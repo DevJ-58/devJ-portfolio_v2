@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+
+:root {
+  --couleur-primaire:       #10b981;
+  --couleur-primaire-fonce: #059669;
+  --couleur-fond:           #0a0a0a;
+  --couleur-fond-secondaire:#111111;
+  --couleur-fond-carte:     #1a1a1a;
+  --couleur-texte:          #f9fafb;
+  --couleur-texte-discret:  #9ca3af;
+  --couleur-bordure:        #2d2d2d;
+  --couleur-accent:         #6366f1;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background-color: var(--couleur-fond);
+  color: var(--couleur-texte);
+  font-family: 'Syne', sans-serif;
+  overflow: hidden; /* devJAI gère la navigation — pas de scroll natif */
+}
+
+/* Scrollbar personnalisée */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--couleur-fond); }
+::-webkit-scrollbar-thumb { background: var(--couleur-primaire); border-radius: 2px; }
+
+@keyframes scanAnim { 0% { top: -1% } 100% { top: 101% } }
+@keyframes blink { 0%, 100% { opacity: 1 } 50% { opacity: 0.3 } }
+
+.experience-text-input::placeholder { color: rgba(255,255,255,0.18); }
+
+.police-mono { font-family: 'Space Mono', monospace; }
