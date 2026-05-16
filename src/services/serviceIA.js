@@ -17,8 +17,9 @@ function construirePromptSysteme(prenomVisiteur, profilVisiteur) {
     `${s.name} : ${s.price}, délai ${s.delivery}.`
   ).join('\n')
 
+  // Prompt système mis à jour pour présenter AXIS comme assistant
   return `
-Tu es devJAI, l'assistant IA du portfolio de Fréjus Kouadio,
+Tu es AXIS, l'assistant IA du portfolio de Fréjus Kouadio,
 développeur fullstack basé à Yamoussoukro, Côte d'Ivoire.
 
 PROJETS — MÉMORISE CES DESCRIPTIONS EXACTES, NE JAMAIS INVENTER :
@@ -91,7 +92,7 @@ export function detecterSection(texteReponse) {
 }
 
 // ── Appel principal à l'API Groq ─────────────────────────────────────────────
-export async function interrogerDevJAI({
+export async function interrogerAxis({
   prenomVisiteur,
   profilVisiteur,
   historiqueConversation,

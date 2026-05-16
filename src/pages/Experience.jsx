@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import utiliserStore from '@/store/utiliserStore'
 import utiliserTheme from '@/store/utiliserTheme'
-import { useDevJAI } from '@/hooks/utiliserDevJAI'
+import { utiliserAxis } from '@/hooks/utiliserDevJAI'
 import AvatarParticulaire from '@/composants/ui/AvatarParticulaire'
+
+// Import du hook AXIS renommé sans changer le nom du fichier
 import Portfolio from '@/composants/Portfolio'
 import PanneauParametres from '@/composants/ui/PanneauParametres'
 import { Volume2, Layout, RotateCcw, Send, MapPin, Briefcase, Zap } from 'lucide-react'
@@ -69,7 +71,7 @@ export default function Experience() {
   const sectionEnAttenteRef = useRef(null)
   const [aiState, setAiState] = useState('idle')
 
-  const { envoyerMessage, estEnChargement, messageCourant } = useDevJAI()
+  const { envoyerMessage, estEnChargement, messageCourant } = utiliserAxis()
   const envoyerMessageRef = useRef(envoyerMessage)
   useEffect(() => {
     envoyerMessageRef.current = envoyerMessage
@@ -260,7 +262,7 @@ export default function Experience() {
     if (typeof window === 'undefined' || !window.speechSynthesis) return
 
     let actif = true
-    const { definirDevJAIParle } = utiliserStore.getState()
+    const { definirAxisParle } = utiliserStore.getState()
 
     window.speechSynthesis.cancel()
 
@@ -291,7 +293,7 @@ export default function Experience() {
     function trySpeak() {
       if (!actif) return
       if (!modeVocal) {
-        setTimeout(() => { if (actif) definirDevJAIParle(false) }, 0)
+        setTimeout(() => { if (actif) definirAxisParle(false) }, 0)
         return
       }
 
@@ -339,7 +341,7 @@ export default function Experience() {
         if (!actif || idx >= segments.length) {
           if (keepAlive) clearInterval(keepAlive)
           setAiState('idle')
-          definirDevJAIParle(false)
+          definirAxisParle(false)
           setCartesActives([])
           return
         }
@@ -584,7 +586,7 @@ export default function Experience() {
           </div>
           {modeChat && bulleVisible && (
             <div style={{ width: 'calc(100vw - 64px)', maxWidth: 340, background: 'rgba(3,3,3,0.92)', border: `1px solid rgba(${aRgb},0.1)`, borderRadius: 14, padding: 16, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', color: '#fff' }}>
-              <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: a, letterSpacing: '0.25em', marginBottom: 8 }}>devJAI // TRANSMISSION</div>
+              <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: a, letterSpacing: '0.25em', marginBottom: 8 }}>AXIS // TRANSMISSION</div>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6 }}>{dernierMessage}</div>
             </div>
           )}
@@ -921,7 +923,7 @@ export default function Experience() {
         <div style={{ position: 'absolute', top: 90, left: '50%', transform: 'translateX(-50%)', width: 380, zIndex: 25, opacity: bulleVisible ? 1 : 0, transition: 'opacity 0.4s' }}>
           <div style={{ position: 'relative', background: 'rgba(3,3,3,0.82)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderRadius: '14px', border: `1px solid rgba(${aRgb},0.1)`, padding: '16px 20px', fontFamily: 'Syne, sans-serif', color: '#fff' }}>
             <div style={{ position:'absolute',top:0,left:20,right:20,height:1, background:`linear-gradient(90deg,transparent,rgba(${aRgb},0.22),transparent)` }} />
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: a, letterSpacing: '0.25em', marginBottom: 8 }}>devJAI // TRANSMISSION</div>
+            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: a, letterSpacing: '0.25em', marginBottom: 8 }}>AXIS // TRANSMISSION</div>
             <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.85)', lineHeight: 1.7 }}>{dernierMessage}</div>
           </div>
         </div>
@@ -1021,7 +1023,7 @@ export default function Experience() {
                 borderLeft:`3px solid ${a}`,
                 padding:'10px 14px'
               }}>
-                <div style={{ fontSize:8, color:a, letterSpacing:'0.2em', marginBottom:6 }}>devJAI //</div>
+                <div style={{ fontSize:8, color:a, letterSpacing:'0.2em', marginBottom:6 }}>AXIS //</div>
                 <div style={{ fontSize:11, color:'rgba(255,255,255,0.85)', lineHeight:1.6, fontFamily:'Space Mono, monospace' }}>
                   {dernierMessage.slice(0,120)}{dernierMessage.length > 120 ? '...' : ''}
                 </div>

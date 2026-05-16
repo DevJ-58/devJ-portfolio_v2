@@ -96,7 +96,7 @@ export default function Accueil() {
           <AnimatePresence mode="wait">
             {etape === 1 && (
               <motion.div key="step1" variants={variantsStep} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="flex flex-col items-center">
-                <h1 className="text-white font-extrabold mb-[14px]" style={{ fontFamily: 'Syne, sans-serif', fontSize: isMobile ? 36 : 72, letterSpacing: '-0.03em', lineHeight: 1 }}>Bonjour, je suis DevJ</h1>
+                <h1 className="text-white font-extrabold mb-[14px]" style={{ fontFamily: 'Syne, sans-serif', fontSize: isMobile ? 36 : 72, letterSpacing: '-0.03em', lineHeight: 1 }}>Bonjour, je suis AXIS</h1>
                 <p className="text-[17px] text-white/60 max-w-lg mb-[44px]" style={{ fontSize: isMobile ? 14 : 17, marginBottom: isMobile ? '24px' : '44px', maxWidth: isMobile ? '100%' : undefined }}>Je vais t'accompagner pour créer une expérience personnalisée. Commence par me dire comment t'appeler.</p>
 
                 <form onSubmit={submitIdentite} className="relative mb-8" style={{ width: isMobile ? '100%' : 440 }}>

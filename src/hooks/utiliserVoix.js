@@ -36,7 +36,7 @@ export function useVoix() {
     definirEcoute(false)
   }, [])
 
-  // ── Synthèse vocale (devJAI parle) ──────────────────────
+  // ── Synthèse vocale (AXIS parle) ──────────────────────
   const parler = useCallback((texte, surFin) => {
     if (!refSynthese.current) return
     refSynthese.current.cancel() // Arrête toute lecture en cours

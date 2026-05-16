@@ -22,7 +22,7 @@ body {
   background-color: var(--couleur-fond);
   color: var(--couleur-texte);
   font-family: 'Syne', sans-serif;
-  overflow: hidden; /* devJAI gère la navigation — pas de scroll natif */
+  overflow: hidden; /* AXIS gère la navigation — pas de scroll natif */
 }
 
 /* Scrollbar personnalisée */

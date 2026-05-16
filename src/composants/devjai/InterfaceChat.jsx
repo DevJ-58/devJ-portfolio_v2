@@ -37,7 +37,8 @@ export default function InterfaceChat() {
       <div className="flex items-center gap-4 p-6 border-b border-bordure">
         <AvatarParticulaire width={60} height={60} etat="idle" />
         <div>
-          <h3 className="police-mono font-bold text-primaire text-lg">devJAI</h3>
+          {/* Nom d'interface mis à jour pour AXIS */}
+          <h3 className="police-mono font-bold text-primaire text-lg">AXIS</h3>
           <p className="text-xs text-gray-500">
             {estEnTrain      ? '● en train de parler...' :
              estEnEcoute     ? '● en écoute...' :

@@ -1,13 +1,14 @@
 import { useEffect, useCallback } from 'react'
 import utiliserStore from '@/store/utiliserStore'
-import { interrogerDevJAI, obtenirMessageAccueil, detecterSection } from '@/services/serviceIA'
+import { interrogerAxis, obtenirMessageAccueil, detecterSection } from '@/services/serviceIA'
 import { useVoix } from './utiliserVoix'
 
-export function useDevJAI() {
+// Hook principal renommé pour utiliser AXIS au lieu de l'ancien nom devJAI
+export function utiliserAxis() {
   const {
     visiteur, devjai,
     ajouterMessage, definirMessageCourant,
-    definirDevJAIParle, definirDevJAICharge,
+    definirAxisParle, definirAxisCharge,
     definirSectionActive,
   } = utiliserStore()
 
@@ -20,7 +21,7 @@ export function useDevJAI() {
       const message = obtenirMessageAccueil(visiteur.prenom, visiteur.profession)
       ajouterMessage('assistant', message)
       definirMessageCourant(message)
-      definirDevJAIParle(false)
+      definirAxisParle(false)
     }
     if (visiteur.prenom) lancerAccueil()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -30,11 +31,11 @@ export function useDevJAI() {
     if (!texteUtilisateur.trim()) return
 
     ajouterMessage('user', texteUtilisateur)
-    definirDevJAICharge(true)
+    definirAxisCharge(true)
     arreterParole()
 
     try {
-      const reponse = await interrogerDevJAI({
+      const reponse = await interrogerAxis({
         prenomVisiteur:        visiteur.prenom,
         profilVisiteur:        visiteur.profession,
         historiqueConversation: devjai.historiqueConversation,
@@ -48,15 +49,15 @@ export function useDevJAI() {
       const sectionDetectee = detecterSection(reponse)
       if (sectionDetectee) definirSectionActive(sectionDetectee)
 
-      definirDevJAIParle(false)
+      definirAxisParle(false)
 
     } catch (erreur) {
-      console.error('Erreur devJAI :', erreur)
+      console.error('Erreur AXIS :', erreur)
       const messageErreur = "Je rencontre une difficulté technique. Pourriez-vous reformuler votre question ?"
       ajouterMessage('assistant', messageErreur)
       definirMessageCourant(messageErreur)
     } finally {
-      try { definirDevJAICharge(false) } catch { /* ignore */ }
+      try { definirAxisCharge(false) } catch { /* ignore */ }
     }
   }, [visiteur, devjai.historiqueConversation]) // eslint-disable-line
 

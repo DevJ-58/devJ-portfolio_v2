@@ -12,7 +12,7 @@ const utiliserStore = create((definir) => ({
   definirVisiteur: (donnees) =>
     definir((etat) => ({ visiteur: { ...etat.visiteur, ...donnees } })),
 
-  // ── État de devJAI ────────────────────────────────────────────────
+  // ── État de AXIS (nom logique conservé pour les données internes)
   devjai: {
     estActif:          false,
     estEnTrain:        false,   // parle en ce moment
@@ -21,9 +21,9 @@ const utiliserStore = create((definir) => ({
     messageCourant:    '',
     historiqueConversation: [],  // [{ role: 'user'|'assistant', contenu: string }]
   },
-  definirDevJAIParle:    (valeur) => definir((e) => ({ devjai: { ...e.devjai, estEnTrain: valeur } })),
-  definirDevJAIEcoute:   (valeur) => definir((e) => ({ devjai: { ...e.devjai, estEcoutant: valeur } })),
-  definirDevJAICharge:   (valeur) => definir((e) => ({ devjai: { ...e.devjai, estEnChargement: valeur } })),
+  definirAxisParle:    (valeur) => definir((e) => ({ devjai: { ...e.devjai, estEnTrain: valeur } })),
+  definirAxisEcoute:   (valeur) => definir((e) => ({ devjai: { ...e.devjai, estEcoutant: valeur } })),
+  definirAxisCharge:   (valeur) => definir((e) => ({ devjai: { ...e.devjai, estEnChargement: valeur } })),
   definirMessageCourant: (msg)    => definir((e) => ({ devjai: { ...e.devjai, messageCourant: msg } })),
   ajouterMessage: (role, contenu) =>
     definir((e) => ({
