@@ -1,14 +1,7 @@
-﻿import OpenAI from 'openai'
-import donneePortfolio from '@/donnees/portfolio.json'
+﻿import donneePortfolio from '@/donnees/portfolio.json'
 
-// Groq est compatible avec le SDK OpenAI — même interface, endpoint différent
-const clientGroq = new OpenAI({
-  apiKey:  import.meta.env.VITE_GROQ_API_KEY,
-  baseURL: 'https://api.groq.com/openai/v1',
-  dangerouslyAllowBrowser: true, // acceptable en dev — prévoir un proxy en prod
-})
-
-const MODELE = import.meta.env.VITE_GROQ_MODEL || 'llama-3.1-8b-instant'
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY
+const MODELE = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile'
 
 // ── Construction du prompt système ───────────────────────────────────────────
 function construirePromptSysteme(prenomVisiteur, profilVisiteur) {
@@ -104,28 +97,43 @@ export async function interrogerDevJAI({
   historiqueConversation,
   messageUtilisateur,
 }) {
-  const promptSysteme = construirePromptSysteme(prenomVisiteur, profilVisiteur)
+  const promptSysteme = construirePromptSysteme(
+    prenomVisiteur,
+    profilVisiteur
+  )
 
-  // Reformater l'historique : notre prop "contenu" → prop "content" attendu par l'API
   const messagesFormates = historiqueConversation.map((msg) => ({
-    role:    msg.role,
+    role: msg.role,
     content: msg.contenu,
   }))
 
-  const reponse = await clientGroq.chat.completions.create({
-    model: MODELE,
-    messages: [
-      { role: 'system', content: promptSysteme },
-      ...messagesFormates,
-      { role: 'user',   content: messageUtilisateur },
-    ],
-    temperature: 0.1,
-    max_tokens:  800,
-  })
+  const response = await fetch(
+    'https://api.groq.com/openai/v1/chat/completions',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: MODELE,
+        messages: [
+          { role: 'system', content: promptSysteme },
+          ...messagesFormates,
+          { role: 'user', content: messageUtilisateur },
+        ],
+        temperature: 0.7,
+        max_tokens: 400,
+      }),
+    }
+  )
 
-  let reponseFinale = reponse.choices[0].message.content
+  if (!response.ok) {
+    throw new Error(`Groq API error: ${response.status}`)
+  }
 
-  return reponseFinale
+  const data = await response.json()
+  return data.choices[0].message.content
 }
 
 // ── Message d'accueil initial (instantané, pas d'appel API) ──────────────────
