@@ -262,12 +262,19 @@ export default function Experience() {
       }
 
       const voix = window.speechSynthesis.getVoices()
-
+      
       const priorite = [
+        // Desktop — voix masculines françaises
         v => v.lang.startsWith('fr') && v.name.toLowerCase().includes('thomas'),
         v => v.lang.startsWith('fr') && v.name.toLowerCase().includes('nicolas'),
-        v => v.lang.startsWith('fr') && v.name.toLowerCase().includes('microsoft') && v.name.toLowerCase().includes('paul'),
-        v => v.lang.startsWith('fr') && !v.name.toLowerCase().includes('amelie') && !v.name.toLowerCase().includes('marie'),
+        v => v.lang.startsWith('fr') && v.name.toLowerCase().includes('paul'),
+        // Mobile Android — Google français
+        v => v.lang === 'fr-FR' && v.name.includes('Google'),
+        v => v.lang === 'fr-FR' && !v.name.toLowerCase().includes('amelie') 
+             && !v.name.toLowerCase().includes('marie')
+             && !v.name.toLowerCase().includes('alice')
+             && !v.name.toLowerCase().includes('stephanie'),
+        // Fallback fr générique
         v => v.lang.startsWith('fr'),
       ]
 
@@ -281,16 +288,22 @@ export default function Experience() {
       const segments = segmenterTexte(textePropre)
       let idx = 0
 
-      // Fix Chrome : keep-alive pour éviter les coupures longues
-      const keepAlive = setInterval(() => {
-        if (!actif) { clearInterval(keepAlive); return }
-        window.speechSynthesis.pause()
-        window.speechSynthesis.resume()
-      }, 10000)
+      // Détection iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+
+      // Keep-alive uniquement sur desktop — cause des coupures sur mobile
+      let keepAlive = null
+      if (!isIOS && !('ontouchstart' in window)) {
+        keepAlive = setInterval(() => {
+          if (!actif) { clearInterval(keepAlive); return }
+          window.speechSynthesis.pause()
+          window.speechSynthesis.resume()
+        }, 10000)
+      }
 
       function parlerSegment() {
         if (!actif || idx >= segments.length) {
-          clearInterval(keepAlive)
+          if (keepAlive) clearInterval(keepAlive)
           setAiState('idle')
           definirDevJAIParle(false)
           setCartesActives([])
@@ -301,75 +314,27 @@ export default function Experience() {
         if (voixChoisie) seg.voice = voixChoisie
         seg.lang = 'fr-FR'
         seg.pitch = 0.82
-        seg.rate = 0.92
+        seg.rate = isIOS ? 0.88 : 0.92
         seg.volume = 1
 
         seg.onend = () => {
           if (!actif) return
           idx++
-          setTimeout(parlerSegment, 120)
+          // Délai légèrement plus long sur mobile
+          setTimeout(parlerSegment, isIOS ? 200 : 120)
         }
 
-        seg.onerror = () => {
+        seg.onerror = (e) => {
           if (!actif) return
+          console.warn('[speech] erreur segment:', e.error)
           idx++
-          setTimeout(parlerSegment, 120)
+          setTimeout(parlerSegment, 200)
         }
 
         window.speechSynthesis.speak(seg)
       }
 
       setAiState('speaking')
-
-      // Navigation automatique — question utilisateur uniquement
-      const usr2 = derniereQuestionRef.current.toLowerCase()
-      console.log('[trySpeak] usr2:', usr2)
-      console.log('[trySpeak] demandeOuv:', [
-        'voir le portfolio', 'ouvre le portfolio', 'montre le portfolio',
-        'affiche le portfolio', 'va sur le portfolio', 'navigue vers',
-        'ouvre moi le portfolio', 'montre moi le portfolio'
-      ].some(m => usr2.includes(m)))
-      const demandeOuv = [
-        'voir le portfolio', 'ouvre le portfolio', 'montre le portfolio',
-        'affiche le portfolio', 'va sur le portfolio', 'navigue vers',
-        'ouvre moi le portfolio', 'montre moi le portfolio',
-        'montre-moi le portfolio', 'ouvre-moi le portfolio',
-        '> voir le portfolio', 'portfolio',
-        'montre moi', 'montre-moi',
-      ].some(m => usr2.includes(m))
-
-      if (demandeOuv) {
-        const reglesSection = [
-          { mots: ['service', 'tarif', 'prix', 'offre', 'devis', 'vitrine', 'ecommerce'], section: 'services' },
-          { mots: ['compétence', 'stack', 'skill', 'technologie', 'frontend', 'backend'], section: 'skills' },
-          { mots: ['contact', 'email', 'whatsapp', 'joindre', 'appeler'], section: 'contact' },
-          { mots: ['parcours', 'à propos', 'formation', 'expérience', 'qui est', 'qui es'], section: 'about' },
-          { mots: ['projet', 'réalisation', 'eliko', 'santeai', 'uiya', 'zimu', 'travaux'], section: 'projects' },
-        ]
-        let sectionCible = 'hero'
-        for (const { mots, section } of reglesSection) {
-          if (mots.some(m => usr2.includes(m))) {
-            sectionCible = section
-            break
-          }
-        }
-        console.log('[portfolio] usr2:', usr2, '→ section:', sectionCible)
-        // Écrire la ref AVANT le setState — sinon le useEffect
-        // lit null parce que React batch les updates
-        sectionEnAttenteRef.current = sectionCible
-        if (modePortfolio) {
-          // Portfolio déjà ouvert — naviguer directement
-          setTimeout(() => {
-            portfolioRef.current?.naviguerVers(sectionCible)
-            setSectionActive(sectionCible)
-            setTimeout(() => setSectionActive(null), 3000)
-            sectionEnAttenteRef.current = null
-          }, 100)
-        } else {
-          setModePortfolio(true)
-        }
-      }
-
       parlerSegment()
     }
 
