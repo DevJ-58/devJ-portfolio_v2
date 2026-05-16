@@ -175,6 +175,40 @@ export default function Experience() {
 
     const init = window.setTimeout(() => {
       setDernierMessage(messageCourant)
+
+      // ── Détection ouverture portfolio ──
+      const reponseIA = messageCourant.toLowerCase()
+      const questionUsr = derniereQuestionRef.current.toLowerCase()
+
+      const motsClePortfolio = [
+        'portfolio', 'voir le portfolio', 'ouvre le portfolio',
+        'je vous emmène', 'je t\'emmène', 'voici le portfolio',
+        'affiche le portfolio', 'montre le portfolio'
+      ]
+
+      const demandePortfolio = motsClePortfolio.some(m =>
+        questionUsr.includes(m) || reponseIA.includes(m)
+      )
+
+      if (demandePortfolio && !modePortfolio) {
+        // Détecter la section cible si mentionnée
+        const sectionMap = {
+          'projet': 'projects',
+          'compétence': 'skills',
+          'contact': 'contact',
+          'parcours': 'about',
+          'à propos': 'about',
+          'service': 'services',
+        }
+        let sectionCible = null
+        Object.entries(sectionMap).forEach(([mot, section]) => {
+          if (questionUsr.includes(mot)) sectionCible = section
+        })
+
+        sectionEnAttenteRef.current = sectionCible
+        setModePortfolio(true)
+      }
+
       const detectionPhoto = (texte, question) => {
         const t = texte.toLowerCase()
         const q = question.toLowerCase()
@@ -219,7 +253,7 @@ export default function Experience() {
     }, 0)
 
     return () => window.clearTimeout(init)
-  }, [messageCourant, dernierMessage])
+  }, [messageCourant, dernierMessage, modePortfolio])
 
   useEffect(() => {
     if (!dernierMessage) return
