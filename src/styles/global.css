@@ -33,6 +33,21 @@ body {
 @keyframes scanAnim { 0% { top: -1% } 100% { top: 101% } }
 @keyframes blink { 0%, 100% { opacity: 1 } 50% { opacity: 0.3 } }
 
+@keyframes slideFromLeft {
+  from { opacity: 0; transform: translateY(-50%) translateX(-30px); }
+  to   { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+
+@keyframes slideFromRight {
+  from { opacity: 0; transform: translateY(-50%) translateX(30px); }
+  to   { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 .experience-text-input::placeholder { color: rgba(255,255,255,0.18); }
 
 .police-mono { font-family: 'Space Mono', monospace; }

@@ -40,13 +40,47 @@
   "projects": [
     {
       "name": "Eliko",
-      "description": "Application de gestion médicale"
+      "description": "Plateforme de réservation de billets d'avion en ligne. NE PAS CONFONDRE avec SanteAI. Eliko = AVION, pas santé.",
+      "technologies": ["React", "Node.js", "MongoDB"]
+    },
+    {
+      "name": "SanteAI",
+      "description": "Application mobile de suivi de santé basée sur l'intelligence artificielle. NE PAS CONFONDRE avec Eliko. SanteAI = SANTÉ, pas avion.",
+      "technologies": ["React Native", "Python", "TensorFlow"]
+    },
+    {
+      "name": "DevJAI",
+      "description": "Assistant IA conversationnel intégré dans un portfolio de développeur.",
+      "technologies": ["React", "OpenAI API", "Tailwind CSS"]
+    },
+    {
+      "name" : "Système de Gestion de Bibliothèque - UIYA",
+      "description" : "Système complet de gestion de bibliothèque pour l'Université Internationale de Yamoussoukro, avec espace bibliothécaire et lecteur.",
+      "technologies" : ["HTML", "CSS", "JavaScript", "PHP", "MySQL"]
+    },
+    {
+      "name" : "Zimu-CI",
+      "description" : "Plateforme musicale ivoirienne minimaliste célébrant la richesse de la musique populaire (Coupé-Décalé, Zouglou, Afrobeat). Design responsive noir/blanc avec accents orange ivoire.",
+      "technologies" : ["html", "css", "JavaScript"]
+    },
+    {
+      "name" : "Terasse",
+      "description" : "Petit site vitrine proposant articles éducatifs et ressources sur le changement climatique en Côte d'Ivoire. Design responsive, galerie d'illustrations optimisée et navigation fixe avec état actif.",
+      "technologies" : ["html", "css", "JavaScript"]
     }
   ],
   "services": [
     {
-      "name": "Développement web",
+      "name" : "developpement de site vitrine, statique",
+      "price" : "À partir de 300 000 FCFA"
+    },
+    {
+      "name": "Développement de site E-commerce",
       "price": "À partir de 500 000 FCFA"
+    },
+    {
+      "name" : "developpement de site sur mesure, dynamique",
+      "price" : "Sur devis, en fonction des fonctionnalités et de la complexité du projet"
     }
   ]
 }

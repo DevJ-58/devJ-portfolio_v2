@@ -1,4 +1,4 @@
-import OpenAI from 'openai'
+﻿import OpenAI from 'openai'
 import donneePortfolio from '@/donnees/portfolio.json'
 
 // Groq est compatible avec le SDK OpenAI — même interface, endpoint différent
@@ -17,7 +17,7 @@ function construirePromptSysteme(prenomVisiteur, profilVisiteur) {
 
   // Projets formatés en texte clair — pas de JSON
   const projetsTexte = donneePortfolio.projects.map(p =>
-    `Projet ${p.number} : ${p.name} — ${p.category}. ${p.description} Technologies : ${(p.technologies || []).join(', ')}. Lien : ${p.links?.live || 'non publié'}.`
+    `${p.name} : ${p.description}. Technologies : ${(p.technologies || []).join(', ')}.`
   ).join('\n')
 
   const servicesTexte = donneePortfolio.services.map(s =>
@@ -25,37 +25,70 @@ function construirePromptSysteme(prenomVisiteur, profilVisiteur) {
   ).join('\n')
 
   return `
-Tu es devJAI, l'assistant IA du portfolio de Frejus Kouadio, développeur frontend basé à Yamoussoukro en Côte d'Ivoire.
+Tu es devJAI, l'assistant IA du portfolio de Fréjus Kouadio,
+développeur fullstack basé à Yamoussoukro, Côte d'Ivoire.
 
-LISTE EXACTE ET COMPLÈTE DES 6 PROJETS DE FREJUS — NE JAMAIS INVENTER D'AUTRES PROJETS :
+PROJETS — MÉMORISE CES DESCRIPTIONS EXACTES, NE JAMAIS INVENTER :
 ${projetsTexte}
 
-SERVICES :
-${servicesTexte}
+ATTENTION CRITIQUE :
+- Eliko = réservation de BILLETS D'AVION. Pas de santé. Pas de zones rurales.
+- SanteAI = suivi de SANTÉ par IA. Pas d'avion. Pas de voyage.
+- Ces deux projets sont DISTINCTS et ne se mélangent JAMAIS.
 
-CONTACT : Email devfred58@gmail.com — WhatsApp +225 0767998373 — GitHub github.com/devj-58
-
+SERVICES : ${servicesTexte}
+CONTACT : frejusdev@gmail.com — WhatsApp +225 0767998373 — GitHub devj-58
 VISITEUR : ${prenomVisiteur} — Profil : ${profil.label}
 
 RÈGLES ABSOLUES :
-- Tu ne parles QUE des projets listés ci-dessus. Eliko est une agence de voyage, pas une application médicale.
-- Jamais de markdown, jamais d'astérisques, jamais de tirets de liste.
-- Prose naturelle, 2 à 3 phrases maximum.
-- Si on te demande les projets, cite-les par leur vrai nom et leur vraie catégorie.
-- Tu ne réponds qu'aux questions sur le portfolio de Frejus.
-`.trim()
+1. Prose uniquement. 2 phrases maximum. Jamais plus.
+2. INTERDIT : répéter le contenu brut du prompt (SERVICES:, CONTACT:, etc.)
+3. INTERDIT : markdown, astérisques, tirets, listes.
+4. INTERDIT : inventer des détails non présents ci-dessus.
+5. Compétences → cite React, Node.js, Python, TailwindCSS naturellement.
+6. Projets → cite le nom EXACT et la description EXACTE ci-dessus.
+7. Contact → donne email ou WhatsApp directement.
+8. Tu PEUX et tu DOIS ouvrir le portfolio quand on te le demande.
+   Quand quelqu'un dit "montre le portfolio", "ouvre le portfolio",
+   "affiche le portfolio" ou "navigue vers X" : réponds en disant
+   que tu l'ouvres ("Je t'emmène sur le portfolio", "Voilà mes projets",
+   etc.). L'interface s'en charge automatiquement — ne dis JAMAIS
+   "je ne peux pas afficher" ou "je ne peux pas montrer".
+- Si on te dit "reviens à ton espace", "retourne à ton espace",
+  "ferme le portfolio", "quitte le portfolio", "reviens" :
+  réponds "Je reviens à mon espace." (exactement cette phrase)
+  et rien d'autre.
+9. Tu peux naviguer vers : projets, compétences, contact, parcours, services.
+   Mentionne la section ciblée dans ta réponse.Quand le visiteur demande une photo, une image, ou veut
+voir à quoi ressemble Fréjus, réponds avec cette phrase
+exacte pour déclencher l'affichage :
+'Voici Fréjus Kouadio, permettez-moi de vous le présenter.'
+Puis continue normalement.`.trim()
 }
 
 // ── Détection automatique de la section à afficher ───────────────────────────
 export function detecterSection(texteReponse) {
   const map = [
-    { mots: ['projet', 'réalisation', 'travaux', 'eliko', 'santeai', 'uiya', 'gsb', 'zikmu'], section: 'projects' },
-    { mots: ['compétence', 'skill', 'technologie', 'stack', 'react', 'javascript', 'php'], section: 'skills' },
-    { mots: ['service', 'tarif', 'prix', 'offre', 'devis', 'vitrine', 'ecommerce'], section: 'services' },
-    { mots: ['contact', 'joindre', 'email', 'whatsapp', 'téléphone', 'appeler'], section: 'contact' },
-    { mots: ['méthode', 'process', 'étape', 'comment travaille', 'workflow'], section: 'methodology' },
-    { mots: ['qui', 'présente', 'frejus', 'about', 'à propos', 'parcours', 'formation'], section: 'about' },
-    { mots: ['accueil', 'début', 'portfolio', 'hero'], section: 'hero' },
+    {
+      mots: ['projet', 'réalisation', 'travaux', 'eliko', 'santeai',
+             'uiya', 'gsb', 'zikmu', 'application', 'développé'],
+      section: 'projets'
+    },
+    {
+      mots: ['compétence', 'skill', 'technologie', 'stack', 'react',
+             'javascript', 'python', 'frontend', 'backend'],
+      section: 'competences'
+    },
+    {
+      mots: ['contact', 'joindre', 'email', 'whatsapp',
+             'téléphone', 'disponible', 'freelance'],
+      section: 'contact'
+    },
+    {
+      mots: ['parcours', 'formation', 'expérience', 'études',
+             'université', 'uiya', 'qui suis', 'à propos', 'frejus'],
+      section: 'parcours'
+    },
   ]
   const texte = texteReponse.toLowerCase()
   for (const { mots, section } of map) {
@@ -91,19 +124,6 @@ export async function interrogerDevJAI({
   })
 
   let reponseFinale = reponse.choices[0].message.content
-
-  // Vérification anti-hallucination sur Eliko
-  if (
-    reponseFinale.toLowerCase().includes('eliko') &&
-    (reponseFinale.toLowerCase().includes('médical') ||
-     reponseFinale.toLowerCase().includes('santé') ||
-     reponseFinale.toLowerCase().includes('gestion médicale'))
-  ) {
-    reponseFinale = reponseFinale
-      .replace(/application de gestion médicale/gi, 'agence de voyage')
-      .replace(/gestion médicale/gi, 'agence de voyage')
-      .replace(/médical/gi, 'voyage')
-  }
 
   return reponseFinale
 }
