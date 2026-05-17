@@ -1,4 +1,15 @@
 const themes = {
+  blanc: {
+    id: 'blanc',
+    label: 'WHITE',
+    accent: '#e2e8f0',
+    accentFonce: '#cbd5e1',
+    accentRgb: '226,232,240',
+    fond: '#050508',
+    fondSecondaire: '#080810',
+    texte: '#ffffff',
+    grille: 'rgba(226,232,240,0.025)',
+  },
   vert: {
     id: 'vert',
     label: 'VERT',
@@ -20,17 +31,6 @@ const themes = {
     fondSecondaire: '#050505',
     texte: '#ffffff',
     grille: 'rgba(239,68,68,0.025)',
-  },
-  blanc: {
-    id: 'blanc',
-    label: 'WHITE',
-    accent: '#e2e8f0',
-    accentFonce: '#cbd5e1',
-    accentRgb: '226,232,240',
-    fond: '#050508',
-    fondSecondaire: '#080810',
-    texte: '#ffffff',
-    grille: 'rgba(226,232,240,0.025)',
   },
 }
 

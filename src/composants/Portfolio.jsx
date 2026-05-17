@@ -1,7 +1,9 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import utiliserTheme from '@/store/utiliserTheme'
+import PanneauParametres from '@/composants/ui/PanneauParametres'
 
-const Portfolio = forwardRef(function Portfolio({ onClose }, ref) {
+const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false }, ref) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [servicesOuverts, setServicesOuverts] = useState({})
@@ -9,6 +11,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose }, ref) {
   const { theme } = utiliserTheme()
   const a = theme.accent
   const aRgb = theme.accentRgb
+  const navigate = useNavigate()
 
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768)
@@ -504,6 +507,51 @@ const Portfolio = forwardRef(function Portfolio({ onClose }, ref) {
         <div style={s.secNum}>06 // CONTACT</div>
         <h2 style={s.secTitle}>Travaillons <span style={s.accent}>Ensemble</span></h2>
 
+        {accesDirecte && (
+          <div style={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            zIndex: 40,
+            width: isMobile ? 'calc(100% - 32px)' : 280,
+            padding: '18px 20px',
+            background: 'rgba(5,5,5,0.85)',
+            border: `1px solid rgba(${aRgb},0.24)`,
+            borderRadius: 20,
+            boxShadow: '0 24px 60px rgba(0,0,0,0.35)',
+            backdropFilter: 'blur(18px)',
+            WebkitBackdropFilter: 'blur(18px)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+              <div style={{ width: 12, height: 12, borderRadius: '50%', background: a }} />
+              <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 10, color: `rgba(${aRgb},0.7)`, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Parler à AXIS</div>
+            </div>
+            <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 16, color: '#F5F5F0', marginBottom: 10 }}>Découvrez mon portfolio</div>
+            <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 12, lineHeight: 1.6, color: 'rgba(245,245,240,0.72)', margin: 0, marginBottom: 14 }}>
+              Vous êtes sur la version directe du portfolio. Cliquez pour revenir à l'accueil ou explorer un projet.
+            </p>
+            <button
+              onClick={() => navigate('/')}
+              style={{
+                width: '100%',
+                padding: '12px 14px',
+                background: a,
+                color: '#050505',
+                border: 'none',
+                borderRadius: 12,
+                fontFamily: 'Space Mono, monospace',
+                fontSize: 11,
+                letterSpacing: '0.18em',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.95' }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
+            >
+              Retour à l'accueil
+            </button>
+          </div>
+        )}
+
         {/* Phrase d'accroche */}
         <div style={{
           maxWidth: 600, marginBottom: 48,
@@ -619,6 +667,16 @@ const Portfolio = forwardRef(function Portfolio({ onClose }, ref) {
           © {new Date().getFullYear()} · YAMOUSSOUKRO, CI
         </div>
       </footer>
+
+      {/* Panneau paramètres — même position que dans Experience */}
+      <div style={{
+        position: 'fixed',
+        bottom: isMobile ? 80 : 16,
+        right: isMobile ? 8 : 16,
+        zIndex: 200,
+      }}>
+        <PanneauParametres />
+      </div>
 
     </div>
   )

@@ -595,6 +595,9 @@ export default function Experience() {
           )}
         </div>
 
+        <button onClick={() => setDrawerSys(true)} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 42, background: 'rgba(0,0,0,0.7)', border: `1px solid rgba(${aRgb},0.25)`, padding: '10px 0', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: 14, zIndex: 21 }}>
+          <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: '#fff', transform: 'rotate(-90deg)', display: 'inline-block' }}>SYS</span>
+        </button>
         <button onClick={() => setDrawerMod(true)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 42, background: 'rgba(0,0,0,0.7)', border: `1px solid rgba(${aRgb},0.25)`, padding: '10px 0', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: 14, zIndex: 21 }}>
           <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: '#fff', transform: 'rotate(-90deg)', display: 'inline-block' }}>MOD</span>
         </button>

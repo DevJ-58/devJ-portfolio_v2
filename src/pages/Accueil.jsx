@@ -193,6 +193,39 @@ export default function Accueil() {
           </div>
         </div>
       </div>
+
+      {/* Bouton d'accès direct au portfolio */}
+      <button
+        onClick={() => navigate('/portfolio')}
+        style={{
+          position: 'fixed',
+          bottom: isMobile ? 20 : 32,
+          right: isMobile ? 16 : 32,
+          zIndex: 50,
+          background: 'rgba(5,5,5,0.5)',
+          backdropFilter: 'blur(18px)',
+          WebkitBackdropFilter: 'blur(18px)',
+          border: `1px solid rgba(${aRgb},0.2)`,
+          borderRadius: 18,
+          padding: '12px 18px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          cursor: 'pointer',
+          color: a,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.border = `1px solid rgba(${aRgb},0.4)`
+          e.currentTarget.style.background = 'rgba(5,5,5,0.7)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.border = `1px solid rgba(${aRgb},0.2)`
+          e.currentTarget.style.background = 'rgba(5,5,5,0.5)'
+        }}
+      >
+        <Briefcase size={14} color={a} />
+        <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Portfolio</span>
+      </button>
     </div>
   )
 }
