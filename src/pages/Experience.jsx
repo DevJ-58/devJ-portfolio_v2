@@ -277,6 +277,9 @@ export default function Experience() {
         .replace(/\n{2,}/g, '. ')
         .replace(/\n/g, ', ')
         .replace(/\s{2,}/g, ' ')
+        // Correction prononciation : Fréjus → Fréjusse (force le S)
+        .replace(/Fréjus/gi, 'Fréjusse')
+        .replace(/Frejus/gi, 'Fréjusse')
         .trim()
     }
 
@@ -584,17 +587,13 @@ export default function Experience() {
               {aiState === 'idle' ? '// EN ATTENTE' : aiState === 'thinking' ? '// TRAITEMENT...' : '// EN TRAIN DE PARLER'}
             </div>
           </div>
-          {modeChat && bulleVisible && (
+          {modeChat && bulleVisible && !modePortfolio && (
             <div style={{ width: 'calc(100vw - 64px)', maxWidth: 340, background: 'rgba(3,3,3,0.92)', border: `1px solid rgba(${aRgb},0.1)`, borderRadius: 14, padding: 16, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', color: '#fff' }}>
               <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: a, letterSpacing: '0.25em', marginBottom: 8 }}>AXIS // TRANSMISSION</div>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6 }}>{dernierMessage}</div>
             </div>
           )}
         </div>
-
-        <button onClick={() => setDrawerSys(true)} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 42, background: 'rgba(0,0,0,0.7)', border: `1px solid rgba(${aRgb},0.25)`, padding: '10px 0', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: 14, zIndex: 21 }}>
-          <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: '#fff', transform: 'rotate(-90deg)', display: 'inline-block' }}>SYS</span>
-        </button>
 
         <button onClick={() => setDrawerMod(true)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 42, background: 'rgba(0,0,0,0.7)', border: `1px solid rgba(${aRgb},0.25)`, padding: '10px 0', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: 14, zIndex: 21 }}>
           <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: '#fff', transform: 'rotate(-90deg)', display: 'inline-block' }}>MOD</span>
@@ -673,19 +672,50 @@ export default function Experience() {
               bottom: 16,
               right: 12,
               zIndex: 52,
-              pointerEvents: 'none',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: 4
+              gap: 6,
             }}>
-              <AvatarStable width={64} height={64} etat={aiState} />
+              <div
+                onClick={() => setModePortfolio(false)}
+                style={{
+                  position: 'relative',
+                  cursor: 'pointer',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  width: 72,
+                  height: 72,
+                  background: 'rgba(5,5,5,0.55)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  border: `1px solid rgba(${aRgb},0.2)`,
+                  boxShadow: `0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(${aRgb},0.08)`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <div style={{
+                  position: 'absolute',
+                  inset: -2,
+                  borderRadius: '50%',
+                  border: `1px solid rgba(${aRgb},${aiState !== 'idle' ? '0.6' : '0.15'})`,
+                  animation: aiState !== 'idle' ? 'pulse 1.4s infinite' : 'none',
+                  pointerEvents: 'none',
+                }} />
+                <AvatarStable width={68} height={68} etat={aiState} />
+              </div>
               <div style={{
                 fontFamily: 'Space Mono, monospace',
                 fontSize: 7,
-                color: aiState === 'idle' ? `rgba(${aRgb},0.4)` : a,
-                textAlign: 'center',
-                letterSpacing: '0.1em'
+                color: aiState === 'idle' ? `rgba(${aRgb},0.35)` : a,
+                letterSpacing: '0.12em',
+                background: 'rgba(0,0,0,0.7)',
+                backdropFilter: 'blur(12px)',
+                padding: '3px 8px',
+                borderRadius: 20,
+                border: `1px solid rgba(${aRgb},0.1)`,
               }}>
                 {aiState === 'idle' ? '●' : aiState === 'thinking' ? '◌' : '◉'}
               </div>
@@ -1010,35 +1040,73 @@ export default function Experience() {
         }}>
           <Portfolio ref={portfolioRef} onClose={() => setModePortfolio(false)} />
 
-          {/* Avatar flottant */}
           <div style={{
-            position:'fixed', bottom:30, right:24, zIndex:52,
-            display:'flex', flexDirection:'column', alignItems:'center', gap:8,
-            pointerEvents:'none'
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            zIndex: 52,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 0,
           }}>
-            {bulleVisible && dernierMessage && (
+            {/* Bouton glassmorphique pour masquer/afficher l'avatar */}
+            <div
+              onClick={() => setModePortfolio(false)}
+              title="Fermer le portfolio"
+              style={{
+                position: 'relative',
+                cursor: 'pointer',
+                borderRadius: '50%',
+                overflow: 'hidden',
+                width: 120,
+                height: 120,
+                background: 'rgba(5,5,5,0.45)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: 'none',
+                boxShadow: `0 8px 32px rgba(0,0,0,0.4)`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'box-shadow 0.3s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.boxShadow = `0 8px 40px rgba(0,0,0,0.5)`
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.boxShadow = `0 8px 32px rgba(0,0,0,0.4)`
+              }}
+            >
+              {/* Anneau animé selon l'état */}
               <div style={{
-                maxWidth:260, background:'rgba(0,0,0,0.92)',
-                border:`1px solid rgba(${aRgb},0.4)`,
-                borderLeft:`3px solid ${a}`,
-                padding:'10px 14px'
-              }}>
-                <div style={{ fontSize:8, color:a, letterSpacing:'0.2em', marginBottom:6 }}>AXIS //</div>
-                <div style={{ fontSize:11, color:'rgba(255,255,255,0.85)', lineHeight:1.6, fontFamily:'Space Mono, monospace' }}>
-                  {dernierMessage.slice(0,120)}{dernierMessage.length > 120 ? '...' : ''}
-                </div>
-                {sectionActive && (
-                  <div style={{ marginTop:8, fontSize:8, color:a, letterSpacing:'0.15em', borderTop:`1px solid rgba(${aRgb},0.2)`, paddingTop:6 }}>
-                    ↓ NAVIGATION → {sectionActive.toUpperCase()}
-                  </div>
-                )}
-              </div>
-            )}
-            <div style={{ background:'rgba(0,0,0,0.8)', border:`1px solid rgba(${aRgb},0.3)`, padding:8 }}>
-              <AvatarStable etat={aiState} />
-              <div style={{ fontFamily:'Space Mono, monospace', fontSize:8, color: aiState==='idle' ? `rgba(${aRgb},0.4)` : a, textAlign:'center', marginTop:4 }}>
-                {aiState==='idle' ? '// EN ATTENTE' : aiState==='thinking' ? '// TRAITEMENT...' : '// EN TRAIN DE PARLER'}
-              </div>
+                position: 'absolute',
+                inset: -2,
+                borderRadius: '50%',
+                border: `1px solid rgba(${aRgb},${aiState !== 'idle' ? '0.5' : '0.15'})`,
+                animation: aiState !== 'idle' ? 'pulse 1.4s infinite' : 'none',
+                pointerEvents: 'none',
+              }} />
+              <AvatarStable etat={aiState} width={110} height={110} />
+            </div>
+
+            {/* Statut sous l'avatar */}
+            <div style={{
+              marginTop: 8,
+              fontFamily: 'Space Mono, monospace',
+              fontSize: 8,
+              color: aiState === 'idle' ? `rgba(${aRgb},0.35)` : a,
+              letterSpacing: '0.15em',
+              textAlign: 'center',
+              background: 'rgba(0,0,0,0.6)',
+              backdropFilter: 'blur(12px)',
+              padding: '4px 10px',
+              borderRadius: 20,
+              border: `1px solid rgba(${aRgb},0.1)`,
+            }}>
+              {aiState === 'idle' ? '● EN ATTENTE' : 
+               aiState === 'thinking' ? '◌ TRAITEMENT' : 
+               '◉ EN PAROLE'}
             </div>
           </div>
         </div>

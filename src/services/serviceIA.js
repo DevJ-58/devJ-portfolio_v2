@@ -57,7 +57,8 @@ RÈGLES ABSOLUES :
 voir à quoi ressemble Fréjus, réponds avec cette phrase
 exacte pour déclencher l'affichage :
 'Voici Fréjus Kouadio, permettez-moi de vous le présenter.'
-Puis continue normalement.`.trim()
+Puis continue normalement.
+- Mon prénom est "Fréjus" — le S final se prononce. Écris-le toujours "Fréjus" avec le S.`.trim()
 }
 
 // ── Détection automatique de la section à afficher ───────────────────────────
