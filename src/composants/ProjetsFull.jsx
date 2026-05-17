@@ -151,7 +151,7 @@ export default function ProjetsFull() {
 
       {/* HEADER */}
       <div style={{
-        padding: isMobile ? '60px 24px 40px' : '80px 60px 60px',
+        padding: isMobile ? '40px 20px 28px' : '80px 60px 60px',
         position: 'relative', overflow: 'hidden',
       }}>
         <div style={{
@@ -167,15 +167,15 @@ export default function ProjetsFull() {
 
         <div style={{ position: 'relative', zIndex: 2 }}>
           <div style={{
-            fontFamily: 'Space Mono, monospace', fontSize: 9,
-            color: `rgba(${aRgb},0.5)`, letterSpacing: '0.35em',
-            marginBottom: 16,
+            fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9,
+            color: `rgba(${aRgb},0.5)`, letterSpacing: isMobile ? '0.2em' : '0.35em',
+            marginBottom: isMobile ? 10 : 16,
           }}>// PORTFOLIO COMPLET</div>
 
           <h1 style={{
             fontFamily: 'Fraunces, serif', fontWeight: 800,
-            fontSize: isMobile ? 40 : 72,
-            lineHeight: 1, margin: '0 0 20px',
+            fontSize: isMobile ? 36 : 72,
+            lineHeight: 1, margin: isMobile ? '0 0 14px' : '0 0 20px',
             letterSpacing: '-0.03em',
           }}>
             Tous mes<br />
@@ -184,8 +184,8 @@ export default function ProjetsFull() {
 
           <p style={{
             fontFamily: 'Inter, sans-serif', fontWeight: 300,
-            fontSize: 15, color: 'rgba(255,255,255,0.4)',
-            maxWidth: 500, lineHeight: 1.8, margin: 0,
+            fontSize: isMobile ? 13 : 15, color: 'rgba(255,255,255,0.4)',
+            maxWidth: isMobile ? '100%' : 500, lineHeight: 1.8, margin: 0,
           }}>
             6 projets réalisés entre 2023 et 2024 — du frontend au fullstack, de la culture ivoirienne à la télémédecine.
           </p>
@@ -194,9 +194,9 @@ export default function ProjetsFull() {
 
       {/* FILTRES */}
       <div style={{
-        padding: isMobile ? '0 12px 18px' : '0 60px 48px',
+        padding: isMobile ? '0 20px 28px' : '0 60px 48px',
       }}>
-        <div className="filtres-scroll" style={{ display: 'flex', gap: 10, overflowX: isMobile ? 'auto' : 'visible', paddingBottom: isMobile ? 6 : 0, WebkitOverflowScrolling: isMobile ? 'touch' : 'auto' }}>
+        <div className="filtres-scroll" style={{ display: 'flex', gap: 10, overflowX: isMobile ? 'auto' : 'visible', paddingBottom: isMobile ? 6 : 0, WebkitOverflowScrolling: isMobile ? 'touch' : 'auto', msOverflowStyle: isMobile ? 'none' : undefined, scrollbarWidth: isMobile ? 'none' : undefined, flexWrap: isMobile ? 'nowrap' : 'wrap' }}>
           {FILTRES.map(f => (
             <button key={f} onClick={() => setFiltre(f)} style={{
               padding: isMobile ? '6px 14px' : '8px 20px',
@@ -206,18 +206,18 @@ export default function ProjetsFull() {
                 : '1px solid rgba(255,255,255,0.08)',
               color: filtre === f ? '#050505' : 'rgba(255,255,255,0.5)',
               fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9,
-              letterSpacing: '0.15em', borderRadius: 6,
+              letterSpacing: '0.15em', borderRadius: isMobile ? 20 : 6,
               cursor: 'pointer',
               fontWeight: filtre === f ? 700 : 400,
               transition: 'all 0.2s',
-              flex: isMobile ? '0 0 auto' : undefined,
+              flexShrink: isMobile ? 0 : undefined,
             }}>{f}</button>
           ))}
         </div>
       </div>
 
       {/* GRILLE PROJETS — layout alterné magazine */}
-      <div style={{ padding: isMobile ? '0 24px 80px' : '0 60px 100px' }}>
+      <div style={{ padding: isMobile ? '0 20px 60px' : '0 60px 100px' }}>
         {projetsFiltres.map((p, idx) => {
           const isSurvol = survol === p.num
           const isGrand = idx === 0 || (idx % 5 === 0)
@@ -226,7 +226,7 @@ export default function ProjetsFull() {
             <div
               key={p.num}
               style={{
-                marginBottom: isMobile ? 20 : 24,
+                marginBottom: isMobile ? 14 : 24,
                 animation: `fadeInUp 0.5s ease ${idx * 0.07}s both`,
               }}
             >
@@ -235,31 +235,28 @@ export default function ProjetsFull() {
                 onMouseLeave={() => setSurvol(null)}
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: isMobile
-                    ? '1fr'
-                    : isGrand
-                      ? (idx % 2 === 0 ? '55% 45%' : '45% 55%')
-                      : '1fr 1fr',
-                  minHeight: isGrand ? (isMobile ? 'auto' : 420) : (isMobile ? 'auto' : 260),
-                  borderRadius: 20,
+                  gridTemplateColumns: isMobile ? '1fr' : (isGrand ? (idx % 2 === 0 ? '55% 45%' : '45% 55%') : '1fr 1fr'),
+                    minHeight: isMobile ? 'auto' : (isGrand ? 420 : 260),
+                    borderRadius: isMobile ? 14 : 20,
                   overflow: 'hidden',
                   border: isSurvol
                     ? `1px solid rgba(${aRgb},0.4)`
                     : '1px solid rgba(255,255,255,0.06)',
                   background: 'rgba(255,255,255,0.02)',
                   transition: 'border-color 0.3s, transform 0.3s, box-shadow 0.3s',
-                  transform: isSurvol ? 'translateY(-4px)' : 'translateY(0)',
-                  boxShadow: isSurvol
-                    ? `0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(${aRgb},0.1)`
-                    : 'none',
+                    transform: (!isMobile && isSurvol) ? 'translateY(-4px)' : 'translateY(0)',
+                    boxShadow: (!isMobile && isSurvol)
+                      ? `0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(${aRgb},0.1)`
+                      : 'none',
                   cursor: 'default',
                 }}
               >
                 <div style={{
                   position: 'relative',
                   overflow: 'hidden',
-                  order: (!isMobile && idx % 2 !== 0) ? 2 : 1,
-                  minHeight: isMobile ? 220 : 'auto',
+                    order: isMobile ? 1 : ((!isMobile && idx % 2 !== 0) ? 2 : 1),
+                    minHeight: isMobile ? 190 : 'auto',
+                    maxHeight: isMobile ? 210 : 'none',
                 }}>
                   <img src={p.img} alt={p.titre}
                     style={{
@@ -276,10 +273,12 @@ export default function ProjetsFull() {
                   />
                   <div style={{
                     position: 'absolute', inset: 0,
-                    background: idx % 2 === 0
-                      ? 'linear-gradient(to right, transparent 50%, rgba(5,5,5,0.7) 100%)'
-                      : 'linear-gradient(to left, transparent 50%, rgba(5,5,5,0.7) 100%)',
-                    opacity: isSurvol ? 0.6 : 1,
+                    background: isMobile
+                      ? 'linear-gradient(to top, rgba(5,5,5,0.75) 0%, transparent 55%)'
+                      : (idx % 2 === 0
+                        ? 'linear-gradient(to right, transparent 50%, rgba(5,5,5,0.7) 100%)'
+                        : 'linear-gradient(to left, transparent 50%, rgba(5,5,5,0.7) 100%)'),
+                    opacity: isMobile ? 1 : (isSurvol ? 0.6 : 1),
                     transition: 'opacity 0.3s',
                   }} />
 
@@ -312,10 +311,10 @@ export default function ProjetsFull() {
                 </div>
 
                 <div style={{
-                  padding: isMobile ? '28px 24px' : isGrand ? '48px 52px' : '32px 40px',
+                  padding: isMobile ? '16px 18px 20px' : isGrand ? '48px 52px' : '32px 40px',
                   display: 'flex', flexDirection: 'column',
-                  justifyContent: 'center', gap: isGrand ? 20 : 14,
-                  order: (!isMobile && idx % 2 !== 0) ? 1 : 2,
+                  justifyContent: 'center', gap: isMobile ? 10 : (isGrand ? 20 : 14),
+                  order: isMobile ? 2 : ((!isMobile && idx % 2 !== 0) ? 1 : 2),
                   position: 'relative',
                 }}>
                   <div style={{
@@ -329,8 +328,8 @@ export default function ProjetsFull() {
                     alignItems: 'center',
                   }}>
                     <div style={{
-                      fontFamily: 'Space Mono, monospace', fontSize: 8,
-                      color: `rgba(${aRgb},0.55)`, letterSpacing: '0.2em',
+                      fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 8,
+                      color: `rgba(${aRgb},0.55)`, letterSpacing: isMobile ? '0.15em' : '0.2em',
                       textTransform: 'uppercase',
                     }}>{p.categorie}</div>
                     <div style={{
@@ -341,13 +340,13 @@ export default function ProjetsFull() {
 
                   <h2 style={{
                     fontFamily: 'Fraunces, serif', fontWeight: 800,
-                    fontSize: isGrand ? (isMobile ? 26 : 36) : (isMobile ? 20 : 24),
+                    fontSize: isMobile ? 18 : (isGrand ? 36 : 24),
                     color: '#F5F5F0', margin: 0, lineHeight: 1.1,
-                    letterSpacing: '-0.02em',
+                    letterSpacing: isMobile ? '-0.01em' : '-0.02em',
                   }}>{p.titre}</h2>
 
                   <div style={{
-                    width: isSurvol ? 60 : 32, height: 2,
+                    width: isMobile ? (isSurvol ? 40 : 24) : (isSurvol ? 60 : 32), height: 2,
                     background: `linear-gradient(90deg, ${a}, transparent)`,
                     borderRadius: 2,
                     transition: 'width 0.3s',
@@ -355,17 +354,21 @@ export default function ProjetsFull() {
 
                   <p style={{
                     fontFamily: 'Inter, sans-serif', fontWeight: 300,
-                    fontSize: 13, color: 'rgba(245,245,240,0.5)',
-                    lineHeight: 1.75, margin: 0,
+                    fontSize: isMobile ? 12 : 13, color: 'rgba(245,245,240,0.5)',
+                    lineHeight: isMobile ? 1.65 : 1.75, margin: 0,
+                    display: isMobile ? '-webkit-box' : undefined,
+                    WebkitLineClamp: isMobile ? 3 : undefined,
+                    WebkitBoxOrient: isMobile ? 'vertical' : undefined,
+                    overflow: isMobile ? 'hidden' : undefined,
                   }}>{p.desc}</p>
 
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: isMobile ? 6 : 8 }}>
                     {p.tags.map(t => (
                       <span key={t} style={{
                         background: `rgba(${aRgb},0.07)`,
                         border: `1px solid rgba(${aRgb},0.18)`,
                         color: `rgba(${aRgb},0.8)`,
-                        padding: '4px 12px', fontSize: 8,
+                        padding: isMobile ? '3px 10px' : '4px 12px', fontSize: isMobile ? 8 : 8,
                         letterSpacing: '0.15em', borderRadius: 4,
                         fontFamily: 'Space Mono, monospace',
                       }}>{t}</span>
@@ -374,16 +377,17 @@ export default function ProjetsFull() {
 
                   {p.lien ? (
                     <a href={p.lien} target="_blank" rel="noopener" style={{
-                      display: 'inline-flex', alignItems: 'center', justifyContent: isMobile ? 'center' : 'flex-start', gap: 8,
-                      background: isSurvol ? a : `rgba(${aRgb},0.1)`,
+                      display: 'inline-flex', alignItems: 'center', gap: 8,
+                      background: isMobile ? `rgba(${aRgb},0.1)` : (isSurvol ? a : `rgba(${aRgb},0.1)`),
                       border: `1px solid rgba(${aRgb},0.3)`,
-                      color: isSurvol ? '#050505' : a,
-                      fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 9 : 9,
-                      letterSpacing: '0.15em', padding: isMobile ? '12px 16px' : '10px 20px',
+                      color: isMobile ? a : (isSurvol ? '#050505' : a),
+                      fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9,
+                      letterSpacing: '0.15em', padding: isMobile ? '9px 16px' : '10px 20px',
                       borderRadius: 8, textDecoration: 'none',
                       width: isMobile ? '100%' : 'fit-content',
+                      justifyContent: isMobile ? 'center' : 'flex-start',
                       transition: 'background 0.25s, color 0.25s',
-                      fontWeight: isSurvol ? 700 : 400,
+                      fontWeight: isMobile ? 400 : (isSurvol ? 700 : 400),
                     }}>
                       VOIR LE PROJET →
                     </a>
@@ -393,9 +397,9 @@ export default function ProjetsFull() {
                       background: 'rgba(255,255,255,0.04)',
                       border: '1px solid rgba(255,255,255,0.08)',
                       color: 'rgba(255,255,255,0.2)',
-                      fontFamily: 'Space Mono, monospace', fontSize: 9,
-                      letterSpacing: '0.15em', padding: '10px 20px',
-                      borderRadius: 8, width: 'fit-content',
+                      fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9,
+                      letterSpacing: '0.15em', padding: isMobile ? '9px 16px' : '10px 20px',
+                      borderRadius: 8, width: isMobile ? '100%' : 'fit-content', justifyContent: isMobile ? 'center' : 'flex-start',
                     }}>
                       PROJET PRIVÉ
                     </div>
@@ -410,12 +414,13 @@ export default function ProjetsFull() {
       {/* FOOTER MINIMAL */}
       <div style={{
         borderTop: `1px solid rgba(${aRgb},0.08)`,
-        padding: isMobile ? '32px 24px' : '40px 60px',
+        padding: isMobile ? '24px 20px' : '40px 60px',
         display: 'flex', justifyContent: 'space-between',
-        alignItems: 'center', flexWrap: 'wrap', gap: 16,
+        flexDirection: isMobile ? 'column' : 'row',
+        alignItems: 'center', flexWrap: 'wrap', gap: isMobile ? 12 : 16,
       }}>
         <div style={{
-          fontFamily: 'Space Mono, monospace', fontSize: 9,
+          fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9,
           color: `rgba(${aRgb},0.35)`, letterSpacing: '0.2em',
         }}>
           {new Date().getFullYear()} · FRÉJUS KOUADIO
@@ -424,10 +429,11 @@ export default function ProjetsFull() {
           display: 'flex', alignItems: 'center', gap: 8,
           background: `rgba(${aRgb},0.08)`,
           border: `1px solid rgba(${aRgb},0.2)`,
-          color: a, padding: '10px 24px',
-          fontFamily: 'Space Mono, monospace', fontSize: 9,
+          color: a, padding: isMobile ? '12px 20px' : '10px 24px',
+          fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9,
           letterSpacing: '0.18em', borderRadius: 8,
           cursor: 'pointer', transition: 'background 0.2s',
+          width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'center' : 'flex-start',
         }}
           onMouseEnter={e => e.currentTarget.style.background = `rgba(${aRgb},0.15)`}
           onMouseLeave={e => e.currentTarget.style.background = `rgba(${aRgb},0.08)`}

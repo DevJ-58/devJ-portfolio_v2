@@ -17,8 +17,11 @@ export default function Accueil() {
   const [prenom, setPrenom] = useState('')
   const [profil, setProfil] = useState(null)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const [showThemeModal, setShowThemeModal] = useState(
+    () => !localStorage.getItem('devj-theme-chosen')
+  )
   const store = utiliserStore()
-  const { theme } = utiliserTheme()
+  const { theme, themes, changerTheme } = utiliserTheme()
   const a = theme.accent
   const aRgb = theme.accentRgb
   const navigate = useNavigate()
@@ -56,10 +59,18 @@ export default function Accueil() {
     navigate('/experience')
   }
 
+  function fermerModal(themeId) {
+    if (themeId) {
+      changerTheme(themeId)
+    }
+    localStorage.setItem('devj-theme-chosen', '1')
+    setShowThemeModal(false)
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: theme.fond, backgroundImage: `linear-gradient(rgba(${aRgb},0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(${aRgb},0.03) 1px, transparent 1px)`, backgroundSize: '60px 60px' }}>
 
-      <style>{`\n        @keyframes scanY { 0%{ top:0% } 100%{ top:100% } }\n        @keyframes scanOpacity { 0%{opacity:.2}50%{opacity:.8}100%{opacity:.2} }\n        @keyframes pulseRing { 0%{ transform: scale(1); opacity: .6 } 100%{ transform: scale(1.3); opacity: 0 } }\n      `}</style>
+      <style>{`\n        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,800;1,9..144,400&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');\n        @keyframes scanY { 0%{ top:0% } 100%{ top:100% } }\n        @keyframes scanOpacity { 0%{opacity:.2}50%{opacity:.8}100%{opacity:.2} }\n        @keyframes pulseRing { 0%{ transform: scale(1); opacity: .6 } 100%{ transform: scale(1.3); opacity: 0 } }\n      `}</style>
 
       {/* HUD corners */}
       <div className="absolute top-4 left-4 w-5 h-5 border-t border-l" style={{ borderColor: a }} />
@@ -226,6 +237,161 @@ export default function Accueil() {
         <Briefcase size={14} color={a} />
         <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Portfolio</span>
       </button>
+
+      {showThemeModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 9999,
+          background: 'rgba(0,0,0,0.85)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 24,
+        }}>
+          <div style={{
+            width: '100%',
+            maxWidth: 520,
+            background: 'rgba(8,8,8,0.95)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 24,
+            padding: isMobile ? '32px 24px' : '48px 40px',
+            backdropFilter: 'blur(24px)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 32,
+            fontFamily: 'Inter, sans-serif',
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                fontFamily: 'Space Mono, monospace',
+                fontSize: 10,
+                letterSpacing: '0.35em',
+                color: 'rgba(255,255,255,0.35)',
+                marginBottom: 16,
+              }}>
+                BIENVENUE SUR DEVJ PORTFOLIO
+              </div>
+              <h2 style={{
+                fontFamily: 'Fraunces, serif',
+                fontSize: isMobile ? 28 : 36,
+                fontWeight: 800,
+                color: '#fff',
+                margin: 0,
+                lineHeight: 1.1,
+              }}>
+                Choisis ton thème
+              </h2>
+              <p style={{
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 14,
+                color: 'rgba(255,255,255,0.5)',
+                marginTop: 12,
+                lineHeight: 1.6,
+              }}>
+                Personnalise ton expérience avant d'explorer.
+                Tu pourras changer ça plus tard dans les paramètres.
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: 14,
+            }}>
+              {themes.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => fermerModal(t.id)}
+                  style={{
+                    background: `rgba(${t.accentRgb},0.06)`,
+                    border: `1px solid rgba(${t.accentRgb},0.25)`,
+                    borderRadius: 16,
+                    padding: '20px 18px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 12,
+                    alignItems: 'flex-start',
+                    transition: 'all 0.2s',
+                    textAlign: 'left',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = 
+                      `rgba(${t.accentRgb},0.14)`
+                    e.currentTarget.style.borderColor = t.accent
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = 
+                      `rgba(${t.accentRgb},0.06)`
+                    e.currentTarget.style.borderColor = 
+                      `rgba(${t.accentRgb},0.25)`
+                    e.currentTarget.style.transform = 'translateY(0)'
+                  }}
+                >
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                  }}>
+                    <div style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: '50%',
+                      background: t.accent,
+                      boxShadow: `0 0 16px rgba(${t.accentRgb},0.5)`,
+                      flexShrink: 0,
+                    }} />
+                    <div>
+                      <div style={{
+                        fontFamily: 'Syne, sans-serif',
+                        fontWeight: 700,
+                        fontSize: 15,
+                        color: '#fff',
+                      }}>{t.nom || t.label}</div>
+                      <div style={{
+                        fontFamily: 'Space Mono, monospace',
+                        fontSize: 9,
+                        color: t.accent,
+                        letterSpacing: '0.15em',
+                        marginTop: 2,
+                      }}>{t.accent}</div>
+                    </div>
+                  </div>
+                  <div style={{
+                    width: '100%',
+                    height: 6,
+                    borderRadius: 999,
+                    background: `linear-gradient(90deg, 
+                      ${t.accent}, 
+                      rgba(${t.accentRgb},0.2))`,
+                  }} />
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => fermerModal(null)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'rgba(255,255,255,0.3)',
+                fontFamily: 'Space Mono, monospace',
+                fontSize: 10,
+                letterSpacing: '0.2em',
+                cursor: 'pointer',
+                textAlign: 'center',
+                padding: '8px',
+              }}
+            >
+              PASSER — GARDER LE THÈME ACTUEL
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
