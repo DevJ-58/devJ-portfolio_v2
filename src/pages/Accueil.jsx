@@ -253,15 +253,15 @@ export default function Accueil() {
         }}>
           <div style={{
             width: '100%',
-            maxWidth: 520,
+            maxWidth: isMobile ? 440 : 520,
             background: 'rgba(8,8,8,0.95)',
             border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: 24,
-            padding: isMobile ? '32px 24px' : '48px 40px',
+            padding: isMobile ? '28px 18px' : '48px 40px',
             backdropFilter: 'blur(24px)',
             display: 'flex',
             flexDirection: 'column',
-            gap: 32,
+            gap: isMobile ? 24 : 32,
             fontFamily: 'Inter, sans-serif',
           }}>
             <div style={{ textAlign: 'center' }}>
@@ -298,8 +298,8 @@ export default function Accueil() {
 
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: 14,
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+              gap: isMobile ? 12 : 14,
             }}>
               {themes.map((t) => (
                 <button
