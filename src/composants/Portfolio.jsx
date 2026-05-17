@@ -6,7 +6,12 @@ import PanneauParametres from '@/composants/ui/PanneauParametres'
 const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false }, ref) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [showScrollTop, setShowScrollTop] = useState(false)
-  const [servicesOuverts, setServicesOuverts] = useState({})
+  const [servicesOuverts, setServicesOuverts] = useState({}) // Initialize servicesOuverts
+  const [githubData, setGithubData] = useState(null)
+  const [githubLoading, setGithubLoading] = useState(true)
+  const [githubError, setGithubError] = useState(null)
+  const [tooltipInfo, setTooltipInfo] = useState(null)
+  const [citationIdx, setCitationIdx] = useState(0)
   const wrapRef = useRef(null)
   const { theme } = utiliserTheme()
   const a = theme.accent
@@ -27,9 +32,48 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
     return () => wrap.removeEventListener('scroll', onScroll)
   }, [])
 
+  useEffect(() => {
+    async function fetchGithub() {
+      try {
+        const res = await fetch(
+          'https://github-contributions-api.jogruber.de/v4/DevJ-58?y=last'
+        )
+        if (!res.ok) throw new Error('fetch failed')
+        const data = await res.json()
+        setGithubData(data)
+      } catch (err) {
+        setGithubError(true)
+      } finally {
+        setGithubLoading(false)
+      }
+    }
+    fetchGithub()
+  }, [])
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCitationIdx(prev => (prev + 1) % 3)
+    }, 3500)
+    return () => clearInterval(id)
+  }, [])
+
   const toggleService = (titre) => {
     setServicesOuverts((prev) => ({ ...prev, [titre]: !prev[titre] }))
   }
+
+  function getContribColor(count, accent, accentRgb) {
+    if (count === 0) return 'rgba(255,255,255,0.04)'
+    if (count <= 2)  return `rgba(${accentRgb},0.2)`
+    if (count <= 5)  return `rgba(${accentRgb},0.45)`
+    if (count <= 10) return `rgba(${accentRgb},0.7)`
+    return accent
+  }
+
+  const citations = [
+    "Je transforme des idées complexes en interfaces fluides et mémorables.",
+    "Construire l'avenir du web, une ligne de code à la fois.",
+    "L'IA n'est pas un outil — c'est un nouveau langage que je parle."
+    ] // List of citations for display
 
   // Exposer la fonction naviguerVers au parent
   useImperativeHandle(ref, () => ({
@@ -123,13 +167,13 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
   ]
 
   const s = {
-    wrap: { fontFamily: 'DM Sans, sans-serif', background: '#050505', color: '#F5F5F0', overflowY: 'auto', height: '100%', scrollBehavior: 'smooth' },
+    wrap: { fontFamily: 'Inter, sans-serif', background: '#050505', color: '#F5F5F0', overflowY: 'auto', height: '100%', scrollBehavior: 'smooth' },
     nav: { position: 'sticky', top: 0, zIndex: 100, background: 'rgba(5,5,5,0.85)', WebkitBackdropFilter: 'blur(24px)', backdropFilter: 'blur(24px)', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-    logo: { color: '#F5F5F0', fontSize: 15, fontWeight: 700, letterSpacing: '0.06em', fontFamily: 'Syne, sans-serif' },
+    logo: { color: '#F5F5F0', fontSize: 15, fontWeight: 700, letterSpacing: '0.06em', fontFamily: 'Fraunces, serif' },
     closeBtn: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', padding: '8px 16px', cursor: 'pointer', fontSize: 9, letterSpacing: '0.2em', borderRadius: 6, fontFamily: 'Space Mono, monospace' },
     section: { padding: '100px 80px', borderBottom: '1px solid rgba(255,255,255,0.04)' },
     secNum: { color: `rgba(${aRgb},0.35)`, fontSize: 10, letterSpacing: '0.35em', fontFamily: 'Space Mono, monospace' },
-    secTitle: { fontSize: 36, fontWeight: 700, color: '#F5F5F0', margin: '0 0 56px', fontFamily: 'Syne, sans-serif' },
+    secTitle: { fontSize: 36, fontWeight: 700, color: '#F5F5F0', margin: '0 0 56px', fontFamily: 'Fraunces, serif' },
     accent: { color: a },
     tag: { background: `rgba(${aRgb},0.08)`, border: `1px solid rgba(${aRgb},0.2)`, color: a, padding: '6px 16px', fontSize: 9, letterSpacing: '0.2em', borderRadius: 3, display: 'inline-block' },
     card: { border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', padding: 24, marginBottom: 20, borderRadius: 12, WebkitBackdropFilter: 'blur(12px)', backdropFilter: 'blur(12px)' },
@@ -138,26 +182,15 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
 
   const navStyle = { ...s.nav, padding: isMobile ? '12px 20px' : s.nav.padding }
   const sectionStyle = { ...s.section, padding: isMobile ? '64px 24px' : s.section.padding }
-  const heroSectionStyle = { ...sectionStyle, minHeight: '85vh', display: 'flex', alignItems: 'center', gap: isMobile ? 40 : 80, flexDirection: isMobile ? 'column' : 'row' }
-  const heroTextStyle = { flex: 1, width: '100%' }
-  const heroImageStyle = { display: isMobile ? 'none' : 'block', maxHeight: 420, maxWidth: '100%', objectFit: 'contain', filter: `drop-shadow(0 0 60px rgba(${aRgb},0.12))` }
-  const heroStatsStyle = { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 32 }
-  const heroButtonsStyle = { display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 12, width: isMobile ? '100%' : 'auto' }
-  const aboutStyle = { display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 16 : 48, alignItems: 'flex-start' }
-  const aboutImgStyle = { width: isMobile ? '100%' : 220, maxHeight: isMobile ? 240 : undefined, objectFit: 'cover', objectPosition: 'top', borderRadius: 16, filter: `drop-shadow(0 0 30px rgba(${aRgb},0.1))` }
-  const aboutGridStyle = { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginTop: 24 }
-  const skillsGridStyle = { display: 'block' }
-  const projectsGridStyle = { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }
-  const projectImageStyle = { width: '100%', objectFit: 'cover', display: 'block', objectPosition: 'top center' }
   const servicesGridStyle = { display: 'flex', flexDirection: 'column', gap: 12 }
-  const contactGridStyle = { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 24 }
+  const contactGridStyle = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: isMobile ? 8 : 12 }
   const navLinksStyle = { display: isMobile ? 'none' : 'flex', gap: 16, fontSize: 9, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.2em', fontFamily: 'Space Mono, monospace', textTransform: 'uppercase' }
 
   return (
     <div style={s.wrap} id="pf-wrap">
       <style>{`
         /* Fonts */
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&family=Space+Mono:wght@400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,800;1,9..144,400&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
 
         /* Animations */
         @keyframes fadeInUp {
@@ -180,13 +213,14 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         #pf-wrap nav span:hover { color: ${a}; transition: color 200ms; }
         #pf-wrap a.pf-btn:hover { background: ${a}; color: #050505; }
         #pf-wrap a.pf-ghost:hover { background: rgba(${aRgb},0.08); }
+        #pf-wrap #pf-academic .timeline-scroll::-webkit-scrollbar { display: none; }
       `}</style>
 
       {/* NAV */}
       <nav style={navStyle}>
         <div style={s.logo}>&lt;<span style={{ color: a }}>/DevJ</span>&gt;</div>
         <div style={navLinksStyle}>
-          {['about','skills','projects','services','methodology','contact'].map(id => (
+          {['about','academic','skills','projects','github','services','methodology','contact'].map(id => (
             <span key={id} style={{ cursor:'pointer' }}
               onClick={() => document.getElementById(`pf-${id}`)?.scrollIntoView({ behavior:'smooth' })}>
               {id.toUpperCase()}
@@ -197,58 +231,515 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
       </nav>
 
       {/* HERO */}
-      <section id="pf-hero" style={heroSectionStyle}>
-        <div style={heroTextStyle}>
-          <div style={{ ...s.tag, display:'inline-block', marginBottom:16, fontSize:9, letterSpacing:'0.2em', color: a, border: `1px solid rgba(${aRgb},0.3)`, padding:'4px 12px' }}>
+      <section id="pf-hero" style={{ ...sectionStyle, minHeight:'85vh', padding: isMobile ? '40px 20px 32px' : '80px 60px', display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 0, position:'relative', overflow:'hidden' }}>
+        <div style={{
+          position:'absolute', top:'50%', left:'50%',
+          transform:'translate(-50%,-50%)',
+          fontFamily:'Fraunces, serif', fontSize: isMobile ? 80 : 180,
+          fontWeight:800, color:'rgba(255,255,255,0.015)',
+          letterSpacing:'-0.05em', whiteSpace:'nowrap',
+          pointerEvents:'none', userSelect:'none', zIndex:0,
+        }}>
+          DEVJ
+        </div>
+
+        <div style={{
+          display:'flex', flexDirection:'column', justifyContent:'center', gap:20,
+          position:'relative', zIndex:2,
+          paddingRight: isMobile ? 0 : 40,
+          borderRight: isMobile ? 'none' : '1px solid rgba(255,255,255,0.05)',
+        }}>
+          <div style={{
+            display:'inline-flex', alignItems:'center', gap:8,
+            padding:'5px 14px',
+            border:`1px solid rgba(${aRgb},0.25)`,
+            borderRadius:20,
+            fontFamily:'Space Mono, monospace', fontSize:8,
+            color:`rgba(${aRgb},0.8)`, letterSpacing:'0.2em',
+            width:'fit-content',
+          }}>
+            <div style={{ width:5, height:5, borderRadius:'50%', background:a, animation:'pulse 1.5s infinite' }}/>
             DÉVELOPPEUR FRONTEND & IA
           </div>
-          <h1 style={{ fontSize: isMobile ? 36 : 48, fontWeight:800, margin:'0 0 8px', lineHeight:1.1 }}>
-            Frejus <span style={s.accent}>Kouadio</span>
-          </h1>
-          <p style={{ color:'rgba(255,255,255,0.5)', fontSize:13, lineHeight:1.8, maxWidth:isMobile ? '100%' : 500, margin:'16px 0 32px' }}>
+
+          <div style={{
+            fontFamily:'Fraunces, serif',
+            fontSize: isMobile ? 32 : 56,
+            fontWeight:800, lineHeight:1,
+            letterSpacing:'-0.03em',
+          }}>
+            Fréjus<br/>
+            <span style={{ color:a }}>Kouadio</span>
+          </div>
+
+          <p style={{ color:'rgba(255,255,255,0.5)', fontSize:13, lineHeight:1.8, maxWidth:isMobile ? '100%' : 520, margin:0 }}>
             Passionné par la création d'expériences web exceptionnelles et l'intelligence artificielle. De Yamoussoukro à l'international.
           </p>
-          <div style={heroStatsStyle}>
-            {[['6','Projets'],['2+','Années'],['100%','Satisfaction']].map(([v,l]) => (
-              <div key={l} className="pf-card" style={s.card}>
-                <div style={{ fontSize:22, color:a, fontWeight:700, fontFamily: 'Syne, sans-serif' }}>{v}</div>
-                <div style={{ fontSize:9, color:'rgba(255,255,255,0.4)', letterSpacing:'0.2em', fontFamily: 'Space Mono, monospace' }}>{l}</div>
+
+          <div style={{
+            position:'relative',
+            height:56,
+            overflow:'hidden',
+            borderLeft:`2px solid rgba(${aRgb},0.3)`,
+            paddingLeft:14,
+          }}>
+            {citations.map((c, i) => (
+              <div
+                key={i}
+                style={{
+                  position:'absolute',
+                  top:0, left:14, right:0,
+                  fontFamily:'Fraunces, serif',
+                  fontSize:13,
+                  color:'rgba(255,255,255,0.5)',
+                  lineHeight:1.6,
+                  fontStyle:'italic',
+                  transition:'opacity 0.6s ease, transform 0.6s ease',
+                  opacity: i === citationIdx ? 1 : 0,
+                  transform: i === citationIdx
+                    ? 'translateY(0)'
+                    : i < citationIdx ? 'translateY(-12px)' : 'translateY(12px)',
+                  pointerEvents:'none',
+                }}
+              >
+                "{c}"
               </div>
             ))}
           </div>
-          <div style={heroButtonsStyle}>
-            <a href="mailto:devfred58@gmail.com" style={{ background: a, color:'#000', padding:'10px 24px', fontSize:9, letterSpacing:'0.2em', textDecoration:'none', fontWeight:700, textAlign:'center' }}>ME CONTACTER</a>
-            <a href="https://wa.me/2250767998373" target="_blank" rel="noopener" style={{ border:`1px solid rgba(${aRgb},0.4)`, color: a, padding:'10px 24px', fontSize:9, letterSpacing:'0.2em', textDecoration:'none', textAlign:'center' }}>WHATSAPP</a>
+
+          <div style={{
+            display:'flex', gap:5, alignItems:'center',
+          }}>
+            {citations.map((_, i) => (
+              <div
+                key={i}
+                onClick={() => setCitationIdx(i)}
+                style={{
+                  height:2,
+                  width: i === citationIdx ? 28 : 8,
+                  borderRadius:2,
+                  background: i === citationIdx
+                    ? a
+                    : 'rgba(255,255,255,0.12)',
+                  transition:'width 0.4s ease, background 0.4s ease',
+                  cursor:'pointer',
+                }}
+              />
+            ))}
+          </div>
+
+          <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+            {['REACT','NODE.JS','PYTHON','IA & ML','FIGMA'].map(t => (
+              <span key={t} style={{
+                padding:'4px 12px',
+                border:'1px solid rgba(255,255,255,0.08)',
+                borderRadius:4,
+                fontFamily:'Space Mono, monospace', fontSize:8,
+                color:'rgba(255,255,255,0.35)', letterSpacing:'0.1em',
+              }}>{t}</span>
+            ))}
+          </div>
+
+          <div style={{ display:'flex', flexDirection: isMobile ? 'column' : 'row', gap:12, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'center' : undefined }}>
+            <a href="mailto:devfred58@gmail.com" style={{
+              display:'inline-flex', alignItems:'center', justifyContent: isMobile ? 'center' : 'center',
+              gap:8, background:`rgba(${aRgb},0.1)`,
+              border:`1px solid rgba(${aRgb},0.35)`,
+              color:a, borderRadius:8, padding:'10px 24px',
+              fontFamily:'Space Mono, monospace', fontSize:9,
+              letterSpacing:'0.2em', textDecoration:'none', fontWeight:700,
+              width: isMobile ? '100%' : 'auto'
+            }}>
+              ME CONTACTER
+            </a>
+            <a href="https://wa.me/2250767998373" target="_blank" rel="noopener" style={{
+              display:'inline-flex', alignItems:'center', justifyContent: isMobile ? 'center' : 'center',
+              gap:8, background:'rgba(255,255,255,0.03)',
+              border:'1px solid rgba(255,255,255,0.08)',
+              color:'rgba(255,255,255,0.4)', borderRadius:8,
+              padding:'10px 24px', fontFamily:'Space Mono, monospace', fontSize:9,
+              letterSpacing:'0.2em', textDecoration:'none',
+              width: isMobile ? '100%' : 'auto'
+            }}>
+              WHATSAPP
+            </a>
           </div>
         </div>
-        <div style={{ flex:1, display:'flex', justifyContent:'center', width:isMobile ? '100%' : undefined }}>
-          <img src="/asset/2026010323251463.png" alt="Frejus Kouadio"
-            style={heroImageStyle} />
+
+        <div style={{ position:'relative', display:'flex', flexDirection:'column' }}>
+
+          <div style={{
+            position:'absolute',
+            top:0, right:0, bottom:0,
+            width: isMobile ? '100%' : '110%',
+            overflow:'hidden',
+            zIndex:0,
+          }}>
+            <img
+              src="/asset/2026010323251463.png"
+              alt="Fréjus Kouadio"
+              style={{
+                position:'absolute',
+                top:'-5%',
+                right:'-5%',
+                width:'100%',
+                height:'115%',
+                objectFit:'cover',
+                objectPosition:'top center',
+                display: isMobile ? 'none' : 'block',
+                filter:`drop-shadow(0 0 60px rgba(${aRgb},0.06))`,
+                maskImage:'linear-gradient(to left, rgba(0,0,0,0.85) 40%, transparent 100%)',
+                WebkitMaskImage:'linear-gradient(to left, rgba(0,0,0,0.85) 40%, transparent 100%)',
+              }}
+            />
+            <div style={{
+              position:'absolute', inset:0,
+              background:'linear-gradient(to right, #050505 0%, rgba(5,5,5,0.2) 50%, transparent 100%)',
+              zIndex:1,
+            }}/>
+            <div style={{
+              position:'absolute', inset:0,
+              background:'linear-gradient(to top, #050505 0%, transparent 40%)',
+              zIndex:1,
+            }}/>
+          </div>
+
+          <div style={{
+            position:'relative', zIndex:2,
+            marginTop:'auto',
+            borderTop:'1px solid rgba(255,255,255,0.04)',
+            display:'flex', gap:0,
+            minHeight: isMobile ? 'auto' : '85vh',
+            alignItems:'flex-end',
+          }}>
+            {[['6','PROJETS'],['2+','ANNÉES'],['100%','SATISFACTION']].map(([v,l], i) => (
+              <div key={l} style={{
+                flex:1, padding: isMobile ? '12px 10px' : '16px 20px',
+                borderRight: i < 2 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                display:'flex', flexDirection:'column', gap:4,
+              }}>
+                <div style={{
+                  fontFamily:'Fraunces, serif',
+                  fontSize: isMobile ? 16 : 22, fontWeight:800, color:a
+                }}>{v}</div>
+                <div style={{
+                  fontFamily:'Space Mono, monospace',
+                  fontSize: isMobile ? 6 : 7, color:'rgba(255,255,255,0.3)',
+                  letterSpacing:'0.2em'
+                }}>{l}</div>
+              </div>
+            ))}
+          </div>
         </div>
+
+        <div style={{ position:'absolute', bottom:0, left:0, right:0, height:1, background:`linear-gradient(90deg,transparent,rgba(${aRgb},0.2),transparent)` }} />
       </section>
 
       {/* ABOUT */}
       <section id="pf-about" style={sectionStyle}>
         <div style={s.secNum}>01 // À PROPOS</div>
         <h2 style={s.secTitle}>À Propos de <span style={s.accent}>Moi</span></h2>
-        <div style={aboutStyle}>
-          <img src="/asset/2026010323253284.png" alt="DevJ"
-            style={aboutImgStyle} />
-          <div style={{ flex:1 }}>
-            <p style={{ color:'rgba(255,255,255,0.7)', lineHeight:1.9, fontSize:13, marginBottom:16 }}>
-              Développeur Frontend passionné, spécialisé en React et intelligence artificielle. Conception d'interfaces performantes, accessibles et esthétiques, avec un souci du détail et de la performance.
-            </p>
-            <p style={{ color:'rgba(255,255,255,0.5)', lineHeight:1.9, fontSize:12 }}>
+        <div style={{
+          display:'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '260px 1fr',
+          gap: isMobile ? 24 : 48,
+          alignItems:'start',
+        }}>
+
+          <div style={{ position:'relative', borderRadius:16, overflow:'hidden' }}>
+            <img src="/asset/2026010323253284.png" alt="DevJ"
+              style={{
+                width:'100%', height:isMobile ? 180 : 340,
+                objectFit:'cover', objectPosition:'top',
+                display:'block', borderRadius:16,
+                filter:`drop-shadow(0 0 30px rgba(${aRgb},0.08))`,
+              }}
+            />
+            <div style={{
+              position:'absolute', inset:0,
+              background:'linear-gradient(180deg,transparent 55%,rgba(5,5,5,0.75) 100%)',
+              borderRadius:16,
+              pointerEvents:'none',
+            }}/>
+            <div style={{
+              position:'absolute', bottom:12, left:12, right:12,
+              background:'rgba(5,5,5,0.85)',
+              border:`1px solid rgba(${aRgb},0.2)`,
+              borderRadius:10, padding:'10px 12px',
+              backdropFilter:'blur(10px)',
+              WebkitBackdropFilter:'blur(10px)',
+            }}>
+              <div style={{
+                fontFamily:'Fraunces, serif',
+                fontSize:13, fontWeight:700,
+                color:'#F5F5F0', marginBottom:2,
+              }}>
+                Fréjus Kouadio
+              </div>
+              <div style={{
+                fontFamily:'Space Mono, monospace',
+                fontSize:8, color:`rgba(${aRgb},0.7)`,
+                letterSpacing:'0.15em',
+              }}>
+                DEV FULLSTACK · IA
+              </div>
+            </div>
+            {[['top','left'],['top','right'],['bottom','left'],['bottom','right']].map(([v,h], i) => (
+              <div key={i} style={{
+                position:'absolute', [v]:-1, [h]:-1,
+                width:16, height:16,
+                [`border${v.charAt(0).toUpperCase()+v.slice(1)}`]:`2px solid ${a}`,
+                [`border${h.charAt(0).toUpperCase()+h.slice(1)}`]:`2px solid ${a}`,
+              }}/>
+            ))}
+          </div>
+
+          <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
+            <div style={{ color:'rgba(255,255,255,0.7)', lineHeight:1.9, fontSize:13 }}>
+              Développeur Frontend passionné, spécialisé en <strong style={{ color:'rgba(255,255,255,0.85)', fontWeight:500 }}>React</strong> et <strong style={{ color:'rgba(255,255,255,0.85)', fontWeight:500 }}>intelligence artificielle</strong>. Conception d'interfaces performantes, accessibles et esthétiques, avec un souci du détail et de la performance.
+            </div>
+
+            <div style={{
+              padding:'16px 20px',
+              borderLeft:`2px solid rgba(${aRgb},0.4)`,
+              background:`rgba(${aRgb},0.04)`,
+              borderRadius:'0 8px 8px 0',
+              fontSize:13,
+              color:'rgba(255,255,255,0.65)',
+              lineHeight:1.8,
+              fontStyle:'italic',
+            }}>
               Actuellement en formation d'ingénieur en intelligence artificielle, basé à Yamoussoukro, Côte d'Ivoire. Disponible pour des projets locaux et internationaux.
-            </p>
-            <div style={aboutGridStyle}>
+            </div>
+
+            <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(2,1fr)', gap:12 }}>
               {[['Email','devfred58@gmail.com'],['Téléphone','+225 0767998373'],['Localisation','Yamoussoukro, CI'],['Disponibilité','Ouverts aux projets']].map(([k,v]) => (
-                <div key={k} className="pf-card" style={s.card}>
-                  <div style={{ fontSize:8, color:`rgba(${aRgb},0.5)`, letterSpacing:'0.2em', marginBottom:4, fontFamily: 'Space Mono, monospace' }}>{k}</div>
-                  <div style={{ fontSize:11, color:a, fontFamily: 'DM Sans, sans-serif' }}>{v}</div>
+                <div key={k} style={{
+                  background:'rgba(255,255,255,0.03)',
+                  border:'1px solid rgba(255,255,255,0.06)',
+                  borderRadius:10,
+                  padding:'12px 14px',
+                  position:'relative',
+                  overflow:'hidden',
+                }}>
+                  <div style={{
+                    position:'absolute', top:0, left:0, right:0, height:1,
+                    background:`linear-gradient(90deg,transparent,rgba(${aRgb},0.15),transparent)`,
+                  }}/>
+                  <div style={{ position:'relative' }}>
+                    <div style={{
+                      fontSize:7,
+                      color:`rgba(${aRgb},0.45)`,
+                      letterSpacing:'0.22em',
+                      fontFamily:'Space Mono, monospace',
+                      marginBottom:6,
+                    }}>{k.toUpperCase()}</div>
+                    <div style={{ fontSize:12, color:'rgba(255,255,255,0.85)', fontFamily:'Inter, sans-serif' }}>{v}</div>
+                  </div>
                 </div>
               ))}
             </div>
+
+            <div style={{
+              display:'inline-flex', alignItems:'center', gap:8,
+              padding:'8px 16px',
+              background:`rgba(${aRgb},0.06)`,
+              border:`1px solid rgba(${aRgb},0.18)`,
+              borderRadius:20,
+            }}>
+              <div style={{ width:6, height:6, borderRadius:'50%', background:a, animation:'pulse 1.4s infinite' }}/>
+              <span style={{
+                fontFamily:'Space Mono, monospace',
+                fontSize:8, color:`rgba(${aRgb},0.8)`,
+                letterSpacing:'0.15em',
+              }}>
+                DISPONIBLE POUR DE NOUVEAUX PROJETS
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PARCOURS ACADÉMIQUE */}
+      <section id="pf-academic" style={sectionStyle}>
+        <div style={s.secNum}>01.5 // PARCOURS</div>
+        <h2 style={s.secTitle}>Parcours <span style={s.accent}>Académique</span></h2>
+
+        {/* Conteneur de la timeline */}
+        <div className="timeline-scroll" style={{ position: 'relative', overflowX: isMobile ? 'auto' : 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: 32 }}>
+
+          {/* Ligne sinusoïdale SVG */}
+          <svg
+            viewBox="0 0 900 160"
+            preserveAspectRatio="none"
+            style={{
+              width: '100%',
+              minWidth: 600,
+              height: 160,
+              display: 'block',
+              overflow: 'visible',
+            }}
+          >
+            {/* Dégradé pour la courbe */}
+            <defs>
+              <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor={a} stopOpacity="0.1" />
+                <stop offset="40%" stopColor={a} stopOpacity="0.6" />
+                <stop offset="70%" stopColor={a} stopOpacity="0.9" />
+                <stop offset="100%" stopColor={a} stopOpacity="0.4" />
+              </linearGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* Courbe sinusoïdale */}
+            <path
+              d="M 0 80 C 100 80, 150 40, 225 80 S 375 120, 450 80 S 600 40, 675 80 S 825 120, 900 80"
+              fill="none"
+              stroke={`url(#waveGrad)`}
+              strokeWidth="2"
+              filter="url(#glow)"
+            />
+
+            {/* Points sur la courbe avec cercles */}
+            {[
+              { x: 225, y: 80, label: 'BEPC', annee: '2020 – 2021', desc: 'Brevet d\'Études du\nPremier Cycle', done: true },
+              { x: 450, y: 80, label: 'BAC', annee: '2023 – 2024', desc: 'Baccalauréat\nSérie D', done: true },
+              { x: 675, y: 80, label: 'LICENCE 2', annee: '2024 – 2025', desc: 'Génie Logiciel\nCycle Supérieur', done: false },
+            ].map((item, i) => (
+              <g key={i}>
+                {/* Halo extérieur */}
+                <circle
+                  cx={item.x} cy={item.y} r={item.done ? 22 : 26}
+                  fill="none"
+                  stroke={a}
+                  strokeWidth="1"
+                  strokeOpacity={item.done ? 0.2 : 0.5}
+                />
+                {/* Cercle principal */}
+                <circle
+                  cx={item.x} cy={item.y} r={item.done ? 14 : 18}
+                  fill={item.done ? `rgba(${aRgb},0.15)` : `rgba(${aRgb},0.25)`}
+                  stroke={a}
+                  strokeWidth={item.done ? 1.5 : 2}
+                  filter={item.done ? undefined : 'url(#glow)'}
+                />
+                {/* Point central */}
+                <circle
+                  cx={item.x} cy={item.y} r={item.done ? 4 : 6}
+                  fill={a}
+                  filter="url(#glow)"
+                />
+                {/* Ligne verticale vers le label */}
+                <line
+                  x1={item.x} y1={i % 2 === 0 ? item.y - 22 : item.y + 22}
+                  x2={item.x} y2={i % 2 === 0 ? item.y - 48 : item.y + 48}
+                  stroke={a}
+                  strokeWidth="1"
+                  strokeOpacity="0.4"
+                  strokeDasharray="3,3"
+                />
+              </g>
+            ))}
+          </svg>
+
+          {/* Labels texte positionnés sous/sur la courbe */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-around',
+            marginTop: -160,
+            minWidth: 600,
+            position: 'relative',
+            pointerEvents: 'none',
+          }}>
+            {[
+              { label: 'BEPC', annee: '2020 – 2021', desc: "Brevet d'Études\ndu Premier Cycle", done: true, top: false },
+              { label: 'BAC', annee: '2023 – 2024', desc: 'Baccalauréat\nSérie D', done: true, top: true },
+              { label: 'LICENCE 2', annee: '2024 – En cours', desc: 'Génie Logiciel\nCycle Supérieur', done: false, top: false },
+            ].map((item, i) => (
+              <div key={i} style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                width: '33%',
+                marginTop: item.top ? 0 : 100,
+              }}>
+                {/* Badge label */}
+                <div style={{
+                  fontFamily: 'Space Mono, monospace',
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: item.done ? a : '#fff',
+                  letterSpacing: '0.2em',
+                  background: item.done
+                    ? `rgba(${aRgb},0.1)`
+                    : `rgba(${aRgb},0.2)`,
+                  border: `1px solid ${item.done ? `rgba(${aRgb},0.3)` : a}`,
+                  padding: '4px 14px',
+                  borderRadius: 4,
+                  marginBottom: 6,
+                  boxShadow: item.done ? 'none' : `0 0 12px rgba(${aRgb},0.3)`,
+                }}>
+                  {item.label}
+                </div>
+
+                {/* Année */}
+                <div style={{
+                  fontFamily: 'Space Mono, monospace',
+                  fontSize: 9,
+                  color: a,
+                  letterSpacing: '0.15em',
+                  marginBottom: 4,
+                  opacity: 0.7,
+                }}>
+                  {item.annee}
+                </div>
+
+                {/* Description */}
+                <div style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: 11,
+                  color: 'rgba(255,255,255,0.5)',
+                  textAlign: 'center',
+                  lineHeight: 1.5,
+                  whiteSpace: 'pre-line',
+                }}>
+                  {item.desc}
+                </div>
+
+                {/* Badge "EN COURS" pour le dernier */}
+                {!item.done && (
+                  <div style={{
+                    marginTop: 8,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: `rgba(${aRgb},0.08)`,
+                    border: `1px solid rgba(${aRgb},0.25)`,
+                    borderRadius: 20,
+                    padding: '3px 10px',
+                  }}>
+                    <div style={{
+                      width: 6, height: 6,
+                      borderRadius: '50%',
+                      background: a,
+                      animation: 'pulse 1.4s infinite',
+                    }} />
+                    <span style={{
+                      fontFamily: 'Space Mono, monospace',
+                      fontSize: 8,
+                      color: a,
+                      letterSpacing: '0.15em',
+                    }}>EN COURS</span>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -259,19 +750,19 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         <h2 style={s.secTitle}>Compétences <span style={s.accent}>Techniques</span></h2>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:16 }}>
           {competences.map(cat => (
-            <div key={cat.cat} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius:16, padding:28, WebkitBackdropFilter:'blur(12px)', backdropFilter:'blur(12px)' }}>
+            <div key={cat.cat} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius:16, padding: isMobile ? 16 : 28, WebkitBackdropFilter:'blur(12px)', backdropFilter:'blur(12px)' }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
-                <div style={{ fontFamily:'Syne, sans-serif', fontWeight:700, fontSize:14, color:'#F5F5F0' }}>{cat.cat}</div>
+                <div style={{ fontFamily:'Fraunces, serif', fontWeight:700, fontSize:14, color:'#F5F5F0' }}>{cat.cat}</div>
                 <div style={{ fontFamily:'Space Mono, monospace', fontSize:9, color:`rgba(${aRgb},0.4)`, background:`rgba(${aRgb},0.06)`, border:`1px solid rgba(${aRgb},0.15)`, padding:'3px 8px', borderRadius:4 }}>{cat.items.length}</div>
               </div>
               <div style={{ display:'flex', flexWrap:'wrap', gap:10 }}>
                 {cat.items.map(([nom, pct]) => {
                   const indicatorColor = pct >= 85 ? a : (pct >= 70 ? `rgba(${aRgb},0.5)` : `rgba(${aRgb},0.25)`)
                   return (
-                    <div key={nom} className="pf-skill-pill" style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, padding:'8px 14px' }}>
+                    <div key={nom} className="pf-skill-pill" style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, padding: isMobile ? '6px 10px' : '8px 14px' }}>
                       <div style={{ width:6, height:6, borderRadius:6, background: indicatorColor, flexShrink:0 }} />
-                      <div style={{ fontFamily:'DM Sans, sans-serif', fontSize:13, color:'rgba(245,245,240,0.8)' }}>{nom}</div>
-                      <div style={{ fontFamily:'Space Mono, monospace', fontSize:10, color:`rgba(${aRgb},0.55)`, marginLeft:'auto' }}>{pct}%</div>
+                      <div style={{ fontFamily:'Inter, sans-serif', fontSize: isMobile ? 12 : 13, color:'rgba(245,245,240,0.8)' }}>{nom}</div>
+                      <div style={{ fontFamily:'Space Mono, monospace', fontSize: isMobile ? 9 : 10, color:`rgba(${aRgb},0.55)`, marginLeft:'auto' }}>{pct}%</div>
                     </div>
                   )
                 })}
@@ -286,163 +777,446 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         <div style={s.secNum}>03 // PROJETS</div>
         <h2 style={s.secTitle}>Mes Projets <span style={s.accent}>Réalisés</span></h2>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          {projets.map((p, idx) => {
-            const isEven = idx % 2 === 0
-            return (
-              <div key={p.num}
-                className="pf-project-card"
-                style={{
-                  display: 'flex',
-                  flexDirection: isMobile ? 'column' : (isEven ? 'row' : 'row-reverse'),
-                  background: 'rgba(255,255,255,0.025)',
-                  border: '1px solid rgba(255,255,255,0.07)',
-                  borderRadius: 20,
-                  overflow: 'hidden',
-                  minHeight: isMobile ? 'auto' : 280,
-                  transition: 'border-color 0.3s, transform 0.3s',
-                }}
-              >
-                {/* IMAGE */}
+        {/* 3 cartes aperçu */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+          gap: isMobile ? 10 : 20,
+          marginBottom: isMobile ? 24 : 40,
+        }}>
+          {projets.slice(0, 3).map((p) => (
+            <div key={p.num} style={{
+              position: 'relative',
+              borderRadius: 16,
+              overflow: 'hidden',
+              border: '1px solid rgba(255,255,255,0.07)',
+              background: 'rgba(255,255,255,0.02)',
+              cursor: 'pointer',
+              transition: 'transform 0.3s, border-color 0.3s',
+            }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translateY(-6px)'
+                e.currentTarget.style.borderColor = `rgba(${aRgb},0.35)`
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'
+              }}
+            >
+              {/* Image */}
+              <div style={{ position: 'relative', height: isMobile ? 100 : 160, overflow: 'hidden', maxHeight: isMobile ? 200 : 'none' }}>
+                <img src={p.img} alt={p.titre}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block', transition: 'transform 0.5s' }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                  onError={e => { e.currentTarget.style.display = 'none' }}
+                />
                 <div style={{
-                  width: isMobile ? '100%' : '48%',
-                  flexShrink: 0,
-                  position: 'relative',
-                  overflow: 'hidden',
-                  minHeight: isMobile ? 200 : 280,
+                  position: 'absolute', inset: 0,
+                  background: 'linear-gradient(to top, rgba(5,5,5,0.85) 0%, transparent 60%)',
+                }} />
+                <div style={{
+                  position: 'absolute', top: 12, left: 12,
+                  fontFamily: 'Space Mono, monospace', fontSize: 9,
+                  color: `rgba(${aRgb},0.7)`, letterSpacing: '0.2em',
+                  background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)',
+                  padding: '3px 8px', borderRadius: 4,
+                }}>{p.num}</div>
+              </div>
+
+              {/* Contenu */}
+              <div style={{ padding: isMobile ? '10px 12px 14px' : '16px 18px 20px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                  {p.tags.slice(0, isMobile ? 1 : 2).map(t => (
+                    <span key={t} style={{
+                      background: `rgba(${aRgb},0.08)`,
+                      border: `1px solid rgba(${aRgb},0.2)`,
+                      color: a, padding: '3px 10px',
+                      fontSize: 8, letterSpacing: '0.15em',
+                      borderRadius: 4, fontFamily: 'Space Mono, monospace',
+                    }}>{t}</span>
+                  ))}
+                </div>
+                <div style={{
+                  fontFamily: 'Fraunces, serif', fontWeight: 700,
+                  fontSize: isMobile ? 12 : 15, color: '#F5F5F0', marginBottom: isMobile ? 4 : 8, lineHeight: 1.3,
+                }}>{p.titre}</div>
+                <div style={{
+                  fontFamily: 'Inter, sans-serif', fontWeight: 300,
+                  fontSize: isMobile ? 10 : 12, color: 'rgba(245,245,240,0.45)',
+                  lineHeight: 1.65,
+                  display: '-webkit-box', WebkitLineClamp: isMobile ? 1 : 2,
+                  WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                }}>{p.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA — Voir tous les projets */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: isMobile ? 'flex-start' : 'center',
+          justifyContent: 'space-between',
+          padding: isMobile ? '16px 18px' : '24px 32px',
+          background: `rgba(${aRgb},0.04)`,
+          border: `1px solid rgba(${aRgb},0.15)`,
+          borderRadius: 16,
+          gap: 16,
+        }}>
+          <div>
+            <div style={{
+              fontFamily: 'Fraunces, serif', fontWeight: 700,
+              fontSize: isMobile ? 15 : 18, color: '#F5F5F0', marginBottom: 6,
+            }}>
+              Et {projets.length - 3} autres projets...
+            </div>
+            <div style={{
+              fontFamily: 'Inter, sans-serif', fontSize: isMobile ? 12 : 13,
+              color: 'rgba(255,255,255,0.4)', lineHeight: 1.6,
+            }}>
+              GSB, ZikmuCI, Terasse — des réalisations variées qui témoignent de ma polyvalence.
+            </div>
+          </div>
+
+          <a href="/projets" style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: isMobile ? 'center' : undefined, gap: 10,
+            background: a, color: '#050505',
+            padding: isMobile ? '11px 20px' : '12px 28px', borderRadius: 10,
+            fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 9 : 10,
+            letterSpacing: '0.18em', fontWeight: 700,
+            textDecoration: 'none', whiteSpace: 'nowrap',
+            flexShrink: 0,
+            transition: 'opacity 0.2s, transform 0.2s',
+            boxShadow: `0 0 24px rgba(${aRgb},0.25)`,
+            width: isMobile ? '100%' : 'auto'
+          }}
+            onMouseEnter={e => { e.currentTarget.style.opacity = '0.88'; e.currentTarget.style.transform = 'translateX(4px)' }}
+            onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateX(0)' }}
+          >
+            DÉCOUVRIR TOUS MES PROJETS →
+          </a>
+        </div>
+      </section>
+
+      {/* GITHUB ACTIVITY */}
+      <section id="pf-github" style={sectionStyle}>
+        <div style={s.secNum}>03.5 // ACTIVITÉ</div>
+        <h2 style={s.secTitle}>
+          Activité <span style={s.accent}>GitHub</span>
+        </h2>
+
+        {/* Sous-titre + lien */}
+        <div style={{
+          display: 'flex', justifyContent: 'space-between',
+          alignItems: 'center', marginBottom: 32,
+          flexWrap: 'wrap', gap: 12,
+        }}>
+          <div style={{
+            fontFamily: 'Space Mono, monospace', fontSize: 9,
+            color: `rgba(${aRgb},0.45)`, letterSpacing: '0.2em',
+          }}>
+            {githubData
+              ? `${githubData.total?.lastYear ?? '—'} CONTRIBUTIONS · DERNIÈRE ANNÉE`
+              : 'CHARGEMENT...'}
+          </div>
+          <a
+            href="https://github.com/DevJ-58"
+            target="_blank" rel="noopener"
+            style={{
+              fontFamily: 'Space Mono, monospace', fontSize: 9,
+              color: a, letterSpacing: '0.15em',
+              textDecoration: 'none',
+              border: `1px solid rgba(${aRgb},0.25)`,
+              borderRadius: 6, padding: '5px 14px',
+              background: `rgba(${aRgb},0.06)`,
+              transition: 'background 0.2s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = `rgba(${aRgb},0.12)`}
+            onMouseLeave={e => e.currentTarget.style.background = `rgba(${aRgb},0.06)`}
+          >
+            @DevJ-58 →
+          </a>
+        </div>
+
+        {/* Carte principale glass */}
+        <div style={{
+          background: 'rgba(255,255,255,0.025)',
+          border: '1px solid rgba(255,255,255,0.07)',
+          borderRadius: 20,
+          padding: isMobile ? '24px 16px' : '36px 40px',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          position: 'relative',
+          overflow: 'visible',
+        }}>
+
+          {/* Ligne lumineuse top */}
+          <div style={{
+            position: 'absolute', top: 0, left: 40, right: 40, height: 1,
+            background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.3),transparent)`,
+          }} />
+
+          {githubLoading && (
+            <div style={{
+              textAlign: 'center', padding: '40px 0',
+              fontFamily: 'Space Mono, monospace', fontSize: 9,
+              color: `rgba(${aRgb},0.4)`, letterSpacing: '0.2em',
+              animation: 'pulse 1.5s infinite',
+            }}>
+              // CONNEXION AU RÉSEAU GITHUB...
+            </div>
+          )}
+
+          {githubError && (
+            <div style={{
+              textAlign: 'center', padding: '40px 0',
+              fontFamily: 'Space Mono, monospace', fontSize: 9,
+              color: 'rgba(255,100,100,0.5)', letterSpacing: '0.15em',
+            }}>
+              // ERREUR DE CONNEXION — DONNÉES INDISPONIBLES
+            </div>
+          )}
+
+          {githubData && (() => {
+            // Regrouper les contributions par semaine
+            const contributions = githubData.contributions ?? []
+            
+            // Trouver le premier lundi
+            const weeks = []
+            let currentWeek = []
+            
+            contributions.forEach((day, i) => {
+              const date = new Date(day.date)
+              const dow = date.getDay() // 0=dim
+              if (i === 0) {
+                // Padding de début si on ne commence pas un dimanche
+                for (let p = 0; p < dow; p++) {
+                  currentWeek.push(null)
+                }
+              }
+              currentWeek.push(day)
+              if (dow === 6 || i === contributions.length - 1) {
+                // Padding de fin
+                while (currentWeek.length < 7) currentWeek.push(null)
+                weeks.push([...currentWeek])
+                currentWeek = []
+              }
+            })
+
+            const CELL = isMobile ? 10 : 13
+            const GAP = 3
+            const DAY_LABELS = ['', 'L', '', 'M', '', 'V', '']
+
+            // Mois pour les labels
+            const monthLabels = []
+            weeks.forEach((week, wi) => {
+              const first = week.find(d => d !== null)
+              if (!first) return
+              const d = new Date(first.date)
+              if (d.getDate() <= 7) {
+                monthLabels.push({
+                  wi,
+                  label: d.toLocaleDateString('fr-FR', { month: 'short' })
+                    .replace('.', '').toUpperCase()
+                })
+              }
+            })
+
+            return (
+              <div style={{ position: 'relative' }}>
+
+                {/* Labels mois */}
+                <div style={{
+                  display: 'flex', marginLeft: isMobile ? 0 : 28,
+                  marginBottom: 6, position: 'relative',
+                  height: 16,
                 }}>
-                  <img
-                    src={p.img}
-                    alt={p.titre}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      objectPosition: 'top center',
-                      display: 'block',
-                      transition: 'transform 0.6s ease',
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.04)'}
-                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                    onError={e => {
-                      e.currentTarget.parentElement.style.background = `rgba(${aRgb},0.04)`
-                      e.currentTarget.style.display = 'none'
-                    }}
-                  />
-                  {/* Overlay dégradé latéral */}
-                  <div style={{
-                    position: 'absolute', inset: 0,
-                    background: isEven
-                      ? 'linear-gradient(to right, transparent 60%, rgba(5,5,5,0.6) 100%)'
-                      : 'linear-gradient(to left, transparent 60%, rgba(5,5,5,0.6) 100%)',
-                    pointerEvents: 'none',
-                  }} />
-                  {/* Numéro flottant */}
-                  <div style={{
-                    position: 'absolute', top: 16,
-                    left: isEven ? 'auto' : 16,
-                    right: isEven ? 16 : 'auto',
-                    fontFamily: 'Space Mono, monospace',
-                    fontSize: 11,
-                    color: `rgba(${aRgb},0.5)`,
-                    letterSpacing: '0.2em',
-                    background: 'rgba(0,0,0,0.5)',
-                    backdropFilter: 'blur(8px)',
-                    padding: '4px 10px',
-                    borderRadius: 4,
-                  }}>{p.num}</div>
+                  {monthLabels.map(({ wi, label }) => (
+                    <div key={`${wi}-${label}`} style={{
+                      position: 'absolute',
+                      left: wi * (CELL + GAP),
+                      fontFamily: 'Space Mono, monospace',
+                      fontSize: 8,
+                      color: `rgba(${aRgb},0.4)`,
+                      letterSpacing: '0.1em',
+                      whiteSpace: 'nowrap',
+                    }}>{label}</div>
+                  ))}
                 </div>
 
-                {/* CONTENU */}
-                <div style={{
-                  flex: 1,
-                  padding: isMobile ? '24px 20px' : '36px 40px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  gap: 16,
-                }}>
-                  {/* Tags */}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {p.tags.map(t => (
-                      <span key={t} style={{
-                        background: `rgba(${aRgb},0.08)`,
-                        border: `1px solid rgba(${aRgb},0.2)`,
-                        color: a,
-                        padding: '4px 12px',
-                        fontSize: 9,
-                        letterSpacing: '0.18em',
-                        borderRadius: 4,
-                        fontFamily: 'Space Mono, monospace',
-                      }}>{t}</span>
-                    ))}
-                  </div>
-
-                  {/* Titre */}
-                  <h3 style={{
-                    fontFamily: 'Syne, sans-serif',
-                    fontWeight: 800,
-                    fontSize: isMobile ? 22 : 28,
-                    color: '#F5F5F0',
-                    margin: 0,
-                    lineHeight: 1.2,
-                  }}>{p.titre}</h3>
-
-                  {/* Ligne accent */}
-                  <div style={{
-                    width: 40, height: 2,
-                    background: `linear-gradient(90deg, ${a}, transparent)`,
-                  }} />
-
-                  {/* Description */}
-                  <p style={{
-                    fontFamily: 'DM Sans, sans-serif',
-                    fontWeight: 300,
-                    fontSize: 13,
-                    color: 'rgba(245,245,240,0.55)',
-                    lineHeight: 1.75,
-                    margin: 0,
-                  }}>{p.desc}</p>
-
-                  {/* Bouton */}
-                  {p.lien && (
-                    <div>
-                      <a
-                        href={p.lien}
-                        target="_blank"
-                        rel="noopener"
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 8,
-                          background: `rgba(${aRgb},0.1)`,
-                          border: `1px solid rgba(${aRgb},0.3)`,
-                          color: a,
+                <div style={{ display: 'flex', gap: 0 }}>
+                  {/* Labels jours */}
+                  {!isMobile && (
+                    <div style={{
+                      display: 'flex', flexDirection: 'column',
+                      gap: GAP, marginRight: 6, paddingTop: 0,
+                    }}>
+                      {DAY_LABELS.map((lbl, i) => (
+                        <div key={i} style={{
+                          height: CELL,
                           fontFamily: 'Space Mono, monospace',
-                          fontSize: 9,
-                          letterSpacing: '0.15em',
-                          padding: '10px 20px',
-                          borderRadius: 8,
-                          textDecoration: 'none',
-                          transition: 'background 0.2s, border-color 0.2s',
-                        }}
-                        onMouseEnter={e => {
-                          e.currentTarget.style.background = `rgba(${aRgb},0.2)`
-                          e.currentTarget.style.borderColor = a
-                        }}
-                        onMouseLeave={e => {
-                          e.currentTarget.style.background = `rgba(${aRgb},0.1)`
-                          e.currentTarget.style.borderColor = `rgba(${aRgb},0.3)`
-                        }}
-                      >
-                        VOIR LE PROJET →
-                      </a>
+                          fontSize: 7,
+                          color: `rgba(${aRgb},0.3)`,
+                          display: 'flex', alignItems: 'center',
+                          justifyContent: 'flex-end',
+                          width: 14,
+                        }}>{lbl}</div>
+                      ))}
                     </div>
                   )}
+
+                  {/* Grille */}
+                  <div style={{
+                    display: 'flex', gap: GAP,
+                    overflowX: 'auto',
+                    paddingBottom: 4,
+                  }}>
+                    {weeks.map((week, wi) => (
+                      <div key={wi} style={{
+                        display: 'flex', flexDirection: 'column', gap: GAP,
+                      }}>
+                        {week.map((day, di) => {
+                          if (!day) {
+                            return (
+                              <div key={di} style={{
+                                width: CELL, height: CELL,
+                                borderRadius: 3,
+                                background: 'transparent',
+                              }} />
+                            )
+                          }
+                          const color = getContribColor(day.count, a, aRgb)
+                          const isActive = day.count > 0
+                          return (
+                            <div
+                              key={di}
+                              style={{
+                                width: CELL, height: CELL,
+                                borderRadius: 3,
+                                background: color,
+                                border: isActive
+                                  ? `1px solid rgba(${aRgb},0.15)`
+                                  : '1px solid rgba(255,255,255,0.03)',
+                                cursor: isActive ? 'pointer' : 'default',
+                                transition: 'transform 0.15s, box-shadow 0.15s',
+                                boxShadow: day.count > 8
+                                  ? `0 0 6px rgba(${aRgb},0.5)`
+                                  : 'none',
+                                position: 'relative',
+                              }}
+                              onMouseEnter={e => {
+                                if (!isActive) return
+                                e.currentTarget.style.transform = 'scale(1.4)'
+                                e.currentTarget.style.boxShadow = `0 0 10px rgba(${aRgb},0.7)`
+                                e.currentTarget.style.zIndex = '50'
+                                const rect = e.currentTarget.getBoundingClientRect()
+                                setTooltipInfo({
+                                  x: rect.left + rect.width / 2,
+                                  y: rect.top - 8,
+                                  date: day.date,
+                                  count: day.count,
+                                })
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.transform = 'scale(1)'
+                                e.currentTarget.style.boxShadow = day.count > 8
+                                  ? `0 0 6px rgba(${aRgb},0.5)` : 'none'
+                                e.currentTarget.style.zIndex = 'auto'
+                                setTooltipInfo(null)
+                              }}
+                            />
+                          )
+                        })}
+                      </div>
+                    ))}
+                  </div>
                 </div>
+
+                {/* Légende */}
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  marginTop: 16, justifyContent: 'flex-end',
+                }}>
+                  <span style={{
+                    fontFamily: 'Space Mono, monospace', fontSize: 7,
+                    color: `rgba(${aRgb},0.3)`, letterSpacing: '0.1em',
+                  }}>MOINS</span>
+                  {[0, 2, 5, 9, 15].map(v => (
+                    <div key={v} style={{
+                      width: CELL, height: CELL, borderRadius: 3,
+                      background: getContribColor(v, a, aRgb),
+                      border: `1px solid rgba(${aRgb},0.1)`,
+                    }} />
+                  ))}
+                  <span style={{
+                    fontFamily: 'Space Mono, monospace', fontSize: 7,
+                    color: `rgba(${aRgb},0.3)`, letterSpacing: '0.1em',
+                  }}>PLUS</span>
+                </div>
+
               </div>
             )
-          })}
+          })()}
+
+          {/* Stats rapides sous la grille */}
+          {githubData && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4,1fr)',
+              gap: 12, marginTop: 28,
+              paddingTop: 24,
+              borderTop: `1px solid rgba(${aRgb},0.08)`,
+            }}>
+              {[
+                ['TOTAL', githubData.total?.lastYear ?? '—', 'contributions'],
+                ['STREAK', (() => {
+                  const contribs = githubData.contributions ?? []
+                  let max = 0, cur = 0
+                  contribs.forEach(d => {
+                    if (d.count > 0) { cur++; if (cur > max) max = cur }
+                    else cur = 0
+                  })
+                  return max
+                })(), 'jours consécutifs'],
+                ['ACTIF', (() => {
+                  const contribs = githubData.contributions ?? []
+                  return contribs.filter(d => d.count > 0).length
+                })(), 'jours actifs'],
+                ['BEST DAY', (() => {
+                  const contribs = githubData.contributions ?? []
+                  return Math.max(...contribs.map(d => d.count), 0)
+                })(), 'contributions max/jour'],
+              ].map(([label, value, sub]) => (
+                <div key={label} style={{
+                  padding: '14px 16px',
+                  background: `rgba(${aRgb},0.03)`,
+                  border: `1px solid rgba(${aRgb},0.1)`,
+                  borderRadius: 12,
+                  position: 'relative', overflow: 'hidden',
+                }}>
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, right: 0, height: 1,
+                    background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.2),transparent)`,
+                  }} />
+                  <div style={{
+                    fontFamily: 'Space Mono, monospace', fontSize: 7,
+                    color: `rgba(${aRgb},0.4)`, letterSpacing: '0.2em',
+                    marginBottom: 8,
+                  }}>{label}</div>
+                        <div style={{
+                          fontFamily: 'Fraunces, serif', fontWeight: 800,
+                          fontSize: isMobile ? 20 : 24, color: a, marginBottom: 4,
+                        }}>{value}</div>
+                  <div style={{
+                    fontFamily: 'Inter, sans-serif', fontSize: 10,
+                    color: 'rgba(255,255,255,0.3)',
+                  }}>{sub}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -453,13 +1227,13 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         <div style={servicesGridStyle}>
           {services.map((sv, idx) => {
             const isPopular = !!sv.badge
-            const cardStyle = { display:'flex', alignItems:'stretch', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', WebkitBackdropFilter:'blur(16px)', backdropFilter:'blur(16px)', borderRadius:16, overflow:'hidden', transition:'border-color 300ms, transform 300ms', padding:0 }
+            const cardStyle = { display:'flex', flexDirection: isMobile ? 'column' : 'row', alignItems:'stretch', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', WebkitBackdropFilter:'blur(16px)', backdropFilter:'blur(16px)', borderRadius:16, overflow:'hidden', transition:'border-color 300ms, transform 300ms', padding: isMobile ? '12px' : 0 }
             if (isPopular) { cardStyle.border = `1px solid rgba(${aRgb},0.25)`; cardStyle.background = `rgba(${aRgb},0.04)` }
-            const leftStyle = { width:260, flexShrink:0, background:`rgba(${aRgb},0.05)`, borderRight:'1px solid rgba(255,255,255,0.06)', padding:'28px 32px', display:'flex', flexDirection:'column', justifyContent:'center' }
-            const rightStyle = { flex:1, padding:'28px 36px', display:'flex', flexWrap:'wrap', alignContent:'center', gap:'10px 24px' }
+            const leftStyle = { width: isMobile ? '100%' : 260, flexShrink:0, background:`rgba(${aRgb},0.05)`, borderRight: isMobile ? 'none' : '1px solid rgba(255,255,255,0.06)', borderBottom: isMobile ? '1px solid rgba(255,255,255,0.06)' : 'none', padding: isMobile ? '18px 20px' : '28px 32px', display:'flex', flexDirection:'column', justifyContent:'center' }
+            const rightStyle = { flex:1, padding: isMobile ? '16px 18px' : '28px 36px', display:'flex', flexWrap:'wrap', alignContent:'center', gap:'10px 24px' }
             const badgeStyle = { background:a, color:'#050505', fontFamily:'Space Mono, monospace', fontSize:8, fontWeight:700, letterSpacing:'0.1em', padding:'4px 10px', borderRadius:4, display:'inline-block', marginBottom:16 }
-            const priceStyle = { fontFamily:'Syne, sans-serif', fontWeight:800, fontSize:28, color:a, marginBottom:6 }
-            const titleStyle = { fontFamily:'Syne, sans-serif', fontWeight:600, fontSize:16, color:'#F5F5F0', marginBottom:8 }
+            const priceStyle = { fontFamily:'Fraunces, serif', fontWeight:800, fontSize:isMobile ? 20 : 28, color:a, marginBottom:6 }
+            const titleStyle = { fontFamily:'Fraunces, serif', fontWeight:600, fontSize:isMobile ? 14 : 16, color:'#F5F5F0', marginBottom:8 }
             const delayStyle = { fontFamily:'Space Mono, monospace', fontSize:9, color:`rgba(${aRgb},0.45)`, display:'flex', alignItems:'center', gap:6 }
             return (
               <div key={sv.titre} className="pf-service-card pf-card" style={cardStyle}>
@@ -469,13 +1243,13 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                   <div style={priceStyle}>{sv.prix}</div>
                   <div style={titleStyle}>{sv.titre}</div>
                   <div style={delayStyle}><span style={{ color:a }}>●</span><span>Délai : {sv.delai}</span></div>
-                  <a href="mailto:devfred58@gmail.com" style={{ marginTop:24, background:`rgba(${aRgb},0.1)`, border:`1px solid rgba(${aRgb},0.3)`, color:a, fontFamily:'Space Mono, monospace', fontSize:9, letterSpacing:'0.18em', padding:'10px 20px', borderRadius:8, textDecoration:'none', display:'block', textAlign:'center' }}>COMMANDER</a>
+                  <a href="mailto:devfred58@gmail.com" style={{ marginTop: isMobile ? 14 : 24, background:`rgba(${aRgb},0.1)`, border:`1px solid rgba(${aRgb},0.3)`, color:a, fontFamily:'Space Mono, monospace', fontSize:isMobile ? 10 : 9, letterSpacing:'0.18em', padding:isMobile ? '12px 16px' : '10px 20px', borderRadius:8, textDecoration:'none', display:'block', textAlign:'center', width: isMobile ? '100%' : 'auto' }}>COMMANDER</a>
                 </div>
                 <div style={rightStyle}>
                   {sv.features.map((f, i) => (
                     <div key={f} style={{ display:'flex', alignItems:'center', gap:10, width: isMobile ? '100%' : 'calc(50% - 12px)', marginBottom:8 }}>
-                      <div style={{ width:18, height:18, flexShrink:0, background:`rgba(${aRgb},0.1)`, border:`1px solid rgba(${aRgb},0.25)`, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, color:a }}>✓</div>
-                      <div style={{ fontFamily:'DM Sans, sans-serif', fontWeight:300, fontSize:12, color:'rgba(245,245,240,0.65)' }}>{f}</div>
+                      <div style={{ width: isMobile ? 16 : 18, height: isMobile ? 16 : 18, flexShrink:0, background:`rgba(${aRgb},0.1)`, border:`1px solid rgba(${aRgb},0.25)`, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontSize:isMobile ? 9 : 10, color:a }}>✓</div>
+                      <div style={{ fontFamily:'Inter, sans-serif', fontWeight:300, fontSize:isMobile ? 11 : 12, color:'rgba(245,245,240,0.65)' }}>{f}</div>
                     </div>
                   ))}
                 </div>
@@ -489,16 +1263,137 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
       <section id="pf-methodology" style={sectionStyle}>
         <div style={s.secNum}>05 // MÉTHODE</div>
         <h2 style={s.secTitle}>Ma <span style={s.accent}>Méthode</span> de Travail</h2>
-        <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-          {etapes.map((e, i) => (
-            <div key={e.n} className="pf-card" style={{ ...s.card, display:'flex', gap:24, alignItems:'flex-start' }}>
-              <div style={{ fontSize:28, color:`rgba(${aRgb},0.2)`, fontWeight:700, minWidth:44, fontFamily: 'Syne, sans-serif' }}>{e.n}</div>
-              <div>
-                <div style={{ fontSize:13, fontWeight:700, marginBottom:6, color:a }}>{e.titre}</div>
-                <div style={{ fontSize:11, color:'rgba(255,255,255,0.5)', lineHeight:1.7 }}>{e.desc}</div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+          gap: isMobile ? 12 : 2,
+          position: 'relative',
+        }}>
+          {[
+            { n:'01', titre:'Analyse & Audit', desc:'Compréhension des besoins, définition des objectifs et cartographie complète du projet.', icon:'◈' },
+            { n:'02', titre:'Conception & UI', desc:'Design des maquettes, prototypage interactif et création de l\'identité visuelle.', icon:'◎' },
+            { n:'03', titre:'Développement', desc:'Codage propre et optimisé avec architecture scalable et maintenable.', icon:'⬡' },
+            { n:'04', titre:'Tests & Validation', desc:'Tests multi-navigateurs, validation performance, accessibilité et SEO.', icon:'◇' },
+            { n:'05', titre:'Déploiement', desc:'Mise en ligne sécurisée, formation et documentation complète.', icon:'◉' },
+          ].map((e, i) => {
+            const isLast = i === 4
+            return (
+              <div
+                key={e.n}
+                style={{
+                  position: 'relative',
+                  padding: isMobile ? '20px 18px' : '36px 32px',
+                  background: i % 2 === 0
+                    ? `rgba(${aRgb},0.04)`
+                    : 'rgba(255,255,255,0.02)',
+                  border: `1px solid rgba(${aRgb},${i % 2 === 0 ? '0.15' : '0.07'})`,
+                  borderRadius: 20,
+                  margin: isMobile ? 6 : 8,
+                  transition: 'transform 0.3s, border-color 0.3s, background 0.3s',
+                  gridColumn: isLast ? (isMobile ? '1 / -1' : '2 / 3') : 'auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 16,
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'translateY(-6px)'
+                  e.currentTarget.style.borderColor = `rgba(${aRgb},0.5)`
+                  e.currentTarget.style.background = `rgba(${aRgb},0.08)`
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.borderColor = `rgba(${aRgb},${i % 2 === 0 ? '0.15' : '0.07'})`
+                  e.currentTarget.style.background = i % 2 === 0
+                    ? `rgba(${aRgb},0.04)`
+                    : 'rgba(255,255,255,0.02)'
+                }}
+              >
+                {/* Ligne de connexion top */}
+                {i > 0 && !isMobile && (
+                  <div style={{
+                    position: 'absolute',
+                    top: -8,
+                    left: '50%',
+                    width: 1,
+                    height: 8,
+                    background: `linear-gradient(180deg, transparent, rgba(${aRgb},0.3))`,
+                  }} />
+                )}
+
+                {/* Header numéro + icône */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                }}>
+                  <div style={{
+                    fontFamily: 'Space Mono, monospace',
+                    fontSize: 11,
+                    color: `rgba(${aRgb},0.4)`,
+                    letterSpacing: '0.3em',
+                  }}>{e.n}</div>
+                  <div style={{
+                    width: isMobile ? 36 : 44,
+                    height: isMobile ? 36 : 44,
+                    borderRadius: '50%',
+                    background: `rgba(${aRgb},0.08)`,
+                    border: `1px solid rgba(${aRgb},0.2)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: isMobile ? 18 : 20,
+                    color: a,
+                  }}>{e.icon}</div>
+                </div>
+
+                {/* Ligne accent */}
+                <div style={{
+                  width: 32, height: 2,
+                  background: `linear-gradient(90deg, ${a}, transparent)`,
+                  borderRadius: 2,
+                }} />
+
+                {/* Titre */}
+                <div style={{
+                  fontFamily: 'Fraunces, serif',
+                  fontWeight: 700,
+                  fontSize: isMobile ? 14 : 16,
+                  color: '#F5F5F0',
+                  lineHeight: 1.3,
+                }}>{e.titre}</div>
+
+                {/* Description */}
+                <div style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 300,
+                  fontSize: isMobile ? 11 : 12,
+                  color: 'rgba(245,245,240,0.5)',
+                  lineHeight: 1.7,
+                }}>{e.desc}</div>
+
+                {/* Indicateur de progression */}
+                <div style={{
+                  marginTop: 'auto',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}>
+                  {[...Array(5)].map((_, dot) => (
+                      <div key={dot} style={{
+                      width: dot <= i ? (isMobile ? 14 : 20) : 6,
+                      height: 3,
+                      borderRadius: 2,
+                      background: dot <= i
+                        ? a
+                        : `rgba(${aRgb},0.15)`,
+                      transition: 'width 0.3s',
+                    }} />
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </section>
 
@@ -526,8 +1421,8 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               <div style={{ width: 12, height: 12, borderRadius: '50%', background: a }} />
               <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 10, color: `rgba(${aRgb},0.7)`, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Parler à AXIS</div>
             </div>
-            <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 16, color: '#F5F5F0', marginBottom: 10 }}>Découvrez mon portfolio</div>
-            <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 12, lineHeight: 1.6, color: 'rgba(245,245,240,0.72)', margin: 0, marginBottom: 14 }}>
+            <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, fontSize: 16, color: '#F5F5F0', marginBottom: 10 }}>Découvrez mon portfolio</div>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, lineHeight: 1.6, color: 'rgba(245,245,240,0.72)', margin: 0, marginBottom: 14 }}>
               Vous êtes sur la version directe du portfolio. Cliquez pour revenir à l'accueil ou explorer un projet.
             </p>
             <button
@@ -561,7 +1456,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           borderLeft: `3px solid ${a}`,
           borderRadius: 12,
         }}>
-          <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 15, color: 'rgba(255,255,255,0.75)', lineHeight: 1.8, margin: 0 }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, color: 'rgba(255,255,255,0.75)', lineHeight: 1.8, margin: 0 }}>
             Vous avez un projet web, une idée à concrétiser ou vous cherchez un développeur fullstack passionné par l'IA ? Je suis disponible pour des missions freelance, des collaborations et des opportunités à temps plein.
           </p>
         </div>
@@ -592,7 +1487,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           ].map(({ label, val, href, desc }) => (
             <a key={label} href={href} target="_blank" rel="noopener"
               className="pf-card"
-              style={{ ...s.card, textDecoration: 'none', display: 'block', transition: 'border-color 0.2s, transform 0.2s' }}
+              style={{ ...s.card, padding: isMobile ? '12px 12px' : s.card.padding, textDecoration: 'none', display: 'block', transition: 'border-color 0.2s, transform 0.2s', marginBottom: isMobile ? 0 : 20 }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = `rgba(${aRgb},0.35)`; e.currentTarget.style.transform = 'translateY(-3px)' }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.transform = 'translateY(0)' }}
             >
@@ -600,7 +1495,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                 <div style={{ fontSize: 8, color: `rgba(${aRgb},0.5)`, letterSpacing: '0.2em', fontFamily: 'Space Mono, monospace' }}>{label.toUpperCase()}</div>
                 <div style={{ fontSize: 8, color: `rgba(${aRgb},0.35)`, fontFamily: 'Space Mono, monospace' }}>{desc}</div>
               </div>
-              <div style={{ fontSize: 13, color: a, fontFamily: 'DM Sans, sans-serif', fontWeight: 500 }}>{val}</div>
+              <div style={{ fontSize: isMobile ? 11 : 13, color: a, fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>{val}</div>
             </a>
           ))}
         </div>
@@ -609,14 +1504,15 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         <div style={{ marginTop: 48, textAlign: 'center' }}>
           <a href="mailto:devfred58@gmail.com"
             style={{
-              display: 'inline-flex', alignItems: 'center', gap: 12,
+              display: 'inline-flex', alignItems: 'center', justifyContent: isMobile ? 'center' : undefined, gap: 12,
               background: a, color: '#050505',
-              padding: '16px 40px',
-              fontFamily: 'Space Mono, monospace', fontSize: 11,
+              padding: isMobile ? '14px 18px' : '16px 40px',
+              fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 11 : 11,
               letterSpacing: '0.2em', fontWeight: 700,
               textDecoration: 'none', borderRadius: 8,
               transition: 'opacity 0.2s, transform 0.2s',
               boxShadow: `0 0 30px rgba(${aRgb},0.3)`,
+              width: isMobile ? '100%' : 'auto'
             }}
             onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'translateY(-2px)' }}
             onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)' }}
@@ -631,21 +1527,22 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
 
       {/* FOOTER */}
       <footer style={{
-        padding: '40px 80px',
+        padding: isMobile ? '24px 20px' : '40px 80px',
         borderTop: `1px solid rgba(${aRgb},0.08)`,
         background: 'rgba(0,0,0,0.4)',
         display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: isMobile ? 'center' : 'center',
         flexWrap: 'wrap',
         gap: 16,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 14, color: '#F5F5F0', letterSpacing: '0.06em' }}>
+          <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, fontSize: 14, color: '#F5F5F0', letterSpacing: '0.06em' }}>
             &lt;<span style={{ color: a }}>/DevJ</span>&gt;
           </div>
           <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.08)' }} />
-          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: `rgba(${aRgb},0.45)`, letterSpacing: '0.15em' }}>
+          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: `rgba(${aRgb},0.45)`, letterSpacing: '0.15em', display: isMobile ? 'none' : 'block' }}>
             FRÉJUS KOUADIO · DEV FULLSTACK & IA
           </div>
         </div>
@@ -678,8 +1575,102 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         <PanneauParametres />
       </div>
 
+      {tooltipInfo && (
+        <div
+          style={{
+            position: 'fixed',
+            left: tooltipInfo.x,
+            top: tooltipInfo.y,
+            transform: 'translate(-50%, -100%)',
+            zIndex: 9999,
+            pointerEvents: 'none',
+            animation: 'fadeInUp 0.15s ease forwards',
+          }}
+        >
+          <div style={{
+            background: 'rgba(3,6,4,0.95)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: `1px solid ${a}`,
+            borderRadius: 10,
+            padding: '10px 14px',
+            minWidth: 160,
+            boxShadow: `0 0 20px rgba(${aRgb},0.3), 0 8px 32px rgba(0,0,0,0.5)`,
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            {/* Ligne lumineuse */}
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0, height: 1,
+              background: `linear-gradient(90deg,transparent,${a},transparent)`,
+            }} />
+            {/* Coins HUD */}
+            {[['top','left'],['top','right'],['bottom','left'],['bottom','right']].map(([v,h],i) => (
+              <div key={i} style={{
+                position:'absolute', [v]:4, [h]:4,
+                width:8, height:8,
+                [`border${v.charAt(0).toUpperCase()+v.slice(1)}`]:`1px solid ${a}`,
+                [`border${h.charAt(0).toUpperCase()+h.slice(1)}`]:`1px solid ${a}`,
+              }} />
+            ))}
+
+            {/* Date */}
+            <div style={{
+              fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 6 : 7,
+              color: `rgba(${aRgb},0.4)`, letterSpacing: '0.2em',
+              marginBottom: 8,
+            }}>
+              {new Date(tooltipInfo.date).toLocaleDateString('fr-FR', {
+                weekday: 'long', day: 'numeric',
+                month: 'long', year: 'numeric'
+              }).toUpperCase()}
+            </div>
+
+            {/* Compte */}
+            <div style={{
+              fontFamily: 'Fraunces, serif', fontWeight: 800,
+              fontSize: isMobile ? 16 : 20, color: a,
+              marginBottom: 2,
+            }}>
+              {tooltipInfo.count}
+            </div>
+            <div style={{
+              fontFamily: 'Inter, sans-serif', fontSize: 10,
+              color: 'rgba(255,255,255,0.4)',
+            }}>
+              contribution{tooltipInfo.count > 1 ? 's' : ''}
+            </div>
+
+            {/* Barre visuelle */}
+            <div style={{
+              marginTop: 8, height: 2,
+              background: 'rgba(255,255,255,0.05)',
+              borderRadius: 2, overflow: 'hidden',
+            }}>
+              <div style={{
+                width: `${Math.min((tooltipInfo.count / 15) * 100, 100)}%`,
+                height: '100%',
+                background: `linear-gradient(90deg,rgba(${aRgb},0.5),${a})`,
+                borderRadius: 2,
+              }} />
+            </div>
+
+            {/* Flèche bas */}
+            <div style={{
+              position: 'absolute', bottom: -6, left: '50%',
+              transform: 'translateX(-50%)',
+              width: 10, height: 6,
+              clipPath: 'polygon(0 0, 100% 0, 50% 100%)',
+              background: a,
+            }} />
+          </div>
+        </div>
+      )}
+
     </div>
   )
 })
 
 export default Portfolio
+
+
