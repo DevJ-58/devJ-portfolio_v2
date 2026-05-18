@@ -14,7 +14,6 @@ export default function InterfaceChat() {
   const estEnEcoute               = false
   const demarrerEcoute            = () => {}
   const arreterEcoute             = () => {}
-  const messageCourant            = ''
   const historique                = []
 
   // Défilement automatique vers le bas à chaque nouveau message

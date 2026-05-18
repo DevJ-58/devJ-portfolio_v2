@@ -4,7 +4,7 @@ import { interrogerAxis, obtenirMessageAccueil, detecterSection } from '@/servic
 import { useVoix } from './utiliserVoix'
 
 // Hook principal renommé pour utiliser AXIS au lieu de l'ancien nom devJAI
-export function utiliserAxis() {
+export function useAxis() {
   const {
     visiteur, devjai,
     ajouterMessage, definirMessageCourant,

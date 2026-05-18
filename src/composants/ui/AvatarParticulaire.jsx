@@ -162,7 +162,7 @@ export default function AvatarParticulaire({ width = 280, height = 280, etat = '
       })
     }
 
-    function drawStreams(e, f) {
+    function drawStreams(e) {
       streams.forEach(s => {
         const rate = e==='speaking' ? 0.55 : e==='thinking' ? 0.3 : 0.08
         if (!s.active && Math.random() < rate*0.04) s.active = true

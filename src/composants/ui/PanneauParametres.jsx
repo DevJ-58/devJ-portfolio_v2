@@ -15,9 +15,9 @@ export default function PanneauParametres() {
         onClick={() => setOuvert(o => !o)}
         style={{
           position: 'fixed',
-          bottom: 24,
+          top: 24,
           right: 24,
-          zIndex: 60,
+          zIndex: 110,
           width: 36,
           height: 36,
           borderRadius: '8px',
@@ -46,9 +46,9 @@ export default function PanneauParametres() {
       {ouvert && (
         <div style={{
           position: 'fixed',
-          bottom: 70,
+          top: 70,
           right: 24,
-          zIndex: 60,
+          zIndex: 110,
           width: 220,
           background: 'rgba(4,4,6,0.92)',
           backdropFilter: 'blur(24px)',

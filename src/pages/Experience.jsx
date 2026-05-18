@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import utiliserStore from '@/store/utiliserStore'
 import utiliserTheme from '@/store/utiliserTheme'
-import { utiliserAxis } from '@/hooks/utiliserDevJAI'
+import { useAxis } from '@/hooks/utiliserDevJAI'
 import AvatarParticulaire from '@/composants/ui/AvatarParticulaire'
 
 // Import du hook AXIS renommé sans changer le nom du fichier
@@ -71,7 +71,7 @@ export default function Experience() {
   const sectionEnAttenteRef = useRef(null)
   const [aiState, setAiState] = useState('idle')
 
-  const { envoyerMessage, estEnChargement, messageCourant } = utiliserAxis()
+  const { envoyerMessage, estEnChargement, messageCourant } = useAxis()
   const envoyerMessageRef = useRef(envoyerMessage)
   useEffect(() => {
     envoyerMessageRef.current = envoyerMessage
