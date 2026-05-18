@@ -18,7 +18,7 @@ export default function Accueil() {
   const [profil, setProfil] = useState(null)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [showThemeModal, setShowThemeModal] = useState(
-    () => !localStorage.getItem('devj-theme-chosen')
+    () => !sessionStorage.getItem('devj-theme-session')
   )
   const store = utiliserStore()
   const { theme, themes, changerTheme } = utiliserTheme()
@@ -63,7 +63,7 @@ export default function Accueil() {
     if (themeId) {
       changerTheme(themeId)
     }
-    localStorage.setItem('devj-theme-chosen', '1')
+    sessionStorage.setItem('devj-theme-session', '1')
     setShowThemeModal(false)
   }
 
@@ -257,26 +257,26 @@ export default function Accueil() {
             background: 'rgba(8,8,8,0.95)',
             border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: 24,
-            padding: isMobile ? '28px 18px' : '48px 40px',
+            padding: isMobile ? '20px 16px 24px' : '48px 40px',
             backdropFilter: 'blur(24px)',
             display: 'flex',
             flexDirection: 'column',
-            gap: isMobile ? 24 : 32,
+            gap: isMobile ? 16 : 32,
             fontFamily: 'Inter, sans-serif',
           }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{
                 fontFamily: 'Space Mono, monospace',
-                fontSize: 10,
-                letterSpacing: '0.35em',
+                fontSize: isMobile ? 8 : 10,
+                letterSpacing: isMobile ? '0.2em' : '0.35em',
                 color: 'rgba(255,255,255,0.35)',
-                marginBottom: 16,
+                marginBottom: isMobile ? 10 : 16,
               }}>
                 BIENVENUE SUR DEVJ PORTFOLIO
               </div>
               <h2 style={{
                 fontFamily: 'Fraunces, serif',
-                fontSize: isMobile ? 28 : 36,
+                fontSize: isMobile ? 20 : 36,
                 fontWeight: 800,
                 color: '#fff',
                 margin: 0,
@@ -286,9 +286,9 @@ export default function Accueil() {
               </h2>
               <p style={{
                 fontFamily: 'Inter, sans-serif',
-                fontSize: 14,
+                fontSize: isMobile ? 12 : 14,
                 color: 'rgba(255,255,255,0.5)',
-                marginTop: 12,
+                marginTop: isMobile ? 8 : 12,
                 lineHeight: 1.6,
               }}>
                 Personnalise ton expérience avant d'explorer.
@@ -298,8 +298,8 @@ export default function Accueil() {
 
             <div style={{
               display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
-              gap: isMobile ? 12 : 14,
+              gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(2, 1fr)',
+              gap: isMobile ? 8 : 14,
             }}>
               {themes.map((t) => (
                 <button
@@ -308,12 +308,12 @@ export default function Accueil() {
                   style={{
                     background: `rgba(${t.accentRgb},0.06)`,
                     border: `1px solid rgba(${t.accentRgb},0.25)`,
-                    borderRadius: 16,
-                    padding: '20px 18px',
+                    borderRadius: isMobile ? 12 : 16,
+                    padding: isMobile ? '12px 10px' : '20px 18px',
                     cursor: 'pointer',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 12,
+                    gap: isMobile ? 8 : 12,
                     alignItems: 'flex-start',
                     transition: 'all 0.2s',
                     textAlign: 'left',
@@ -338,8 +338,8 @@ export default function Accueil() {
                     gap: 10,
                   }}>
                     <div style={{
-                      width: 32,
-                      height: 32,
+                      width: isMobile ? 24 : 32,
+                      height: isMobile ? 24 : 32,
                       borderRadius: '50%',
                       background: t.accent,
                       boxShadow: `0 0 16px rgba(${t.accentRgb},0.5)`,
@@ -349,21 +349,22 @@ export default function Accueil() {
                       <div style={{
                         fontFamily: 'Syne, sans-serif',
                         fontWeight: 700,
-                        fontSize: 15,
+                        fontSize: isMobile ? 13 : 15,
                         color: '#fff',
                       }}>{t.nom || t.label}</div>
                       <div style={{
                         fontFamily: 'Space Mono, monospace',
-                        fontSize: 9,
+                        fontSize: isMobile ? 8 : 9,
                         color: t.accent,
                         letterSpacing: '0.15em',
-                        marginTop: 2,
+                        marginTop: isMobile ? 1 : 2,
                       }}>{t.accent}</div>
                     </div>
                   </div>
                   <div style={{
                     width: '100%',
-                    height: 6,
+                    height: isMobile ? 4 : 6,
+                    marginTop: isMobile ? 8 : 0,
                     borderRadius: 999,
                     background: `linear-gradient(90deg, 
                       ${t.accent}, 
@@ -380,11 +381,12 @@ export default function Accueil() {
                 border: 'none',
                 color: 'rgba(255,255,255,0.3)',
                 fontFamily: 'Space Mono, monospace',
-                fontSize: 10,
+                fontSize: isMobile ? 9 : 10,
                 letterSpacing: '0.2em',
                 cursor: 'pointer',
                 textAlign: 'center',
-                padding: '8px',
+                padding: isMobile ? '6px' : '8px',
+                marginTop: isMobile ? 4 : 0,
               }}
             >
               PASSER — GARDER LE THÈME ACTUEL

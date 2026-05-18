@@ -186,6 +186,228 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
   const contactGridStyle = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: isMobile ? 8 : 12 }
   const navLinksStyle = { display: isMobile ? 'none' : 'flex', gap: 16, fontSize: 9, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.2em', fontFamily: 'Space Mono, monospace', textTransform: 'uppercase' }
 
+  function AxisBouton({ isMobile, a, aRgb, navigate }) {
+    const [survol, setSurvol] = useState(false)
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: isMobile ? 16 : 24,
+        right: isMobile ? 12 : 24,
+        zIndex: 40,
+      }}>
+        <style>{`
+          @keyframes axisRing {
+            0%   { transform: scale(1);   opacity: 0.6; }
+            100% { transform: scale(1.5); opacity: 0; }
+          }
+          @keyframes axisPulse {
+            0%,100% { opacity: 1; }
+            50%      { opacity: 0.4; }
+          }
+          @keyframes axisScan {
+            from { top: 0%; }
+            to   { top: 100%; }
+          }
+          @keyframes tooltipIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
+        `}</style>
+
+        {/* Tooltip au survol */}
+        {survol && (
+          <div style={{
+            position: 'absolute',
+            bottom: isMobile ? 52 : 62,
+            left: 0,
+            width: isMobile ? 200 : 220,
+            background: 'rgba(4,4,6,0.96)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: `1px solid rgba(${aRgb},0.25)`,
+            borderRadius: 10,
+            padding: '10px 12px',
+            animation: 'tooltipIn 0.2s ease forwards',
+            pointerEvents: 'none',
+          }}>
+            {/* Ligne lumineuse top */}
+            <div style={{
+              position: 'absolute', top: 0, left: 12, right: 12, height: 1,
+              background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.4),transparent)`,
+            }} />
+
+            {/* Flèche bas */}
+            <div style={{
+              position: 'absolute',
+              bottom: -5, left: 18,
+              width: 8, height: 5,
+              clipPath: 'polygon(0 0, 100% 0, 50% 100%)',
+              background: `rgba(${aRgb},0.3)`,
+            }} />
+
+            <div style={{
+              fontFamily: 'Space Mono, monospace',
+              fontSize: 8,
+              color: `rgba(${aRgb},0.5)`,
+              letterSpacing: '0.2em',
+              marginBottom: 5,
+            }}>AXIS // IA</div>
+
+            <div style={{
+              fontFamily: 'Inter, sans-serif',
+              fontSize: isMobile ? 10 : 11,
+              color: 'rgba(255,255,255,0.75)',
+              lineHeight: 1.55,
+            }}>
+              Optimisez votre expérience en conversant avec AXIS, l'IA de Fréjus.
+            </div>
+          </div>
+        )}
+
+        {/* Bouton principal */}
+        <div
+          onClick={() => navigate('/')}
+          onMouseEnter={() => setSurvol(true)}
+          onMouseLeave={() => setSurvol(false)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: isMobile ? 0 : 10,
+            cursor: 'pointer',
+          }}
+        >
+          {/* Cercle HUD */}
+          <div style={{
+            position: 'relative',
+            width: isMobile ? 44 : 52,
+            height: isMobile ? 44 : 52,
+            flexShrink: 0,
+          }}>
+            {/* Anneaux pulsants */}
+            <div style={{
+              position: 'absolute', inset: -4,
+              borderRadius: '50%',
+              border: `1px solid rgba(${aRgb},0.4)`,
+              animation: 'axisRing 2s ease-out infinite',
+              pointerEvents: 'none',
+            }} />
+            <div style={{
+              position: 'absolute', inset: -4,
+              borderRadius: '50%',
+              border: `1px solid rgba(${aRgb},0.2)`,
+              animation: 'axisRing 2s ease-out infinite',
+              animationDelay: '0.7s',
+              pointerEvents: 'none',
+            }} />
+
+            {/* Cercle principal */}
+            <div style={{
+              width: '100%', height: '100%',
+              borderRadius: '50%',
+              background: survol
+                ? `rgba(${aRgb},0.12)`
+                : 'rgba(4,4,6,0.9)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              border: `1px solid rgba(${aRgb},${survol ? '0.6' : '0.35'})`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              overflow: 'hidden',
+              boxShadow: survol
+                ? `0 0 28px rgba(${aRgb},0.35)`
+                : `0 0 16px rgba(${aRgb},0.15)`,
+              transition: 'all 0.25s',
+            }}>
+              {/* Scan interne */}
+              <div style={{
+                position: 'absolute',
+                left: 0, right: 0, height: 1,
+                background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.6),transparent)`,
+                animation: 'axisScan 2s linear infinite',
+                zIndex: 2, pointerEvents: 'none',
+              }} />
+
+              {/* Hexagone SVG */}
+              <svg
+                width={isMobile ? 20 : 24}
+                height={isMobile ? 20 : 24}
+                viewBox="0 0 24 24"
+                fill="none"
+                style={{ position: 'relative', zIndex: 3 }}
+              >
+                <polygon
+                  points="12,2 20,7 20,17 12,22 4,17 4,7"
+                  stroke={a}
+                  strokeWidth="1.2"
+                  fill={`rgba(${aRgb},0.1)`}
+                />
+                <circle cx="12" cy="12" r="3" fill={a}
+                  style={{ animation: 'axisPulse 1.8s infinite' }}
+                />
+              </svg>
+            </div>
+
+            {/* Point statut */}
+            <div style={{
+              position: 'absolute', bottom: 1, right: 1,
+              width: isMobile ? 7 : 8, height: isMobile ? 7 : 8,
+              borderRadius: '50%',
+              background: a,
+              border: '1.5px solid #040406',
+              boxShadow: `0 0 6px ${a}`,
+              animation: 'axisPulse 1.4s infinite',
+              zIndex: 4,
+            }} />
+          </div>
+
+          {/* Label — masqué sur mobile */}
+          {!isMobile && (
+            <div style={{
+              background: 'rgba(4,4,6,0.88)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              border: `1px solid rgba(${aRgb},${survol ? '0.35' : '0.18'})`,
+              borderRadius: 10,
+              padding: '8px 14px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
+              transition: 'border-color 0.25s',
+            }}>
+              <div style={{
+                fontFamily: 'Space Mono, monospace',
+                fontSize: 7,
+                color: `rgba(${aRgb},0.45)`,
+                letterSpacing: '0.22em',
+              }}>AXIS // IA</div>
+              <div style={{
+                fontFamily: 'Space Mono, monospace',
+                fontSize: 9,
+                color: a,
+                letterSpacing: '0.15em',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}>
+                <span style={{
+                  width: 5, height: 5,
+                  borderRadius: '50%',
+                  background: a,
+                  display: 'inline-block',
+                  animation: 'axisPulse 1.4s infinite',
+                }} />
+                PARLER À AXIS
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={s.wrap} id="pf-wrap">
       <style>{`
@@ -214,6 +436,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         #pf-wrap a.pf-btn:hover { background: ${a}; color: #050505; }
         #pf-wrap a.pf-ghost:hover { background: rgba(${aRgb},0.08); }
         #pf-wrap #pf-academic .timeline-scroll::-webkit-scrollbar { display: none; }
+        #pf-github .github-scroll::-webkit-scrollbar { display: none; }
       `}</style>
 
       {/* NAV */}
@@ -1026,121 +1249,146 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             })
 
             return (
-              <div style={{ position: 'relative', overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
+              <div style={{ position: 'relative' }}>
 
-                {/* Labels mois */}
+                {/* UN SEUL div scrollable qui contient labels + grille ensemble */}
                 <div style={{
-                  display: 'flex', marginLeft: isMobile ? 0 : 28,
-                  marginBottom: 6, position: 'relative',
-                  height: 16,
-                  overflowX: 'hidden',
-                  minWidth: 0,
-                    maxWidth: '100%',
+                  overflowX: 'auto',
+                  WebkitOverflowScrolling: 'touch',
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none',
+                  paddingBottom: 4,
                 }}>
-                  {monthLabels.map(({ wi, label }) => (
-                    <div key={`${wi}-${label}`} style={{
-                      position: 'absolute',
-                      left: wi * (CELL + GAP),
-                      fontFamily: 'Space Mono, monospace',
-                      fontSize: 8,
-                      color: `rgba(${aRgb},0.4)`,
-                      letterSpacing: '0.1em',
-                      whiteSpace: 'nowrap',
-                    }}>{label}</div>
-                  ))}
-                </div>
+                  <style>{`
+                    .github-unified::-webkit-scrollbar { display: none; }
+                  `}</style>
 
-                <div style={{ display: 'flex', gap: 0, maxWidth: '100%', overflow: 'visible' }}>
-                  {/* Labels jours */}
-                  {!isMobile && (
+                  {/* Conteneur interne à largeur fixe — labels + grille alignés */}
+                  <div
+                    className="github-unified"
+                    style={{
+                      display: 'inline-flex',
+                      flexDirection: 'column',
+                      minWidth: 'max-content',
+                    }}
+                  >
+                    {/* Labels mois — même largeur que la grille */}
                     <div style={{
-                      display: 'flex', flexDirection: 'column',
-                      gap: GAP, marginRight: 6, paddingTop: 0,
+                      display: 'flex',
+                      marginLeft: !isMobile ? 28 : 0,
+                      marginBottom: 6,
+                      height: 16,
+                      position: 'relative',
                     }}>
-                      {DAY_LABELS.map((lbl, i) => (
-                        <div key={i} style={{
-                          height: CELL,
+                      {monthLabels.map(({ wi, label }) => (
+                        <div key={`${wi}-${label}`} style={{
+                          position: 'absolute',
+                          left: wi * (CELL + GAP),
                           fontFamily: 'Space Mono, monospace',
-                          fontSize: 7,
-                          color: `rgba(${aRgb},0.3)`,
-                          display: 'flex', alignItems: 'center',
-                          justifyContent: 'flex-end',
-                          width: 14,
-                        }}>{lbl}</div>
+                          fontSize: 8,
+                          color: `rgba(${aRgb},0.4)`,
+                          letterSpacing: '0.1em',
+                          whiteSpace: 'nowrap',
+                        }}>{label}</div>
                       ))}
                     </div>
-                  )}
 
-                  {/* Grille */}
-                  <div style={{
-                    display: 'flex', gap: GAP,
-                    overflowX: 'auto',
-                    paddingBottom: 4,
-                    maxWidth: '100%',
-                    minWidth: 0,
-                  }}>
-                    {weeks.map((week, wi) => (
-                      <div key={wi} style={{
-                        display: 'flex', flexDirection: 'column', gap: GAP,
+                    {/* Labels jours + grille côte à côte */}
+                    <div style={{ display: 'flex', gap: 0 }}>
+                      {/* Labels jours — desktop uniquement */}
+                      {!isMobile && (
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: GAP,
+                          marginRight: 6,
+                        }}>
+                          {DAY_LABELS.map((lbl, i) => (
+                            <div key={i} style={{
+                              height: CELL,
+                              fontFamily: 'Space Mono, monospace',
+                              fontSize: 7,
+                              color: `rgba(${aRgb},0.3)`,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'flex-end',
+                              width: 14,
+                            }}>{lbl}</div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Grille des semaines */}
+                      <div style={{
+                        display: 'flex',
+                        gap: GAP,
                       }}>
-                        {week.map((day, di) => {
-                          if (!day) {
-                            return (
-                              <div key={di} style={{
-                                width: CELL, height: CELL,
-                                borderRadius: 3,
-                                background: 'transparent',
-                              }} />
-                            )
-                          }
-                          const color = getContribColor(day.count, a, aRgb)
-                          const isActive = day.count > 0
-                          return (
-                            <div
-                              key={di}
-                              style={{
-                                width: CELL, height: CELL,
-                                borderRadius: 3,
-                                background: color,
-                                border: isActive
-                                  ? `1px solid rgba(${aRgb},0.15)`
-                                  : '1px solid rgba(255,255,255,0.03)',
-                                cursor: isActive ? 'pointer' : 'default',
-                                transition: 'transform 0.15s, box-shadow 0.15s',
-                                boxShadow: day.count > 8
-                                  ? `0 0 6px rgba(${aRgb},0.5)`
-                                  : 'none',
-                                position: 'relative',
-                              }}
-                              onMouseEnter={e => {
-                                if (!isActive) return
-                                e.currentTarget.style.transform = 'scale(1.4)'
-                                e.currentTarget.style.boxShadow = `0 0 10px rgba(${aRgb},0.7)`
-                                e.currentTarget.style.zIndex = '50'
-                                const rect = e.currentTarget.getBoundingClientRect()
-                                setTooltipInfo({
-                                  x: rect.left + rect.width / 2,
-                                  y: rect.top - 8,
-                                  date: day.date,
-                                  count: day.count,
-                                })
-                              }}
-                              onMouseLeave={e => {
-                                e.currentTarget.style.transform = 'scale(1)'
-                                e.currentTarget.style.boxShadow = day.count > 8
-                                  ? `0 0 6px rgba(${aRgb},0.5)` : 'none'
-                                e.currentTarget.style.zIndex = 'auto'
-                                setTooltipInfo(null)
-                              }}
-                            />
-                          )
-                        })}
+                        {weeks.map((week, wi) => (
+                          <div key={wi} style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: GAP,
+                          }}>
+                            {week.map((day, di) => {
+                              if (!day) {
+                                return (
+                                  <div key={di} style={{
+                                    width: CELL, height: CELL,
+                                    borderRadius: 3,
+                                    background: 'transparent',
+                                  }} />
+                                )
+                              }
+                              const color = getContribColor(day.count, a, aRgb)
+                              const isActive = day.count > 0
+                              return (
+                                <div
+                                  key={di}
+                                  style={{
+                                    width: CELL, height: CELL,
+                                    borderRadius: 3,
+                                    background: color,
+                                    border: isActive
+                                      ? `1px solid rgba(${aRgb},0.15)`
+                                      : '1px solid rgba(255,255,255,0.03)',
+                                    cursor: isActive ? 'pointer' : 'default',
+                                    transition: 'transform 0.15s, box-shadow 0.15s',
+                                    boxShadow: day.count > 8
+                                      ? `0 0 6px rgba(${aRgb},0.5)`
+                                      : 'none',
+                                    position: 'relative',
+                                  }}
+                                  onMouseEnter={e => {
+                                    if (!isActive) return
+                                    e.currentTarget.style.transform = 'scale(1.4)'
+                                    e.currentTarget.style.boxShadow = `0 0 10px rgba(${aRgb},0.7)`
+                                    e.currentTarget.style.zIndex = '50'
+                                    const rect = e.currentTarget.getBoundingClientRect()
+                                    setTooltipInfo({
+                                      x: rect.left + rect.width / 2,
+                                      y: rect.top - 8,
+                                      date: day.date,
+                                      count: day.count,
+                                    })
+                                  }}
+                                  onMouseLeave={e => {
+                                    e.currentTarget.style.transform = 'scale(1)'
+                                    e.currentTarget.style.boxShadow = day.count > 8
+                                      ? `0 0 6px rgba(${aRgb},0.5)` : 'none'
+                                    e.currentTarget.style.zIndex = 'auto'
+                                    setTooltipInfo(null)
+                                  }}
+                                />
+                              )
+                            })}
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    </div>
                   </div>
                 </div>
 
-                {/* Légende */}
+                {/* Légende — en dehors du scroll */}
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 6,
                   marginTop: 16, justifyContent: 'flex-end',
@@ -1411,48 +1659,12 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         <h2 style={s.secTitle}>Travaillons <span style={s.accent}>Ensemble</span></h2>
 
         {accesDirecte && (
-          <div style={{
-            position: 'fixed',
-            bottom: 24,
-            right: 24,
-            zIndex: 40,
-            width: isMobile ? 'calc(100% - 32px)' : 280,
-            padding: '18px 20px',
-            background: 'rgba(5,5,5,0.85)',
-            border: `1px solid rgba(${aRgb},0.24)`,
-            borderRadius: 20,
-            boxShadow: '0 24px 60px rgba(0,0,0,0.35)',
-            backdropFilter: 'blur(18px)',
-            WebkitBackdropFilter: 'blur(18px)',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-              <div style={{ width: 12, height: 12, borderRadius: '50%', background: a }} />
-              <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 10, color: `rgba(${aRgb},0.7)`, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Parler à AXIS</div>
-            </div>
-            <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, fontSize: 16, color: '#F5F5F0', marginBottom: 10 }}>Découvrez mon portfolio</div>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, lineHeight: 1.6, color: 'rgba(245,245,240,0.72)', margin: 0, marginBottom: 14 }}>
-              Vous êtes sur la version directe du portfolio. Cliquez pour revenir à l'accueil ou explorer un projet.
-            </p>
-            <button
-              onClick={() => navigate('/')}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                background: a,
-                color: '#050505',
-                border: 'none',
-                borderRadius: 12,
-                fontFamily: 'Space Mono, monospace',
-                fontSize: 11,
-                letterSpacing: '0.18em',
-                cursor: 'pointer',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.95' }}
-              onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
-            >
-              Retour à l'accueil
-            </button>
-          </div>
+          <AxisBouton
+            isMobile={isMobile}
+            a={a}
+            aRgb={aRgb}
+            navigate={navigate}
+          />
         )}
 
         {/* Phrase d'accroche */}

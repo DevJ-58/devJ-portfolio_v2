@@ -1,6 +1,9 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
-const utiliserStore = create((definir) => ({
+const utiliserStore = create(
+  persist(
+    (definir) => ({
 
   // ── Données du visiteur ──────────────────────────────────────────
   visiteur: {
@@ -45,6 +48,13 @@ const utiliserStore = create((definir) => ({
     definir((e) => ({ portfolio: { ...e.portfolio, sectionActive: section } })),
   definirEnTransition:  (valeur) =>
     definir((e) => ({ portfolio: { ...e.portfolio, estEnTransition: valeur } })),
-}))
+    }),
+    {
+      name: 'devj-visiteur',
+      partialize: (state) => ({ visiteur: state.visiteur }),
+      // Ne persister que visiteur, pas les états temporaires
+    }
+  )
+)
 
 export default utiliserStore
