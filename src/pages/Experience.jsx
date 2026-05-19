@@ -24,9 +24,23 @@ const AvatarStable = React.memo(function AvatarStable({ etat }) {
 export default function Experience() {
   const { visiteur } = utiliserStore()
   const naviguer = useNavigate()
-  const { theme } = utiliserTheme()
+  const { theme, setTheme, mode, getThemeEffectif } = utiliserTheme()
+  const eff = getThemeEffectif ? getThemeEffectif() : theme
+  const isLight = mode === 'light'
   const a = theme.accent
   const aRgb = theme.accentRgb
+  const overlayBg = isLight ? 'rgba(15,23,42,0.12)' : 'rgba(0,0,0,0.35)'
+
+  useEffect(() => {
+    const handler = (e) => {
+      const { setMode, mode } = utiliserTheme.getState
+        ? utiliserTheme.getState()
+        : {}
+      if (setMode && mode !== e.detail) setMode(e.detail)
+    }
+    window.addEventListener('axis-set-mode', handler)
+    return () => window.removeEventListener('axis-set-mode', handler)
+  }, [])
 
   const [modeVocal, setModeVocal] = useState(true)
   const [modeChat, setModeChat] = useState(false)
@@ -97,7 +111,7 @@ export default function Experience() {
       contact:     ['contact', 'joindre', 'whatsapp', 'email', 'appeler', 'disponible'],
       parcours:    ['parcours', 'expérience', 'formation', 'études', 'cursus',
                      'diplôme', 'à propos', 'about', 'qui est', 'qui es',
-                     'présente', 'présentation', 'bio', 'profil', 'frejus'],
+                     'présente', 'présentation', 'bio', 'profil', 'frejus', 'académique'],
     }
     Object.entries(intentionsUsr).forEach(([cat, mots]) => {
       mots.forEach(m => { if (usr.includes(m)) scores[cat] += 4 })
@@ -172,14 +186,85 @@ export default function Experience() {
     return () => clearInterval(id)
   }, [])
 
+  const parseEtExecuterCommande = useCallback((texteReponse) => {
+    const match = texteReponse.match(/<AXIS_CMD>(.*?)<\/AXIS_CMD>/s)
+    if (!match) return texteReponse
+
+    try {
+      const cmd = JSON.parse(match[1])
+
+      switch (cmd.action) {
+        case 'SET_CHAT':
+          setModeChat(cmd.valeur === 'on')
+          break
+        case 'SET_VOCAL':
+          setModeVocal(cmd.valeur === 'on')
+          break
+        case 'SET_MICRO':
+          if (cmd.valeur === 'on') {
+            setModeParler(true)
+            modeParlerRef.current = true
+          } else {
+            setModeParler(false)
+            modeParlerRef.current = false
+            try { recognitionRef.current?.abort() } catch {}
+            setEcoute(false)
+          }
+          break
+        case 'SET_THEME': {
+          const themesMap = {
+            vert:   { id:'vert',   accent:'#10b981', accentRgb:'16,185,129',   accentFonce:'#059669', fond:'#030303', fondSecondaire:'#050505', texte:'#ffffff', grille:'rgba(16,185,129,0.025)' },
+            rouge:  { id:'rouge',  accent:'#ef4444', accentRgb:'239,68,68',    accentFonce:'#dc2626', fond:'#030303', fondSecondaire:'#050505', texte:'#ffffff', grille:'rgba(239,68,68,0.025)' },
+            blanc:  { id:'blanc',  accent:'#e2e8f0', accentRgb:'226,232,240',  accentFonce:'#cbd5e1', fond:'#050508', fondSecondaire:'#080810', texte:'#ffffff', grille:'rgba(226,232,240,0.025)' },
+            orange: { id:'orange', accent:'#f97316', accentRgb:'249,115,22',   accentFonce:'#ea580c', fond:'#080400', fondSecondaire:'#120600', texte:'#ffffff', grille:'rgba(249,115,22,0.025)' },
+            violet: { id:'violet', accent:'#a855f7', accentRgb:'168,85,247',   accentFonce:'#9333ea', fond:'#050008', fondSecondaire:'#110016', texte:'#ffffff', grille:'rgba(168,85,247,0.025)' },
+            rose:   { id:'rose',   accent:'#ec4899', accentRgb:'236,72,153',   accentFonce:'#db2777', fond:'#080004', fondSecondaire:'#14000c', texte:'#ffffff', grille:'rgba(236,72,153,0.025)' },
+              bleu:   { id:'bleu',   accent:'#3b82f6', accentRgb:'59,130,246',   accentFonce:'#2563eb', fond:'#020510', fondSecondaire:'#040820', texte:'#ffffff', grille:'rgba(59,130,246,0.025)' },
+              noir:   { id:'noir',   accent:'#94a3b8', accentRgb:'148,163,184',   accentFonce:'#64748b', fond:'#000000', fondSecondaire:'#080808', texte:'#ffffff', grille:'rgba(148,163,184,0.02)' },
+          }
+          const t = themesMap[cmd.valeur.toLowerCase()]
+          if (t) setTheme(t)
+          break
+        }
+        case 'SET_MODE':
+          // toggleMode si le mode actuel est différent
+          // On utilise un event personnalisé pour communiquer avec le store
+          window.dispatchEvent(new CustomEvent('axis-set-mode', { detail: cmd.valeur }))
+          break
+        case 'DOWNLOAD_CV': {
+          const link = document.createElement('a')
+          link.href = '/asset/cv_frejus.pdf'
+          link.download = 'cv_frejus.pdf'
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          break
+        }
+        case 'OPEN_PORTFOLIO':
+          setModePortfolio(true)
+          break
+        case 'CLOSE_PORTFOLIO':
+          setModePortfolio(false)
+          break
+        default:
+          break
+      }
+    } catch (e) {
+      console.warn('[AXIS_CMD] parse error:', e)
+    }
+
+    return texteReponse.replace(/<AXIS_CMD>.*?<\/AXIS_CMD>/s, '').trim()
+  }, [setTheme, setModeChat, setModeVocal, setModeParler, setModePortfolio])
+
   useEffect(() => {
     if (!messageCourant || messageCourant === dernierMessage) return
 
     const init = window.setTimeout(() => {
-      setDernierMessage(messageCourant)
+      const messageNettoye = parseEtExecuterCommande(messageCourant)
+      setDernierMessage(messageNettoye)
 
       // ── Détection ouverture portfolio ──
-      const reponseIA = messageCourant.toLowerCase()
+      const reponseIA = messageNettoye.toLowerCase()
       const questionUsr = derniereQuestionRef.current.toLowerCase()
 
       const motsClePortfolio = [
@@ -195,12 +280,17 @@ export default function Experience() {
       if (demandePortfolio && !modePortfolio) {
         // Détecter la section cible si mentionnée
         const sectionMap = {
-          'projet': 'projects',
-          'compétence': 'skills',
-          'contact': 'contact',
-          'parcours': 'about',
-          'à propos': 'about',
-          'service': 'services',
+          'projet':      'projects',
+          'compétence':  'skills',
+          'contact':     'contact',
+          'parcours':    'academic',
+          'académique':  'academic',
+          'à propos':    'about',
+          'about':       'about',
+          'service':     'services',
+          'tarif':       'services',
+          'github':      'github',
+          'méthode':     'methodology',
         }
         let sectionCible = null
         Object.entries(sectionMap).forEach(([mot, section]) => {
@@ -230,12 +320,12 @@ export default function Experience() {
           t.includes('laissez-moi vous présenter')
         )
       }
-      if (detectionPhoto(messageCourant, derniereQuestionRef.current)) {
+      if (detectionPhoto(messageNettoye, derniereQuestionRef.current)) {
         setPhotoFrejusVisible(true)
         setTimeout(() => setPhotoFrejusVisible(false), 9000)
       }
       // Détecter la commande de retour
-      const msgLower = messageCourant.toLowerCase()
+      const msgLower = messageNettoye.toLowerCase()
       const retourMots = [
         'reviens à mon espace', 'je reviens à mon espace',
         'retourne à mon espace', 'ferme le portfolio'
@@ -243,19 +333,98 @@ export default function Experience() {
       if (retourMots.some(m => msgLower.includes(m))) {
         setModePortfolio(false)
       }
+
+      // ── Navigation de section quand portfolio déjà ouvert ──
+      if (modePortfolio && portfolioRef.current) {
+        // Map mots-clés → ID de section dans Portfolio.jsx
+        const sectionMap = {
+          'accueil':      'hero',
+          'hero':         'hero',
+          'début':        'hero',
+          'haut':         'hero',
+          'à propos':     'about',
+          'about':        'about',
+          'présentation': 'about',
+          'qui':          'about',
+          'compétence':   'skills',
+          'skill':        'skills',
+          'technologie':  'skills',
+          'stack':        'skills',
+          'projet':       'projects',
+          'réalisation':  'projects',
+          'travaux':      'projects',
+          'service':      'services',
+          'tarif':        'services',
+          'prix':         'services',
+          'offre':        'services',
+          'méthode':      'methodology',
+          'méthodologie': 'methodology',
+          'processus':    'methodology',
+          'étape':        'methodology',
+          'contact':      'contact',
+          'joindre':      'contact',
+          'email':        'contact',
+          'whatsapp':     'contact',
+          'parcours':     'academic',
+          'académique':   'academic',
+          'formation':    'academic',
+          'diplôme':      'academic',
+          'github':       'github',
+          'activité':     'github',
+          'contribution': 'github',
+        }
+
+        // Chercher dans la question de l'utilisateur (priorité)
+        let sectionDetectee = null
+        Object.entries(sectionMap).forEach(([mot, section]) => {
+          if (questionUsr.includes(mot) && !sectionDetectee) {
+            sectionDetectee = section
+          }
+        })
+
+        // Si rien trouvé dans la question, chercher dans la réponse
+        if (!sectionDetectee) {
+          Object.entries(sectionMap).forEach(([mot, section]) => {
+            if (reponseIA.includes(mot) && !sectionDetectee) {
+              sectionDetectee = section
+            }
+          })
+        }
+
+        // Mots déclencheurs qui confirment une intention de navigation
+        const motsDeclencheurs = [
+          'va', 'aller', 'naviguer', 'navigue', 'montre',
+          'affiche', 'voir', 'voir la', 'voir les', 'ouvre',
+          'section', 'scroll', 'descend', 'accède', 'emmène',
+          'rends', 'dirige', 'va vers', 'montre-moi',
+        ]
+
+        const intentionNavigation = motsDeclencheurs.some(m =>
+          questionUsr.includes(m) || reponseIA.includes(m)
+        )
+
+        // Naviguer seulement si intention + section détectée
+        if (sectionDetectee && intentionNavigation) {
+          console.log('[nav-portfolio] section détectée:', sectionDetectee)
+          portfolioRef.current.naviguerVers(sectionDetectee)
+          setSectionActive(sectionDetectee)
+          setTimeout(() => setSectionActive(null), 3000)
+        }
+      }
+
       setBulleVisible(true)
       // Afficher la photo de Fréjus dès le premier message
       if (!derniereQuestionRef.current) {
         setPhotoFrejusVisible(true)
         setTimeout(() => setPhotoFrejusVisible(false), 9000)
       }
-      const cartes = detecterCartes(messageCourant, derniereQuestionRef.current)
+      const cartes = detecterCartes(messageNettoye, derniereQuestionRef.current)
       setCartesActives(cartes)
       console.log('[cartes] cartesActives définies:', cartes.map(c => c.id))
     }, 0)
 
     return () => window.clearTimeout(init)
-  }, [messageCourant, dernierMessage, modePortfolio])
+  }, [messageCourant, dernierMessage, modePortfolio, parseEtExecuterCommande])
 
   useEffect(() => {
     if (!dernierMessage) return
@@ -548,7 +717,7 @@ export default function Experience() {
 
   if (isMobile) {
     return (
-      <div style={{ position: 'relative', height: '100vh', width: '100vw', overflow: 'hidden', overflowX: 'hidden', backgroundColor: '#050505', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ position: 'relative', height: '100vh', width: '100vw', overflow: 'hidden', overflowX: 'hidden', backgroundColor: eff.fond, display: 'flex', flexDirection: 'column' }}>
         <style>{`
           @keyframes fadeInDown {
             from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
@@ -568,8 +737,8 @@ export default function Experience() {
           }
         `}</style>
 
-        <div style={{ height: 56, background: 'rgba(0,0,0,0.85)', borderBottom: `1px solid rgba(${aRgb},0.12)`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px' }}>
-          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>&lt;/DevJ&gt;</div>
+        <div style={{ height: 56, background: isLight ? 'rgba(240,242,245,0.95)' : 'rgba(0,0,0,0.85)', borderBottom: `1px solid rgba(${aRgb},0.12)`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px' }}>
+          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, color: eff.textMedium }}>&lt;/DevJ&gt;</div>
           <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 16, color: a }}>{heure}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 8, color: a, letterSpacing: '0.18em' }}>● EN LIGNE</div>
@@ -588,28 +757,28 @@ export default function Experience() {
             </div>
           </div>
           {modeChat && bulleVisible && !modePortfolio && (
-            <div style={{ width: 'calc(100vw - 64px)', maxWidth: 340, background: 'rgba(3,3,3,0.92)', border: `1px solid rgba(${aRgb},0.1)`, borderRadius: 14, padding: 16, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', color: '#fff' }}>
+            <div style={{ width: 'calc(100vw - 64px)', maxWidth: 340, background: eff.glassOverlay, border: `1px solid rgba(${aRgb},0.1)`, borderRadius: 14, padding: 16, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', color: eff.texte }}>
               <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: a, letterSpacing: '0.25em', marginBottom: 8 }}>AXIS // TRANSMISSION</div>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6 }}>{dernierMessage}</div>
             </div>
           )}
         </div>
 
-        <button onClick={() => setDrawerSys(true)} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 42, background: 'rgba(0,0,0,0.7)', border: `1px solid rgba(${aRgb},0.25)`, padding: '10px 0', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: 14, zIndex: 21 }}>
-          <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: '#fff', transform: 'rotate(-90deg)', display: 'inline-block' }}>SYS</span>
+        <button onClick={() => setDrawerSys(true)} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 42, background: isLight ? 'rgba(240,242,245,0.9)' : eff.navOverlay, border: `1px solid rgba(${aRgb},0.25)`, padding: '10px 0', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: 14, zIndex: 21 }}>
+          <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: isLight ? '#334155' : '#fff', transform: 'rotate(-90deg)', display: 'inline-block' }}>SYS</span>
         </button>
-        <button onClick={() => setDrawerMod(true)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 42, background: 'rgba(0,0,0,0.7)', border: `1px solid rgba(${aRgb},0.25)`, padding: '10px 0', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: 14, zIndex: 21 }}>
-          <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: '#fff', transform: 'rotate(-90deg)', display: 'inline-block' }}>MOD</span>
+        <button onClick={() => setDrawerMod(true)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 42, background: isLight ? 'rgba(240,242,245,0.9)' : eff.navOverlay, border: `1px solid rgba(${aRgb},0.25)`, padding: '10px 0', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: 14, zIndex: 21 }}>
+          <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: isLight ? '#334155' : '#fff', transform: 'rotate(-90deg)', display: 'inline-block' }}>MOD</span>
         </button>
 
         {(drawerSys || drawerMod) && (
-          <div onClick={() => { setDrawerSys(false); setDrawerMod(false) }} style={{ position: 'fixed', inset: 0, zIndex: 30, background: 'rgba(0,0,0,0.35)' }} />
+          <div onClick={() => { setDrawerSys(false); setDrawerMod(false) }} style={{ position: 'fixed', inset: 0, zIndex: 30, background: overlayBg }} />
         )}
 
-        <div style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: 220, zIndex: 35, background: 'rgba(0,0,0,0.95)', borderRight: `1px solid rgba(${aRgb},0.2)`, backdropFilter: 'blur(20px)', transform: drawerSys ? 'translateX(0)' : 'translateX(-100%)', transition: 'transform 0.35s ease', padding: '18px 14px', overflowY: 'auto' }}>
+        <div style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: 220, zIndex: 35, background: isLight ? 'rgba(240,242,245,0.98)' : 'rgba(0,0,0,0.95)', borderRight: `1px solid rgba(${aRgb},0.2)`, backdropFilter: 'blur(20px)', transform: drawerSys ? 'translateX(0)' : 'translateX(-100%)', transition: 'transform 0.35s ease', padding: '18px 14px', overflowY: 'auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: a, letterSpacing: '0.2em' }}>// SYSTÈME</div>
-            <button onClick={() => setDrawerSys(false)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 14, cursor: 'pointer' }}>✕</button>
+            <button onClick={() => setDrawerSys(false)} style={{ background: 'transparent', border: 'none', color: isLight ? '#334155' : 'rgba(255,255,255,0.7)', fontSize: 14, cursor: 'pointer' }}>✕</button>
           </div>
           <div style={{ border: `1px solid rgba(${aRgb},0.14)`, background: `rgba(${aRgb},0.05)`, padding: '12px', marginBottom: 12, borderRadius: 14 }}>
             <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.22em', color: `rgba(${aRgb},0.55)`, marginBottom: 6 }}>VISITEUR</div>
@@ -626,35 +795,35 @@ export default function Experience() {
               <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, fontWeight: 700, color: a }}>● CONNECTÉ</div>
             </div>
           </div>
-          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.45)', marginBottom: 10 }}>NAVIGATION RAPIDE</div>
+          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.18em', color: eff.textMuted, marginBottom: 10 }}>NAVIGATION RAPIDE</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {['> voir le portfolio', '> mes projets', '> me contacter', '> mon parcours'].map((cmd) => (
-              <button key={cmd} onClick={() => { envoyerCommande(cmd); setDrawerSys(false) }} style={{ textAlign: 'left', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)', color: `rgba(${aRgb},0.75)`, padding: '10px 12px', fontFamily: 'Space Mono, monospace', fontSize: 9, borderRadius: 12, cursor: 'pointer' }}>
+              <button key={cmd} onClick={() => { envoyerCommande(cmd); setDrawerSys(false) }} style={{ textAlign: 'left', border: `1px solid ${eff.borderLight}`, background: eff.cardBg, color: `rgba(${aRgb},0.75)`, padding: '10px 12px', fontFamily: 'Space Mono, monospace', fontSize: 9, borderRadius: 12, cursor: 'pointer' }}>
                 {cmd.replace('>', '›')}
               </button>
             ))}
           </div>
           <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid rgba(${aRgb},0.08)` }}>
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.18em', marginBottom: 10 }}>AUDIO</div>
-            <button onClick={() => setModeVocal(prev => !prev)} style={{ width: '100%', background: modeVocal ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.04)', border: `1px solid ${modeVocal ? a : `rgba(${aRgb},0.25)`}`, color: modeVocal ? '#fff' : `rgba(${aRgb},0.9)`, padding: '10px 0', borderRadius: 12, fontFamily: 'Space Mono, monospace', fontSize: 10, cursor: 'pointer' }}>
+            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: isLight ? '#475569' : 'rgba(255,255,255,0.45)', letterSpacing: '0.18em', marginBottom: 10 }}>AUDIO</div>
+            <button onClick={() => setModeVocal(prev => !prev)} style={{ width: '100%', background: modeVocal ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.04)', border: `1px solid ${modeVocal ? a : `rgba(${aRgb},0.25)`}`, color: modeVocal ? '#fff' : (isLight ? '#64748b' : `rgba(${aRgb},0.9)`), padding: '10px 0', borderRadius: 12, fontFamily: 'Space Mono, monospace', fontSize: 10, cursor: 'pointer' }}>
               {modeVocal ? 'VOCAL ON' : 'VOCAL OFF'}
             </button>
           </div>
         </div>
 
-        <div style={{ position: 'fixed', right: 0, top: 0, bottom: 0, width: 220, zIndex: 35, background: 'rgba(0,0,0,0.95)', borderLeft: `1px solid rgba(${aRgb},0.2)`, backdropFilter: 'blur(20px)', transform: drawerMod ? 'translateX(0)' : 'translateX(100%)', transition: 'transform 0.35s ease', padding: '18px 14px', overflowY: 'auto' }}>
+        <div style={{ position: 'fixed', right: 0, top: 0, bottom: 0, width: 220, zIndex: 35, background: isLight ? 'rgba(240,242,245,0.98)' : 'rgba(0,0,0,0.95)', borderLeft: `1px solid rgba(${aRgb},0.2)`, backdropFilter: 'blur(20px)', transform: drawerMod ? 'translateX(0)' : 'translateX(100%)', transition: 'transform 0.35s ease', padding: '18px 14px', overflowY: 'auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: a, letterSpacing: '0.2em' }}>// MODES</div>
-            <button onClick={() => setDrawerMod(false)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 14, cursor: 'pointer' }}>✕</button>
+            <button onClick={() => setDrawerMod(false)} style={{ background: 'transparent', border: 'none', color: isLight ? '#334155' : 'rgba(255,255,255,0.7)', fontSize: 14, cursor: 'pointer' }}>✕</button>
           </div>
-          <button onClick={() => setModeVocal(prev => !prev)} style={{ width: '100%', border: `1px solid ${modeVocal ? a : 'rgba(255,255,255,0.12)'}`, background: modeVocal ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.04)', color: modeVocal ? '#fff' : `rgba(${aRgb},0.9)`, padding: '12px', borderRadius: 14, fontFamily: 'Space Mono, monospace', fontSize: 10, marginBottom: 12, cursor: 'pointer' }}>VOCAL</button>
-          <button onClick={() => setModeChat(prev => !prev)} style={{ width: '100%', border: `1px solid ${modeChat ? a : 'rgba(255,255,255,0.12)'}`, background: modeChat ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.04)', color: modeChat ? '#fff' : `rgba(${aRgb},0.9)`, padding: '12px', borderRadius: 14, fontFamily: 'Space Mono, monospace', fontSize: 10, marginBottom: 12, cursor: 'pointer' }}>CHAT</button>
-          <button onClick={toggleParler} style={{ width: '100%', border: `1px solid ${modeParler ? a : 'rgba(255,255,255,0.12)'}`, background: modeParler ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.04)', color: modeParler ? '#fff' : `rgba(${aRgb},0.9)`, padding: '12px', borderRadius: 14, fontFamily: 'Space Mono, monospace', fontSize: 10, cursor: 'pointer' }}>PARLER</button>
+          <button onClick={() => setModeVocal(prev => !prev)} style={{ width: '100%', border: `1px solid ${modeVocal ? a : 'rgba(255,255,255,0.12)'}`, background: modeVocal ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.04)', color: modeVocal ? '#fff' : (isLight ? '#64748b' : `rgba(${aRgb},0.9)`), padding: '12px', borderRadius: 14, fontFamily: 'Space Mono, monospace', fontSize: 10, marginBottom: 12, cursor: 'pointer' }}>VOCAL</button>
+          <button onClick={() => setModeChat(prev => !prev)} style={{ width: '100%', border: `1px solid ${modeChat ? a : 'rgba(255,255,255,0.12)'}`, background: modeChat ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.04)', color: modeChat ? '#fff' : (isLight ? '#64748b' : `rgba(${aRgb},0.9)`), padding: '12px', borderRadius: 14, fontFamily: 'Space Mono, monospace', fontSize: 10, marginBottom: 12, cursor: 'pointer' }}>CHAT</button>
+          <button onClick={toggleParler} style={{ width: '100%', border: `1px solid ${modeParler ? a : 'rgba(255,255,255,0.12)'}`, background: modeParler ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.04)', color: modeParler ? '#fff' : (isLight ? '#64748b' : `rgba(${aRgb},0.9)`), padding: '12px', borderRadius: 14, fontFamily: 'Space Mono, monospace', fontSize: 10, cursor: 'pointer' }}>PARLER</button>
           <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid rgba(${aRgb},0.08)` }}>
             <button onClick={() => { setModePortfolio(true); setDrawerMod(false) }} style={{ width: '100%', background: `rgba(${aRgb},0.1)`, border: `1px solid rgba(${aRgb},0.3)`, color: a, padding: '12px', borderRadius: 14, fontFamily: 'Space Mono, monospace', fontSize: 10, textTransform: 'uppercase', cursor: 'pointer' }}>PORTFOLIO</button>
           </div>
           <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid rgba(${aRgb},0.08)` }}>
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.18em', marginBottom: 10 }}>SYS_STATUS</div>
+            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: isLight ? '#475569' : 'rgba(255,255,255,0.45)', letterSpacing: '0.18em', marginBottom: 10 }}>SYS_STATUS</div>
             {[['MODÈLE','GROQ'],['SESSION','ACTIVE'],['VOIX','FR-FR']].map(([k,v]) => (
               <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'rgba(255,255,255,0.75)', marginBottom: 8 }}>
                 <span>{k}</span><span style={{ color: a }}>{v}</span>
@@ -662,7 +831,7 @@ export default function Experience() {
             ))}
           </div>
           <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid rgba(${aRgb},0.08)` }}>
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.18em', marginBottom: 10 }}>PARAMÈTRES</div>
+            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: isLight ? '#475569' : 'rgba(255,255,255,0.45)', letterSpacing: '0.18em', marginBottom: 10 }}>PARAMÈTRES</div>
             <PanneauParametres />
           </div>
         </div>
@@ -726,7 +895,9 @@ export default function Experience() {
           </div>
         )}
 
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 72, background: 'rgba(0,0,0,0.85)', borderTop: `1px solid rgba(${aRgb},0.12)`, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8, zIndex: 25 }}>
+        {/* Removed: floating inputs rendered inside the portfolio overlay (desktop & mobile). Kept the global bottom input intact. */}
+
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 72, background: isLight ? 'rgba(240,242,245,0.95)' : 'rgba(0,0,0,0.85)', borderTop: `1px solid rgba(${aRgb},0.12)`, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8, zIndex: 25 }}>
           {!modeParler ? (
             <>
               <input
@@ -735,7 +906,7 @@ export default function Experience() {
                 onChange={(e) => setInputCmd(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); soumettre() } }}
                 placeholder="Entrez votre commande..."
-                style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: `1px solid rgba(${aRgb},0.15)`, borderRadius: 14, outline: 'none', padding: '12px 14px', fontFamily: 'Space Mono, monospace', fontSize: 12, color: '#fff', caretColor: a }}
+                style={{ flex: 1, background: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.04)', border: `1px solid rgba(${aRgb},0.15)`, borderRadius: 14, outline: 'none', padding: '12px 14px', fontFamily: 'Space Mono, monospace', fontSize: 12, color: isLight ? '#0f172a' : '#fff', caretColor: a }}
               />
               <button onClick={soumettre} style={{ padding: '12px 14px', border: 'none', borderRadius: 14, background: `rgba(${aRgb},0.1)`, color: a, fontFamily: 'Space Mono, monospace', fontSize: 12, cursor: 'pointer' }}>
                 <Send size={14} color={a} />
@@ -833,7 +1004,7 @@ export default function Experience() {
   }
 
   return (
-    <div style={{ backgroundColor: '#050505', height: '100vh', width: '100vw', overflow: 'hidden', position: 'relative' }}>
+    <div style={{ backgroundColor: eff.fond || '#050505', height: '100vh', width: '100vw', overflow: 'hidden', position: 'relative' }}>
       <style>{`
         @keyframes slideFromLeft {
           from { opacity: 0; transform: translateX(-24px) translateY(-50%); }
@@ -855,10 +1026,11 @@ export default function Experience() {
           0%, 100% { opacity: 1; }
           50%       { opacity: 0.35; }
         }
+        input::placeholder { color: ${isLight ? '#94a3b8' : 'rgba(255,255,255,0.3)'}; }
       `}</style>
 
       <div style={{ position: 'absolute', inset: 0, zIndex: 0, backgroundImage: `linear-gradient(rgba(${aRgb},0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(${aRgb},0.03) 1px, transparent 1px)`, backgroundSize: '60px 60px' }} />
-      <div style={{ position:'absolute', inset:0, zIndex:0, background:'radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.75) 100%)', pointerEvents:'none' }} />
+      <div style={{ position:'absolute', inset:0, zIndex:0, background: isLight ? 'radial-gradient(ellipse at center, transparent 35%, rgba(255,255,255,0.35) 100%)' : 'radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.75) 100%)', pointerEvents:'none' }} />
 
       <div style={{ position: 'absolute', left: 0, right: 0, height: 1, zIndex: 1, top: 0, background: `linear-gradient(90deg, transparent, rgba(${aRgb},0.12), transparent)`, animation: 'scanAnim 6s linear infinite' }} />
 
@@ -875,18 +1047,18 @@ export default function Experience() {
         <path d="M28 0 L28 28 L0 28" fill="none" stroke={`rgba(${aRgb},0.4)`} strokeWidth="1"/>
       </svg>
 
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20, background: 'rgba(0,0,0,0.75)', borderBottom: `1px solid rgba(${aRgb},0.12)` }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20, background: isLight ? 'rgba(240,242,245,0.55)' : 'rgba(0,0,0,0.75)', borderBottom: `1px solid rgba(${aRgb},0.12)` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 20px 4px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Space Mono, monospace', color: 'rgba(255,255,255,0.25)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Space Mono, monospace', color: isLight ? 'rgba(15,23,42,0.55)' : 'rgba(255,255,255,0.25)' }}>
             <span>&lt;</span>
             <span style={{ color: a }}>/DevJ</span>
             <span>&gt;</span>
-            <div style={{ width: 1, height: 20, background: '#2d2d2d' }} />
+            <div style={{ width: 1, height: 20, background: isLight ? '#cbd5e1' : '#2d2d2d' }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 8px', border: `1px solid rgba(${aRgb},0.3)`, color: a, textTransform: 'uppercase', fontSize: 9, letterSpacing: '0.25em' }}>
               <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 9999, background: a, animation: 'pulse 1.4s infinite' }} />
               <span style={{ borderRadius: '20px', padding: '3px 8px' }}>EN LIGNE</span>
             </div>
-            <div style={{ marginLeft: 8, fontFamily: 'Space Mono, monospace', fontSize: 8, color: 'rgba(255,255,255,0.15)' }}>{dateStr}</div>
+            <div style={{ marginLeft: 8, fontFamily: 'Space Mono, monospace', fontSize: 8, color: isLight ? 'rgba(15,23,42,0.38)' : 'rgba(255,255,255,0.15)' }}>{dateStr}</div>
           </div>
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -954,10 +1126,10 @@ export default function Experience() {
 
       {bulleVisible && (modeChat || !modeVocal) && (
         <div style={{ position: 'absolute', top: 90, left: '50%', transform: 'translateX(-50%)', width: 380, zIndex: 25, opacity: bulleVisible ? 1 : 0, transition: 'opacity 0.4s' }}>
-          <div style={{ position: 'relative', background: 'rgba(3,3,3,0.82)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderRadius: '14px', border: `1px solid rgba(${aRgb},0.1)`, padding: '16px 20px', fontFamily: 'Syne, sans-serif', color: '#fff' }}>
+          <div style={{ position: 'relative', background: isLight ? 'rgba(255,255,255,0.92)' : 'rgba(3,3,3,0.82)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderRadius: '14px', border: `1px solid rgba(${aRgb},0.1)`, padding: '16px 20px', fontFamily: 'Syne, sans-serif', color: eff.texte }}>
             <div style={{ position:'absolute',top:0,left:20,right:20,height:1, background:`linear-gradient(90deg,transparent,rgba(${aRgb},0.22),transparent)` }} />
             <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: a, letterSpacing: '0.25em', marginBottom: 8 }}>AXIS // TRANSMISSION</div>
-            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.85)', lineHeight: 1.7 }}>{dernierMessage}</div>
+            <div style={{ fontSize: 14, color: eff.texte, lineHeight: 1.7 }}>{dernierMessage}</div>
           </div>
         </div>
       )}
@@ -992,10 +1164,10 @@ export default function Experience() {
         </div>
 
         <div>
-          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.25em', color: 'rgba(255,255,255,0.22)', textTransform: 'uppercase', marginBottom: 6 }}>NAVIGATION RAPIDE</div>
+          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.25em', color: isLight ? '#475569' : 'rgba(255,255,255,0.22)', textTransform: 'uppercase', marginBottom: 6 }}>NAVIGATION RAPIDE</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {['> voir le portfolio', '> mes projets', '> me contacter', '> mon parcours'].map((cmd) => (
-              <div key={cmd} onClick={() => envoyerCommande(cmd)} style={{ display: 'flex', gap: 6, borderBottom: '1px solid rgba(255,255,255,0.03)', padding: '5px 0', fontFamily: 'Space Mono, monospace', fontSize: 8, color: `rgba(${aRgb},0.55)`, cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.color = a} onMouseLeave={(e) => e.currentTarget.style.color = `rgba(${aRgb},0.55)`}>
+              <div key={cmd} onClick={() => envoyerCommande(cmd)} style={{ display: 'flex', gap: 6, borderBottom: isLight ? '1px solid rgba(15,23,42,0.06)' : '1px solid rgba(255,255,255,0.03)', padding: '5px 0', fontFamily: 'Space Mono, monospace', fontSize: 8, color: `rgba(${aRgb},0.55)`, cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.color = a} onMouseLeave={(e) => e.currentTarget.style.color = `rgba(${aRgb},0.55)`}>
                 {cmd.replace('>', '›')}
               </div>
             ))}
@@ -1005,19 +1177,19 @@ export default function Experience() {
 
       <div style={{ position: 'absolute', right: 16, top: 90, zIndex: 10, width: 150, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, letterSpacing: '0.3em', textTransform: 'uppercase', paddingBottom: 8, borderBottom: `1px solid rgba(${aRgb},0.08)`, marginBottom: 10 }}>// MODES</div>
-        <button onClick={() => setModeVocal((prev) => !prev)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid', borderColor: modeVocal ? `rgba(${aRgb},0.4)` : 'rgba(255,255,255,0.08)', background: modeVocal ? `rgba(${aRgb},0.07)` : 'rgba(255,255,255,0.015)', color: modeVocal ? a : 'rgba(255,255,255,0.35)', padding: '6px 8px', fontFamily: 'Space Mono, monospace', fontSize: 9, cursor: 'pointer', borderRadius: '8px' }}>
+        <button onClick={() => setModeVocal((prev) => !prev)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid', borderColor: modeVocal ? `rgba(${aRgb},0.4)` : isLight ? 'rgba(15,23,42,0.15)' : 'rgba(255,255,255,0.08)', background: modeVocal ? `rgba(${aRgb},0.07)` : isLight ? 'rgba(15,23,42,0.04)' : 'rgba(255,255,255,0.015)', color: modeVocal ? a : isLight ? '#64748b' : 'rgba(255,255,255,0.35)', padding: '6px 8px', fontFamily: 'Space Mono, monospace', fontSize: 9, cursor: 'pointer', borderRadius: '8px' }}>
           <span>VOCAL</span>
           <span style={{ width: 20, height: 10, border: `1px solid ${a}`, position: 'relative' }}>
             <span style={{ position: 'absolute', top: 1, left: modeVocal ? 10 : 2, width: 6, height: 6, background: modeVocal ? a : `rgba(${aRgb},0.3)`, transition: 'left 0.2s' }} />
           </span>
         </button>
-        <button onClick={() => setModeChat((prev) => !prev)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid', borderColor: modeChat ? `rgba(${aRgb},0.4)` : 'rgba(255,255,255,0.08)', background: modeChat ? `rgba(${aRgb},0.07)` : 'rgba(255,255,255,0.015)', color: modeChat ? a : 'rgba(255,255,255,0.35)', padding: '6px 8px', fontFamily: 'Space Mono, monospace', fontSize: 9, cursor: 'pointer', borderRadius: '8px' }}>
+        <button onClick={() => setModeChat((prev) => !prev)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid', borderColor: modeChat ? `rgba(${aRgb},0.4)` : isLight ? 'rgba(15,23,42,0.15)' : 'rgba(255,255,255,0.08)', background: modeChat ? `rgba(${aRgb},0.07)` : isLight ? 'rgba(15,23,42,0.04)' : 'rgba(255,255,255,0.015)', color: modeChat ? a : isLight ? '#64748b' : 'rgba(255,255,255,0.35)', padding: '6px 8px', fontFamily: 'Space Mono, monospace', fontSize: 9, cursor: 'pointer', borderRadius: '8px' }}>
           <span>CHAT</span>
           <span style={{ width: 20, height: 10, border: `1px solid ${a}`, position: 'relative' }}>
             <span style={{ position: 'absolute', top: 1, left: modeChat ? 10 : 2, width: 6, height: 6, background: modeChat ? a : `rgba(${aRgb},0.3)`, transition: 'left 0.2s' }} />
           </span>
         </button>
-        <button onClick={() => setModePortfolio(true)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid', borderColor: modePortfolio ? `rgba(${aRgb},0.4)` : 'rgba(255,255,255,0.08)', background: modePortfolio ? `rgba(${aRgb},0.07)` : 'rgba(255,255,255,0.015)', color: `rgba(${aRgb},0.35)`, padding: '6px 8px', fontFamily: 'Space Mono, monospace', fontSize: 9, cursor: 'pointer', borderRadius: '8px' }}>
+        <button onClick={() => setModePortfolio(true)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid', borderColor: modePortfolio ? `rgba(${aRgb},0.4)` : isLight ? 'rgba(15,23,42,0.15)' : 'rgba(255,255,255,0.08)', background: modePortfolio ? `rgba(${aRgb},0.07)` : isLight ? 'rgba(15,23,42,0.04)' : 'rgba(255,255,255,0.015)', color: modePortfolio ? a : isLight ? '#64748b' : 'rgba(255,255,255,0.35)', padding: '6px 8px', fontFamily: 'Space Mono, monospace', fontSize: 9, cursor: 'pointer', borderRadius: '8px' }}>
           <span>PORTFOLIO</span>
           <span style={{ width: 20, height: 10, border: `1px solid ${a}`, position: 'relative' }}>
             <span style={{ position: 'absolute', top: 1, left: 2, width: 6, height: 6, background: `rgba(${aRgb},0.3)` }} />
@@ -1035,24 +1207,25 @@ export default function Experience() {
       </div>
 
       {modePortfolio && (
-        <div style={{ 
-          position: 'absolute', 
-          inset: 0, 
-          zIndex: 50,
-          overflow: 'hidden'
-        }}>
-          <Portfolio ref={portfolioRef} onClose={() => setModePortfolio(false)} />
-
-          <div style={{
-            position: 'fixed',
-            bottom: 24,
-            right: 24,
-            zIndex: 52,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 0,
+        <>
+          <div style={{ 
+            position: 'absolute', 
+            inset: 0, 
+            zIndex: 50,
+            overflow: 'hidden'
           }}>
+            <Portfolio ref={portfolioRef} onClose={() => setModePortfolio(false)} />
+
+            <div style={{
+              position: 'fixed',
+              bottom: 24,
+              right: 24,
+              zIndex: 52,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 0,
+            }}>
             {/* Bouton glassmorphique pour masquer/afficher l'avatar */}
             <div
               onClick={() => setModePortfolio(false)}
@@ -1113,6 +1286,114 @@ export default function Experience() {
             </div>
           </div>
         </div>
+
+        {/* Input flottant mobile dans le portfolio */}
+        {(modeChat || modeParler) && (
+          <div style={{
+            position: 'fixed',
+            bottom: isMobile ? 0 : 24,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: isMobile ? '100%' : 480,
+            zIndex: 53,
+            padding: isMobile ? '12px 16px' : 0,
+            background: isMobile ? 'rgba(0,0,0,0.9)' : 'transparent',
+            borderTop: isMobile ? `1px solid rgba(${aRgb},0.1)` : 'none',
+          }}>
+            {!modeParler ? (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                background: 'rgba(5,5,5,0.85)',
+                border: `1px solid rgba(${aRgb},0.2)`,
+                borderRadius: isMobile ? 14 : 16,
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(${aRgb},0.05)`,
+                overflow: 'hidden',
+              }}>
+                {/* Ligne lumineuse top */}
+                <div style={{
+                  position: 'absolute',
+                  top: 0, left: 40, right: 40, height: 1,
+                  background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.25),transparent)`,
+                  pointerEvents: 'none',
+                }} />
+                <input
+                  value={inputCmd}
+                  onChange={e => setInputCmd(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); soumettre() } }}
+                  placeholder="Posez une question à AXIS..."
+                  style={{
+                    flex: 1,
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    padding: isMobile ? '14px 16px' : '14px 20px',
+                    fontFamily: 'Space Mono, monospace',
+                    fontSize: isMobile ? 11 : 12,
+                    color: '#fff',
+                    caretColor: a,
+                  }}
+                />
+                <button
+                  onClick={soumettre}
+                  style={{
+                    padding: isMobile ? '14px 16px' : '14px 20px',
+                    border: 'none',
+                    borderLeft: `1px solid rgba(${aRgb},0.15)`,
+                    background: `rgba(${aRgb},0.08)`,
+                    color: a,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'background 0.2s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = `rgba(${aRgb},0.18)`}
+                  onMouseLeave={e => e.currentTarget.style.background = `rgba(${aRgb},0.08)`}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke={a} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 10,
+                background: 'rgba(5,5,5,0.85)',
+                border: `1px solid rgba(${aRgb},0.2)`,
+                borderRadius: isMobile ? 14 : 16,
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                boxShadow: `0 8px 32px rgba(0,0,0,0.5)`,
+                padding: isMobile ? '14px 20px' : '14px 28px',
+              }}>
+                <div style={{
+                  width: 8, height: 8,
+                  borderRadius: '50%',
+                  background: ecoute ? a : `rgba(${aRgb},0.4)`,
+                  animation: ecoute ? 'pulse 1s infinite' : 'none',
+                  flexShrink: 0,
+                }} />
+                <span style={{
+                  fontFamily: 'Space Mono, monospace',
+                  fontSize: isMobile ? 9 : 10,
+                  color: ecoute ? a : `rgba(${aRgb},0.55)`,
+                  letterSpacing: '0.18em',
+                }}>
+                  {ecoute ? 'ÉCOUTE EN COURS — PARLEZ' : 'MICRO PRÊT — EN ATTENTE'}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+        </>
       )}
 
       <div style={{ position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)', width: 480, zIndex: 20 }}>
@@ -1128,7 +1409,7 @@ export default function Experience() {
         <div style={{
           display: modeParler ? 'none' : 'flex', alignItems: 'center',
           border: `1px solid rgba(${aRgb},0.15)`,
-          background: 'rgba(0,0,0,0.6)',
+          background: isLight ? 'rgba(240,242,245,0.85)' : 'rgba(0,0,0,0.6)',
           borderRadius: '12px',
           backdropFilter: 'blur(16px)'
         }}>
@@ -1142,7 +1423,7 @@ export default function Experience() {
               flex: 1, background: 'transparent', border: 'none',
               outline: 'none', padding: '10px 14px',
               fontFamily: 'Space Mono, monospace', fontSize: 11,
-              color: '#fff', caretColor: a
+              color: eff.texte, caretColor: a
             }}
           />
           <button onClick={soumettre} style={{
@@ -1188,11 +1469,13 @@ export default function Experience() {
           setModePortfolio(true)
           setTimeout(() => {
             if (portfolioRef.current) {
+              // CORRECTION 3 — Mise à jour du sectionMap pour naviguerVers
               const sectionMap = {
                 projets:     'projects',
                 competences: 'skills',
                 contact:     'contact',
-                parcours:    'about',
+                parcours:    'academic',
+                services:    'services',
               }
               const cible = sectionMap[cartesActives[0].id] || 'hero'
               portfolioRef.current.naviguerVers(cible)

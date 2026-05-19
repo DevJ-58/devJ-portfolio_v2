@@ -21,7 +21,9 @@ export default function Accueil() {
     () => !sessionStorage.getItem('devj-theme-session')
   )
   const store = utiliserStore()
-  const { theme, themes, changerTheme } = utiliserTheme()
+  const { theme, themes, changerTheme, mode, getThemeEffectif } = utiliserTheme()
+  const eff = getThemeEffectif ? getThemeEffectif() : theme
+  const isLight = mode === 'light'
   const a = theme.accent
   const aRgb = theme.accentRgb
   const navigate = useNavigate()
@@ -68,7 +70,7 @@ export default function Accueil() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: theme.fond, backgroundImage: `linear-gradient(rgba(${aRgb},0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(${aRgb},0.03) 1px, transparent 1px)`, backgroundSize: '60px 60px' }}>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: eff.fond, backgroundImage: `linear-gradient(rgba(${aRgb},0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(${aRgb},0.03) 1px, transparent 1px)`, backgroundSize: '60px 60px' }}>
 
       <style>{`\n        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,800;1,9..144,400&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');\n        @keyframes scanY { 0%{ top:0% } 100%{ top:100% } }\n        @keyframes scanOpacity { 0%{opacity:.2}50%{opacity:.8}100%{opacity:.2} }\n        @keyframes pulseRing { 0%{ transform: scale(1); opacity: .6 } 100%{ transform: scale(1.3); opacity: 0 } }\n      `}</style>
 
@@ -84,14 +86,14 @@ export default function Accueil() {
       </div>
 
       {/* Fixed logo top-left */}
-      <div className="absolute" style={{ top: 16, left: 16, fontFamily: 'Space Mono, monospace', fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>
+      <div className="absolute" style={{ top: 16, left: 16, fontFamily: 'Space Mono, monospace', fontSize: 11, color: eff.textFaint }}>
         <span>&lt;</span>
         <span style={{ color: a, margin: '0 6px' }}>/DevJ</span>
         <span>&gt;</span>
       </div>
 
       {/* Counter top-right */}
-      <div className="absolute" style={{ top: 16, right: 16, fontFamily: 'Space Mono, monospace', fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>
+      <div className="absolute" style={{ top: 16, right: 16, fontFamily: 'Space Mono, monospace', fontSize: 10, color: eff.textFaint }}>
         <span style={{ color: a }}>{'0' + etape}</span>
         <span style={{ margin: '0 6px' }}>/ 03</span>
       </div>
@@ -107,8 +109,8 @@ export default function Accueil() {
           <AnimatePresence mode="wait">
             {etape === 1 && (
               <motion.div key="step1" variants={variantsStep} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="flex flex-col items-center">
-                <h1 className="text-white font-extrabold mb-[14px]" style={{ fontFamily: 'Syne, sans-serif', fontSize: isMobile ? 36 : 72, letterSpacing: '-0.03em', lineHeight: 1 }}>Bonjour, je suis AXIS</h1>
-                <p className="text-[17px] text-white/60 max-w-lg mb-[44px]" style={{ fontSize: isMobile ? 14 : 17, marginBottom: isMobile ? '24px' : '44px', maxWidth: isMobile ? '100%' : undefined }}>Je vais t'accompagner pour créer une expérience personnalisée. Commence par me dire comment t'appeler.</p>
+                    <h1 style={{ color: eff.texte, fontFamily: 'Syne, sans-serif', fontSize: isMobile ? 36 : 72, letterSpacing: '-0.03em', lineHeight: 1, fontWeight: 800, marginBottom: 14 }}>Bonjour, je suis AXIS</h1>
+                      <p style={{ fontSize: isMobile ? 14 : 17, marginBottom: isMobile ? '24px' : '44px', maxWidth: isMobile ? '100%' : undefined, color: eff.textMedium }} className="text-[17px] max-w-lg mb-[44px]">Je vais t'accompagner pour créer une expérience personnalisée. Commence par me dire comment t'appeler.</p>
 
                 <form onSubmit={submitIdentite} className="relative mb-8" style={{ width: isMobile ? '100%' : 440 }}>
                   {/* wrapper corners */}
@@ -124,8 +126,8 @@ export default function Accueil() {
                     value={prenom}
                     onChange={(e) => setPrenom(e.target.value)}
                     placeholder="Ton prénom ici..."
-                    className="w-full mt-2 px-4 py-4 text-white placeholder:text-white/25 text-[20px]"
-                    style={{ background: `rgba(${aRgb},0.04)`, borderLeft: `1px solid rgba(${aRgb},0.25)`, borderRight: `1px solid rgba(${aRgb},0.25)`, borderBottom: `1px solid rgba(${aRgb},0.25)`, borderTop: 'none', fontFamily: 'Syne, sans-serif', outline: 'none', caretColor: a, color: '#fff', fontSize: 20, padding: '18px 16px' }}
+                    className="w-full mt-2 px-4 py-4 placeholder:text-white/25 text-[20px]"
+                    style={{ background: isLight ? 'rgba(0,0,0,0.04)' : `rgba(${aRgb},0.04)`, borderLeft: `1px solid rgba(${aRgb},0.25)`, borderRight: `1px solid rgba(${aRgb},0.25)`, borderBottom: `1px solid rgba(${aRgb},0.25)`, borderTop: 'none', fontFamily: 'Syne, sans-serif', outline: 'none', caretColor: a, color: eff.texte, fontSize: 20, padding: '18px 16px' }}
                     onKeyDown={(e) => { if (e.key === 'Enter') submitIdentite(e) }}
                   />
 
@@ -141,8 +143,8 @@ export default function Accueil() {
 
             {etape === 2 && (
               <motion.div key="step2" variants={variantsStep} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="flex flex-col items-center">
-                <h1 className="text-white font-extrabold mb-[14px]" style={{ fontFamily: 'Syne, sans-serif', fontSize: isMobile ? 36 : 72, letterSpacing: '-0.03em', lineHeight: 1 }}>Quel est ton rôle ?</h1>
-                <p className="text-[17px] text-white/60 max-w-lg mb-[44px]" style={{ fontSize: isMobile ? 14 : 17, marginBottom: isMobile ? '24px' : '44px', maxWidth: isMobile ? '100%' : undefined }}>Choisis une case qui te décrit le mieux.</p>
+                <h1 style={{ color: eff.texte, fontFamily: 'Syne, sans-serif', fontSize: isMobile ? 36 : 72, letterSpacing: '-0.03em', lineHeight: 1, fontWeight: 800 }}>Quel est ton rôle ?</h1>
+                <p style={{ fontSize: isMobile ? 14 : 17, marginBottom: isMobile ? '24px' : '44px', maxWidth: isMobile ? '100%' : undefined, color: eff.textMedium }} className="text-[17px] max-w-lg mb-[44px]">Choisis une case qui te décrit le mieux.</p>
 
                 <div style={{ width: isMobile ? '100%' : 400 }} className={isMobile ? 'grid grid-cols-1 gap-[10px]' : 'grid grid-cols-2 gap-[12px]'}>
                   {[
@@ -159,8 +161,8 @@ export default function Accueil() {
                         <div className="flex items-center gap-3">
                           <Icon size={20} style={{ color: selected ? a : 'rgba(255,255,255,0.35)' }} />
                         </div>
-                        <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.18em', color: selected ? a : 'rgba(255,255,255,0.35)', textTransform: 'uppercase' }}>{c.title}</div>
-                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.22)', lineHeight: 1.4 }}>{c.subtitle}</div>
+                        <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.18em', color: selected ? a : eff.textFaint, textTransform: 'uppercase' }}>{c.title}</div>
+                        <div style={{ fontSize: 11, color: eff.textFaint, lineHeight: 1.4 }}>{c.subtitle}</div>
                       </button>
                     )
                   })}
@@ -170,8 +172,8 @@ export default function Accueil() {
 
             {etape === 3 && (
               <motion.div key="step3" variants={variantsStep} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="flex flex-col items-center">
-                <h1 className="text-white font-extrabold mb-[14px]" style={{ fontFamily: 'Syne, sans-serif', fontSize: isMobile ? 36 : 72, letterSpacing: '-0.03em', lineHeight: 1 }}>Active ton micro</h1>
-                <p className="text-[17px] text-white/60 max-w-lg mb-[44px]" style={{ fontSize: isMobile ? 14 : 17, marginBottom: isMobile ? '24px' : '44px', maxWidth: isMobile ? '100%' : undefined }}>Tu peux activer le micro pour parler à DevJ, ou continuer sans micro.</p>
+                <h1 style={{ color: eff.texte, fontFamily: 'Syne, sans-serif', fontSize: isMobile ? 36 : 72, letterSpacing: '-0.03em', lineHeight: 1, fontWeight: 800 }}>Active ton micro</h1>
+                <p style={{ fontSize: isMobile ? 14 : 17, marginBottom: isMobile ? '24px' : '44px', maxWidth: isMobile ? '100%' : undefined, color: eff.textMedium }} className="text-[17px] max-w-lg mb-[44px]">Tu peux activer le micro pour parler à DevJ, ou continuer sans micro.</p>
 
                 <div className="flex flex-col items-center mb-10">
                   <div className="relative w-[100px] h-[100px] mb-6 flex items-center justify-center">
@@ -199,7 +201,7 @@ export default function Accueil() {
           {/* progression */}
           <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-3" style={{ bottom: isMobile ? 16 : 32 }}>
             {[1,2,3].map((i) => (
-              <div key={i} className="h-px transition-all duration-300" style={{ width: etape === i ? 48 : 16, background: etape === i ? a : '#1f2937' }} />
+              <div key={i} className="h-px transition-all duration-300" style={{ width: etape === i ? 48 : 16, background: etape === i ? a : isLight ? '#94a3b8' : '#1f2937' }} />
             ))}
           </div>
         </div>
@@ -213,7 +215,7 @@ export default function Accueil() {
           bottom: isMobile ? 20 : 32,
           right: isMobile ? 16 : 32,
           zIndex: 50,
-          background: 'rgba(5,5,5,0.5)',
+          background: eff.navOverlay,
           backdropFilter: 'blur(18px)',
           WebkitBackdropFilter: 'blur(18px)',
           border: `1px solid rgba(${aRgb},0.2)`,
@@ -227,11 +229,11 @@ export default function Accueil() {
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.border = `1px solid rgba(${aRgb},0.4)`
-          e.currentTarget.style.background = 'rgba(5,5,5,0.7)'
+          e.currentTarget.style.background = eff.navOverlay
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.border = `1px solid rgba(${aRgb},0.2)`
-          e.currentTarget.style.background = 'rgba(5,5,5,0.5)'
+          e.currentTarget.style.background = eff.navOverlay
         }}
       >
         <Briefcase size={14} color={a} />
@@ -243,7 +245,7 @@ export default function Accueil() {
           position: 'fixed',
           inset: 0,
           zIndex: 9999,
-          background: 'rgba(0,0,0,0.85)',
+          background: eff.navOverlay,
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           display: 'flex',
@@ -254,8 +256,8 @@ export default function Accueil() {
           <div style={{
             width: '100%',
             maxWidth: isMobile ? 440 : 520,
-            background: 'rgba(8,8,8,0.95)',
-            border: '1px solid rgba(255,255,255,0.1)',
+            background: eff.cardBg,
+            border: `1px solid ${eff.borderStrong}`,
             borderRadius: 24,
             padding: isMobile ? '20px 16px 24px' : '48px 40px',
             backdropFilter: 'blur(24px)',
@@ -269,7 +271,7 @@ export default function Accueil() {
                 fontFamily: 'Space Mono, monospace',
                 fontSize: isMobile ? 8 : 10,
                 letterSpacing: isMobile ? '0.2em' : '0.35em',
-                color: 'rgba(255,255,255,0.35)',
+                color: eff.textFaint,
                 marginBottom: isMobile ? 10 : 16,
               }}>
                 BIENVENUE SUR DEVJ PORTFOLIO
@@ -278,7 +280,7 @@ export default function Accueil() {
                 fontFamily: 'Fraunces, serif',
                 fontSize: isMobile ? 20 : 36,
                 fontWeight: 800,
-                color: '#fff',
+                color: eff.texte,
                 margin: 0,
                 lineHeight: 1.1,
               }}>
@@ -287,7 +289,7 @@ export default function Accueil() {
               <p style={{
                 fontFamily: 'Inter, sans-serif',
                 fontSize: isMobile ? 12 : 14,
-                color: 'rgba(255,255,255,0.5)',
+                color: eff.textMuted,
                 marginTop: isMobile ? 8 : 12,
                 lineHeight: 1.6,
               }}>
@@ -350,7 +352,7 @@ export default function Accueil() {
                         fontFamily: 'Syne, sans-serif',
                         fontWeight: 700,
                         fontSize: isMobile ? 13 : 15,
-                        color: '#fff',
+                        color: eff.texte,
                       }}>{t.nom || t.label}</div>
                       <div style={{
                         fontFamily: 'Space Mono, monospace',
@@ -379,7 +381,7 @@ export default function Accueil() {
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: 'rgba(255,255,255,0.3)',
+                color: eff.textFaint,
                 fontFamily: 'Space Mono, monospace',
                 fontSize: isMobile ? 9 : 10,
                 letterSpacing: '0.2em',

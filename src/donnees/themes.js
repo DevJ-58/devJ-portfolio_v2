@@ -71,6 +71,30 @@ const themes = {
     texte: '#ffffff',
     grille: 'rgba(236,72,153,0.025)',
   },
+  bleu: {
+    id: 'bleu',
+    label: 'BLEU ÉLECTRIQUE',
+    nom: 'Bleu',
+    accent: '#3b82f6',
+    accentFonce: '#2563eb',
+    accentRgb: '59,130,246',
+    fond: '#020510',
+    fondSecondaire: '#040820',
+    texte: '#ffffff',
+    grille: 'rgba(59,130,246,0.025)',
+  },
+  noir: {
+    id: 'noir',
+    label: 'NOIR ABSOLU',
+    nom: 'Noir',
+    accent: '#94a3b8',
+    accentFonce: '#64748b',
+    accentRgb: '148,163,184',
+    fond: '#000000',
+    fondSecondaire: '#080808',
+    texte: '#ffffff',
+    grille: 'rgba(148,163,184,0.02)',
+  },
 }
 
 export default themes

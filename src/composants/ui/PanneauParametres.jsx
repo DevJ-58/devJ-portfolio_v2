@@ -5,8 +5,10 @@ import themes from '@/donnees/themes'
 
 export default function PanneauParametres() {
   const [ouvert, setOuvert] = useState(false)
-  const { themeActif, theme, changerTheme } = utiliserTheme()
+  const { theme, mode, setMode, changerTheme, getThemeEffectif } = utiliserTheme()
+  const eff = getThemeEffectif ? getThemeEffectif() : theme
   const a = theme.accent
+  const isLight = mode === 'light'
 
   return (
     <>
@@ -113,14 +115,71 @@ export default function PanneauParametres() {
               marginBottom: 8,
             }}>MODE COULEUR</div>
 
+            {/* Toggle Light / Dark */}
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
+              <button
+                onClick={() => setMode('dark')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 44,
+                  height: 28,
+                  borderRadius: 10,
+                  cursor: 'pointer',
+                  border: isLight
+                    ? `1px solid ${eff.borderLight || 'rgba(15,23,42,0.06)'}`
+                    : `1px solid rgba(${theme.accentRgb},0.06)`,
+                  background: mode === 'dark'
+                    ? `rgba(${theme.accentRgb},0.15)`
+                    : (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.04)'),
+                  color: mode === 'dark' ? theme.accent : (isLight ? '#334155' : 'rgba(255,255,255,0.6)'),
+                  fontFamily: 'Space Mono, monospace',
+                  fontSize: 14,
+                  letterSpacing: '0.2em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                <span style={{ fontSize: 14, lineHeight: 1 }}>☽</span>
+              </button>
+
+              <button
+                onClick={() => setMode('light')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 44,
+                  height: 28,
+                  borderRadius: 10,
+                  cursor: 'pointer',
+                  border: isLight
+                    ? `1px solid ${eff.borderLight || 'rgba(15,23,42,0.06)'}`
+                    : `1px solid rgba(${theme.accentRgb},0.06)`,
+                  background: mode === 'light'
+                    ? `rgba(${theme.accentRgb},0.15)`
+                    : (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.04)'),
+                  color: mode === 'light' ? theme.accent : (isLight ? '#334155' : 'rgba(255,255,255,0.6)'),
+                  fontFamily: 'Space Mono, monospace',
+                  fontSize: 14,
+                  letterSpacing: '0.2em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                <span style={{ fontSize: 14, lineHeight: 1 }}>☀︎</span>
+              </button>
+            </div>
+
             {/* Les 3 options de thème */}
             <div style={{
               display: 'flex',
               flexDirection: 'column',
               gap: 6,
             }}>
-              {Object.values(themes).map(t => {
-                const actif = themeActif === t.id
+              {Object.values(themes)
+                .filter(t => !(isLight && t.id === 'blanc'))
+                .map(t => {
+                const actif = theme.id === t.id
                 return (
                   <button
                     key={t.id}
@@ -133,10 +192,10 @@ export default function PanneauParametres() {
                       borderRadius: '8px',
                       background: actif
                         ? `rgba(${t.accentRgb},0.1)`
-                        : 'rgba(255,255,255,0.02)',
+                        : (isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.02)'),
                       border: actif
                         ? `1px solid rgba(${t.accentRgb},0.4)`
-                        : '1px solid rgba(255,255,255,0.05)',
+                        : (isLight ? `1px solid ${eff.borderLight || 'rgba(15,23,42,0.06)'}` : '1px solid rgba(255,255,255,0.05)'),
                       cursor: 'pointer',
                       transition: 'all 0.2s',
                       width: '100%',

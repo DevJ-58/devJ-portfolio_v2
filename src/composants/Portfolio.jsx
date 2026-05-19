@@ -13,7 +13,9 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
   const [tooltipInfo, setTooltipInfo] = useState(null)
   const [citationIdx, setCitationIdx] = useState(0)
   const wrapRef = useRef(null)
-  const { theme } = utiliserTheme()
+  const { theme, mode, getThemeEffectif } = utiliserTheme()
+  const eff = getThemeEffectif ? getThemeEffectif() : theme
+  const isLight = mode === 'light'
   const a = theme.accent
   const aRgb = theme.accentRgb
   const navigate = useNavigate()
@@ -62,7 +64,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
   }
 
   function getContribColor(count, accent, accentRgb) {
-    if (count === 0) return 'rgba(255,255,255,0.04)'
+    if (count === 0) return isLight ? 'rgba(0,0,0,0.04)' : eff.cardBg
     if (count <= 2)  return `rgba(${accentRgb},0.2)`
     if (count <= 5)  return `rgba(${accentRgb},0.45)`
     if (count <= 10) return `rgba(${accentRgb},0.7)`
@@ -167,24 +169,25 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
   ]
 
   const s = {
-    wrap: { fontFamily: 'Inter, sans-serif', background: '#050505', color: '#F5F5F0', overflowY: 'auto', overflowX: 'hidden', maxWidth: '100vw', height: '100%', scrollBehavior: 'smooth' },
-    nav: { position: 'sticky', top: 0, zIndex: 100, background: 'rgba(5,5,5,0.85)', WebkitBackdropFilter: 'blur(24px)', backdropFilter: 'blur(24px)', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-    logo: { color: '#F5F5F0', fontSize: 15, fontWeight: 700, letterSpacing: '0.06em', fontFamily: 'Fraunces, serif' },
-    closeBtn: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', padding: '8px 16px', cursor: 'pointer', fontSize: 9, letterSpacing: '0.2em', borderRadius: 6, fontFamily: 'Space Mono, monospace' },
-    section: { padding: '100px 80px', borderBottom: '1px solid rgba(255,255,255,0.04)' },
+    wrap: { fontFamily: 'Inter, sans-serif', background: eff.fond, color: eff.texte, overflowY: 'auto', overflowX: 'hidden', maxWidth: '100vw', height: '100%', scrollBehavior: 'smooth' },
+    nav: { position: 'sticky', top: 0, zIndex: 100, background: eff.navOverlay, WebkitBackdropFilter: 'blur(24px)', backdropFilter: 'blur(24px)', borderBottom: `1px solid ${eff.borderLight}`, padding: '16px 48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+    logo: { color: eff.texte, fontSize: 15, fontWeight: 700, letterSpacing: '0.06em', fontFamily: 'Fraunces, serif' },
+    closeBtn: { background: eff.cardBg, border: `1px solid ${eff.borderStrong}`, color: eff.textMuted, padding: '8px 16px', cursor: 'pointer', fontSize: 9, letterSpacing: '0.2em', borderRadius: 6, fontFamily: 'Space Mono, monospace' },
+    section: { padding: '100px 80px', borderBottom: `1px solid ${eff.borderLight}` },
     secNum: { color: `rgba(${aRgb},0.35)`, fontSize: 10, letterSpacing: '0.35em', fontFamily: 'Space Mono, monospace' },
-    secTitle: { fontSize: 36, fontWeight: 700, color: '#F5F5F0', margin: '0 0 56px', fontFamily: 'Fraunces, serif' },
+    secTitle: { fontSize: 36, fontWeight: 700, color: eff.texte, margin: '0 0 56px', fontFamily: 'Fraunces, serif' },
     accent: { color: a },
     tag: { background: `rgba(${aRgb},0.08)`, border: `1px solid rgba(${aRgb},0.2)`, color: a, padding: '6px 16px', fontSize: 9, letterSpacing: '0.2em', borderRadius: 3, display: 'inline-block' },
-    card: { border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', padding: 24, marginBottom: 20, borderRadius: 12, WebkitBackdropFilter: 'blur(12px)', backdropFilter: 'blur(12px)' },
-    barWrap: { background: 'rgba(255,255,255,0.06)', height: 2, borderRadius: 2, margin: '8px 0 12px', width: '100%' },
+    card: { border: `1px solid ${eff.borderStrong}`, background: eff.cardBg, padding: 24, marginBottom: 20, borderRadius: 12, WebkitBackdropFilter: 'blur(12px)', backdropFilter: 'blur(12px)' },
+    barWrap: { background: eff.borderLight, height: 2, borderRadius: 2, margin: '8px 0 12px', width: '100%' },
   }
 
   const navStyle = { ...s.nav, padding: isMobile ? '12px 20px' : s.nav.padding }
   const sectionStyle = { ...s.section, padding: isMobile ? '64px 24px' : s.section.padding, overflowX: 'hidden', maxWidth: '100%' }
   const servicesGridStyle = { display: 'flex', flexDirection: 'column', gap: 12 }
   const contactGridStyle = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: isMobile ? 8 : 12 }
-  const navLinksStyle = { display: isMobile ? 'none' : 'flex', gap: 16, fontSize: 9, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.2em', fontFamily: 'Space Mono, monospace', textTransform: 'uppercase' }
+  const navLinksStyle = { display: isMobile ? 'none' : 'flex', gap: 16, fontSize: 9, color: eff.textFaint, letterSpacing: '0.2em', fontFamily: 'Space Mono, monospace', textTransform: 'uppercase' }
+  const navSpanColor = isLight ? '#64748b' : eff.textFaint
 
   function AxisBouton({ isMobile, a, aRgb, navigate }) {
     const [survol, setSurvol] = useState(false)
@@ -222,7 +225,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             bottom: isMobile ? 52 : 62,
             left: 0,
             width: isMobile ? 200 : 220,
-            background: 'rgba(4,4,6,0.96)',
+            background: eff.glassOverlay,
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             border: `1px solid rgba(${aRgb},0.25)`,
@@ -257,7 +260,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             <div style={{
               fontFamily: 'Inter, sans-serif',
               fontSize: isMobile ? 10 : 11,
-              color: 'rgba(255,255,255,0.75)',
+              color: eff.textMedium,
               lineHeight: 1.55,
             }}>
               Optimisez votre expérience en conversant avec AXIS, l'IA de Fréjus.
@@ -307,7 +310,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               borderRadius: '50%',
               background: survol
                 ? `rgba(${aRgb},0.12)`
-                : 'rgba(4,4,6,0.9)',
+                : eff.glassOverlay,
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
               border: `1px solid rgba(${aRgb},${survol ? '0.6' : '0.35'})`,
@@ -356,7 +359,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               width: isMobile ? 7 : 8, height: isMobile ? 7 : 8,
               borderRadius: '50%',
               background: a,
-              border: '1.5px solid #040406',
+              border: `1.5px solid ${eff.fond}`,
               boxShadow: `0 0 6px ${a}`,
               animation: 'axisPulse 1.4s infinite',
               zIndex: 4,
@@ -366,7 +369,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           {/* Label — masqué sur mobile */}
           {!isMobile && (
             <div style={{
-              background: 'rgba(4,4,6,0.88)',
+              background: eff.navOverlay,
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
               border: `1px solid rgba(${aRgb},${survol ? '0.35' : '0.18'})`,
@@ -421,7 +424,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         }
 
         #pf-wrap .pf-card { transition: transform 300ms ease, border-color 300ms ease, box-shadow 300ms ease; }
-        #pf-wrap .pf-card:hover { transform: translateY(-4px); border-color: rgba(${aRgb},0.3); box-shadow: 0 8px 30px rgba(2,6,6,0.6); }
+        #pf-wrap .pf-card:hover { transform: translateY(-4px); border-color: rgba(${aRgb},0.3); box-shadow: 0 8px 30px ${eff.shadow}; }
         #pf-wrap .pf-project-card { transition: transform 300ms ease, border-color 300ms ease, box-shadow 300ms ease; }
         #pf-wrap .pf-project-card:hover { transform: translateY(-3px); border-color: rgba(${aRgb},0.3); }
         #pf-wrap .pf-project-card img { transition: filter 400ms ease, transform 400ms ease; }
@@ -431,7 +434,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         #pf-wrap .pf-service-card:hover { transform: translateX(4px); border-color: rgba(${aRgb},0.35); }
         #pf-wrap .pf-skill-pill { transition: border-color 200ms, background 200ms; }
         #pf-wrap .pf-skill-pill:hover { border-color: rgba(${aRgb},0.3); background: rgba(${aRgb},0.05); }
-        #pf-wrap nav span { color: rgba(255,255,255,0.35); cursor: pointer; }
+        #pf-wrap nav span { color: ${navSpanColor}; cursor: pointer; }
         #pf-wrap nav span:hover { color: ${a}; transition: color 200ms; }
         #pf-wrap a.pf-btn:hover { background: ${a}; color: #050505; }
         #pf-wrap a.pf-ghost:hover { background: rgba(${aRgb},0.08); }
@@ -480,7 +483,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               <span style={{ color:a }}>Kouadio</span>
             </div>
 
-            <p style={{ color:'rgba(255,255,255,0.5)', fontSize:13, lineHeight:1.8, maxWidth:isMobile ? '100%' : 520, margin:0, marginTop:12 }}>
+            <p style={{ color:eff.textMuted, fontSize:13, lineHeight:1.8, maxWidth:isMobile ? '100%' : 520, margin:0, marginTop:12 }}>
               Passionné par la création d'expériences web exceptionnelles et l'intelligence artificielle. De Yamoussoukro à l'international.
             </p>
 
@@ -500,7 +503,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                     top:0, left:14, right:0,
                     fontFamily:'Fraunces, serif',
                     fontSize:13,
-                    color:'rgba(255,255,255,0.5)',
+                    color: eff.textMuted,
                     lineHeight:1.6,
                     fontStyle:'italic',
                     transition:'opacity 0.6s ease, transform 0.6s ease',
@@ -527,7 +530,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                     borderRadius:2,
                     background: i === citationIdx
                       ? a
-                      : 'rgba(255,255,255,0.12)',
+                      : eff.borderStrong,
                     transition:'width 0.4s ease, background 0.4s ease',
                     cursor:'pointer',
                   }}
@@ -539,10 +542,10 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               {['REACT','NODE.JS','PYTHON','IA & ML','FIGMA'].map(t => (
                 <span key={t} style={{
                   padding:'4px 12px',
-                  border:'1px solid rgba(255,255,255,0.08)',
+                  border:`1px solid ${eff.borderStrong}`,
                   borderRadius:4,
                   fontFamily:'Space Mono, monospace', fontSize:8,
-                  color:'rgba(255,255,255,0.35)', letterSpacing:'0.1em',
+                  color: eff.textFaint, letterSpacing:'0.1em',
                 }}>{t}</span>
               ))}
             </div>
@@ -559,11 +562,11 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               }}>
                 ME CONTACTER
               </a>
-              <a href="https://wa.me/2250767998373" target="_blank" rel="noopener" style={{
+                <a href="https://wa.me/2250767998373" target="_blank" rel="noopener" style={{
                 display:'inline-flex', alignItems:'center', justifyContent: 'center',
-                gap:8, background:'rgba(255,255,255,0.03)',
-                border:'1px solid rgba(255,255,255,0.08)',
-                color:'rgba(255,255,255,0.4)', borderRadius:8,
+                gap:8, background: isLight ? 'rgba(0,0,0,0.08)' : eff.cardBg,
+                border:`1px solid ${eff.borderStrong}`,
+                color: eff.textFaint, borderRadius:8,
                 padding:'10px 24px', fontFamily:'Space Mono, monospace', fontSize:9,
                 letterSpacing:'0.2em', textDecoration:'none',
                 width: isMobile ? '100%' : 'auto'
@@ -593,19 +596,29 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                   objectFit:'cover',
                   objectPosition:'top center',
                   display: isMobile ? 'none' : 'block',
-                  filter:`drop-shadow(0 0 60px rgba(${aRgb},0.06))`,
-                  maskImage:'linear-gradient(to left, rgba(0,0,0,0.85) 40%, transparent 100%)',
-                  WebkitMaskImage:'linear-gradient(to left, rgba(0,0,0,0.85) 40%, transparent 100%)',
+                  filter: isLight
+                    ? `drop-shadow(0 0 40px rgba(${aRgb},0.12)) contrast(1.05) brightness(0.97)`
+                    : `drop-shadow(0 0 60px rgba(${aRgb},0.06))`,
+                  maskImage: isLight
+                    ? 'linear-gradient(to left, rgba(0,0,0,0.92) 50%, transparent 100%)'
+                    : 'linear-gradient(to left, rgba(0,0,0,0.85) 40%, transparent 100%)',
+                  WebkitMaskImage: isLight
+                    ? 'linear-gradient(to left, rgba(0,0,0,0.92) 50%, transparent 100%)'
+                    : 'linear-gradient(to left, rgba(0,0,0,0.85) 40%, transparent 100%)',
                 }}
               />
               <div style={{
                 position:'absolute', inset:0,
-                background:'linear-gradient(to right, #050505 0%, rgba(5,5,5,0.2) 50%, transparent 100%)',
+                background: isLight
+                  ? `linear-gradient(to right, ${eff.fond} 0%, ${eff.fond}55 30%, transparent 80%)`
+                  : `linear-gradient(to right, ${eff.fond} 0%, ${eff.fond}33 50%, transparent 100%)`,
                 zIndex:1,
               }}/>
               <div style={{
                 position:'absolute', inset:0,
-                background:'linear-gradient(to top, #050505 0%, transparent 40%)',
+                background: isLight
+                  ? `linear-gradient(to top, ${eff.fond} 0%, transparent 25%)`
+                  : `linear-gradient(to top, ${eff.fond} 0%, transparent 40%)`,
                 zIndex:1,
               }}/>
             </div>
@@ -613,7 +626,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             <div style={{
               position:'relative', zIndex:2,
               marginTop:'auto',
-              borderTop:'1px solid rgba(255,255,255,0.04)',
+              borderTop:`1px solid ${eff.borderLight}`,
               display:'flex', gap:0,
               minHeight: isMobile ? 'auto' : '85vh',
               alignItems:'flex-end',
@@ -621,7 +634,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               {[['6','PROJETS'],['2+','ANNÉES'],['100%','SATISFACTION']].map(([v,l], i) => (
                 <div key={l} style={{
                   flex:1, padding: isMobile ? '12px 10px' : '16px 20px',
-                  borderRight: i < 2 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                  borderRight: i < 2 ? `1px solid ${eff.borderLight}` : 'none',
                   display:'flex', flexDirection:'column', gap:4,
                 }}>
                   <div style={{
@@ -630,7 +643,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                   }}>{v}</div>
                   <div style={{
                     fontFamily:'Space Mono, monospace',
-                    fontSize: isMobile ? 6 : 7, color:'rgba(255,255,255,0.3)',
+                    fontSize: isMobile ? 6 : 7, color: eff.textFaint,
                     letterSpacing:'0.2em'
                   }}>{l}</div>
                 </div>
@@ -681,7 +694,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               bottom: isMobile ? undefined : 12,
               left: isMobile ? undefined : 12,
               right: isMobile ? undefined : 12,
-              background:'rgba(5,5,5,0.85)',
+              background: eff.glassOverlay,
               border:`1px solid rgba(${aRgb},0.2)`,
               borderRadius:10, padding:'10px 12px',
               backdropFilter: isMobile ? 'none' : 'blur(10px)',
@@ -692,7 +705,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               <div style={{
                 fontFamily:'Fraunces, serif',
                 fontSize:13, fontWeight:700,
-                color:'#F5F5F0', marginBottom:2,
+                color: eff.texte, marginBottom:2,
               }}>
                 Fréjus Kouadio
               </div>
@@ -715,8 +728,8 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           </div>
 
           <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
-            <div style={{ color:'rgba(255,255,255,0.7)', lineHeight:1.9, fontSize:13 }}>
-              Développeur Frontend passionné, spécialisé en <strong style={{ color:'rgba(255,255,255,0.85)', fontWeight:500 }}>React</strong> et <strong style={{ color:'rgba(255,255,255,0.85)', fontWeight:500 }}>intelligence artificielle</strong>. Conception d'interfaces performantes, accessibles et esthétiques, avec un souci du détail et de la performance.
+            <div style={{ color: eff.textMuted, lineHeight:1.9, fontSize:13 }}>
+              Développeur Frontend passionné, spécialisé en <strong style={{ color: eff.textHigh, fontWeight:500 }}>React</strong> et <strong style={{ color: eff.textHigh, fontWeight:500 }}>intelligence artificielle</strong>. Conception d'interfaces performantes, accessibles et esthétiques, avec un souci du détail et de la performance.
             </div>
 
             <div style={{
@@ -725,7 +738,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               background:`rgba(${aRgb},0.04)`,
               borderRadius:'0 8px 8px 0',
               fontSize:13,
-              color:'rgba(255,255,255,0.65)',
+              color: eff.textMuted,
               lineHeight:1.8,
               fontStyle:'italic',
             }}>
@@ -735,8 +748,8 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(2,1fr)', gap:12 }}>
               {[['Email','devfred58@gmail.com'],['Téléphone','+225 0767998373'],['Localisation','Yamoussoukro, CI'],['Disponibilité','Ouverts aux projets']].map(([k,v]) => (
                 <div key={k} style={{
-                  background:'rgba(255,255,255,0.03)',
-                  border:'1px solid rgba(255,255,255,0.06)',
+                  background: eff.cardBg,
+                  border: `1px solid ${eff.borderMedium}`,
                   borderRadius:10,
                   padding:'12px 14px',
                   position:'relative',
@@ -754,7 +767,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                       fontFamily:'Space Mono, monospace',
                       marginBottom:6,
                     }}>{k.toUpperCase()}</div>
-                    <div style={{ fontSize:12, color:'rgba(255,255,255,0.85)', fontFamily:'Inter, sans-serif' }}>{v}</div>
+                    <div style={{ fontSize:12, color: eff.textHigh, fontFamily:'Inter, sans-serif' }}>{v}</div>
                   </div>
                 </div>
               ))}
@@ -776,6 +789,49 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                 DISPONIBLE POUR DE NOUVEAUX PROJETS
               </span>
             </div>
+            <a
+              href="/asset/cv_frejus.pdf"
+              download="cv_frejus.pdf"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 10,
+                marginTop: 16,
+                padding: isMobile ? '12px 20px' : '12px 28px',
+                background: `rgba(${aRgb},0.08)`,
+                border: `1px solid rgba(${aRgb},0.3)`,
+                borderRadius: 10,
+                fontFamily: 'Space Mono, monospace',
+                fontSize: isMobile ? 9 : 10,
+                letterSpacing: '0.18em',
+                color: a,
+                textDecoration: 'none',
+                fontWeight: 700,
+                width: isMobile ? '100%' : 'fit-content',
+                justifyContent: isMobile ? 'center' : 'flex-start',
+                transition: 'background 0.2s, border-color 0.2s, transform 0.2s',
+                boxShadow: `0 0 20px rgba(${aRgb},0.1)`,
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = `rgba(${aRgb},0.15)`
+                e.currentTarget.style.borderColor = a
+                e.currentTarget.style.transform = 'translateY(-2px)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = `rgba(${aRgb},0.08)`
+                e.currentTarget.style.borderColor = `rgba(${aRgb},0.3)`
+                e.currentTarget.style.transform = 'translateY(0)'
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              TÉLÉCHARGER MON CV
+            </a>
           </div>
         </div>
       </section>
@@ -895,7 +951,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                   fontFamily: 'Space Mono, monospace',
                   fontSize: 10,
                   fontWeight: 700,
-                  color: item.done ? a : '#fff',
+                  color: item.done ? a : eff.texte,
                   letterSpacing: '0.2em',
                   background: item.done
                     ? `rgba(${aRgb},0.1)`
@@ -925,7 +981,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                 <div style={{
                   fontFamily: 'Inter, sans-serif',
                   fontSize: 11,
-                  color: 'rgba(255,255,255,0.5)',
+                  color: eff.textMuted,
                   textAlign: 'center',
                   lineHeight: 1.5,
                   whiteSpace: 'pre-line',
@@ -972,18 +1028,18 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         <h2 style={s.secTitle}>Compétences <span style={s.accent}>Techniques</span></h2>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:16 }}>
           {competences.map(cat => (
-            <div key={cat.cat} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius:16, padding: isMobile ? 16 : 28, WebkitBackdropFilter:'blur(12px)', backdropFilter:'blur(12px)' }}>
+            <div key={cat.cat} style={{ background: eff.cardBg, border: `1px solid ${eff.borderMedium}`, borderRadius:16, padding: isMobile ? 16 : 28, WebkitBackdropFilter:'blur(12px)', backdropFilter:'blur(12px)' }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
-                <div style={{ fontFamily:'Fraunces, serif', fontWeight:700, fontSize:14, color:'#F5F5F0' }}>{cat.cat}</div>
+                <div style={{ fontFamily:'Fraunces, serif', fontWeight:700, fontSize:14, color: eff.texte }}>{cat.cat}</div>
                 <div style={{ fontFamily:'Space Mono, monospace', fontSize:9, color:`rgba(${aRgb},0.4)`, background:`rgba(${aRgb},0.06)`, border:`1px solid rgba(${aRgb},0.15)`, padding:'3px 8px', borderRadius:4 }}>{cat.items.length}</div>
               </div>
               <div style={{ display:'flex', flexWrap:'wrap', gap:10 }}>
                 {cat.items.map(([nom, pct]) => {
                   const indicatorColor = pct >= 85 ? a : (pct >= 70 ? `rgba(${aRgb},0.5)` : `rgba(${aRgb},0.25)`)
                   return (
-                    <div key={nom} className="pf-skill-pill" style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, padding: isMobile ? '6px 10px' : '8px 14px' }}>
+                    <div key={nom} className="pf-skill-pill" style={{ display:'flex', alignItems:'center', gap:8, background: isLight ? 'rgba(0,0,0,0.05)' : eff.cardBg, border:`1px solid ${eff.borderStrong}`, borderRadius:8, padding: isMobile ? '6px 10px' : '8px 14px' }}>
                       <div style={{ width:6, height:6, borderRadius:6, background: indicatorColor, flexShrink:0 }} />
-                      <div style={{ fontFamily:'Inter, sans-serif', fontSize: isMobile ? 12 : 13, color:'rgba(245,245,240,0.8)' }}>{nom}</div>
+                      <div style={{ fontFamily:'Inter, sans-serif', fontSize: isMobile ? 12 : 13, color: eff.textHigh }}>{nom}</div>
                       <div style={{ fontFamily:'Space Mono, monospace', fontSize: isMobile ? 9 : 10, color:`rgba(${aRgb},0.55)`, marginLeft:'auto' }}>{pct}%</div>
                     </div>
                   )
@@ -1012,8 +1068,8 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               borderRadius: 16,
               overflow: 'hidden',
               minWidth: 0,
-              border: '1px solid rgba(255,255,255,0.07)',
-              background: 'rgba(255,255,255,0.02)',
+              border: `1px solid ${eff.borderMedium}`,
+              background: eff.cardBg,
               cursor: 'pointer',
               transition: 'transform 0.3s, border-color 0.3s',
               maxWidth: '100%',
@@ -1024,7 +1080,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'
+                e.currentTarget.style.borderColor = eff.borderMedium
               }}
             >
               {/* Image */}
@@ -1037,13 +1093,13 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                 />
                 <div style={{
                   position: 'absolute', inset: 0,
-                  background: 'linear-gradient(to top, rgba(5,5,5,0.85) 0%, transparent 60%)',
+                  background: `linear-gradient(to top, ${eff.fond}d9 0%, transparent 60%)`,
                 }} />
                 <div style={{
                   position: 'absolute', top: 12, left: 12,
                   fontFamily: 'Space Mono, monospace', fontSize: 9,
                   color: `rgba(${aRgb},0.7)`, letterSpacing: '0.2em',
-                  background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)',
+                  background: isLight ? 'rgba(15,23,42,0.4)' : 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)',
                   padding: '3px 8px', borderRadius: 4,
                 }}>{p.num}</div>
               </div>
@@ -1063,11 +1119,11 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                 </div>
                 <div style={{
                   fontFamily: 'Fraunces, serif', fontWeight: 700,
-                  fontSize: isMobile ? 12 : 15, color: '#F5F5F0', marginBottom: isMobile ? 4 : 8, lineHeight: 1.3,
+                  fontSize: isMobile ? 12 : 15, color: eff.texte, marginBottom: isMobile ? 4 : 8, lineHeight: 1.3,
                 }}>{p.titre}</div>
                 <div style={{
                   fontFamily: 'Inter, sans-serif', fontWeight: 300,
-                  fontSize: isMobile ? 10 : 12, color: 'rgba(245,245,240,0.45)',
+                  fontSize: isMobile ? 10 : 12, color: eff.textFaint,
                   lineHeight: 1.65,
                   display: '-webkit-box', WebkitLineClamp: isMobile ? 1 : 2,
                   WebkitBoxOrient: 'vertical', overflow: 'hidden',
@@ -1092,13 +1148,13 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           <div>
             <div style={{
               fontFamily: 'Fraunces, serif', fontWeight: 700,
-              fontSize: isMobile ? 15 : 18, color: '#F5F5F0', marginBottom: 6,
+              fontSize: isMobile ? 15 : 18, color: eff.texte, marginBottom: 6,
             }}>
               Et {projets.length - 3} autres projets...
             </div>
             <div style={{
               fontFamily: 'Inter, sans-serif', fontSize: isMobile ? 12 : 13,
-              color: 'rgba(255,255,255,0.4)', lineHeight: 1.6,
+              color: eff.textFaint, lineHeight: 1.6,
             }}>
               GSB, ZikmuCI, Terasse — des réalisations variées qui témoignent de ma polyvalence.
             </div>
@@ -1166,8 +1222,8 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
 
         {/* Carte principale glass */}
         <div style={{
-          background: 'rgba(255,255,255,0.025)',
-          border: '1px solid rgba(255,255,255,0.07)',
+          background: eff.cardBg,
+          border: `1px solid ${eff.borderStrong}`,
           borderRadius: 20,
           padding: isMobile ? '24px 16px' : '36px 40px',
           backdropFilter: 'blur(12px)',
@@ -1350,7 +1406,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                                     background: color,
                                     border: isActive
                                       ? `1px solid rgba(${aRgb},0.15)`
-                                      : '1px solid rgba(255,255,255,0.03)',
+                                      : `1px solid ${eff.borderLight}`,
                                     cursor: isActive ? 'pointer' : 'default',
                                     transition: 'transform 0.15s, box-shadow 0.15s',
                                     boxShadow: day.count > 8
@@ -1467,7 +1523,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                         }}>{value}</div>
                   <div style={{
                     fontFamily: 'Inter, sans-serif', fontSize: 10,
-                    color: 'rgba(255,255,255,0.3)',
+                    color: eff.textFaint,
                   }}>{sub}</div>
                 </div>
               ))}
@@ -1483,13 +1539,13 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         <div style={servicesGridStyle}>
           {services.map((sv, idx) => {
             const isPopular = !!sv.badge
-            const cardStyle = { display:'flex', flexDirection: isMobile ? 'column' : 'row', alignItems:'stretch', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', WebkitBackdropFilter:'blur(16px)', backdropFilter:'blur(16px)', borderRadius:16, overflow:'hidden', maxWidth: '100%', transition:'border-color 300ms, transform 300ms', padding: isMobile ? '12px' : 0, minWidth: 0 }
+            const cardStyle = { display:'flex', flexDirection: isMobile ? 'column' : 'row', alignItems:'stretch', background: eff.cardBg, border:`1px solid ${eff.borderStrong}`, WebkitBackdropFilter:'blur(16px)', backdropFilter:'blur(16px)', borderRadius:16, overflow:'hidden', maxWidth: '100%', transition:'border-color 300ms, transform 300ms', padding: isMobile ? '12px' : 0, minWidth: 0 }
             if (isPopular) { cardStyle.border = `1px solid rgba(${aRgb},0.25)`; cardStyle.background = `rgba(${aRgb},0.04)` }
-            const leftStyle = { width: isMobile ? '100%' : 260, flexShrink:0, background:`rgba(${aRgb},0.05)`, borderRight: isMobile ? 'none' : '1px solid rgba(255,255,255,0.06)', borderBottom: isMobile ? '1px solid rgba(255,255,255,0.06)' : 'none', padding: isMobile ? '18px 20px' : '28px 32px', display:'flex', flexDirection:'column', justifyContent:'center', minWidth: 0 }
+            const leftStyle = { width: isMobile ? '100%' : 260, flexShrink:0, background:`rgba(${aRgb},0.05)`, borderRight: isMobile ? 'none' : `1px solid ${eff.borderMedium}`, borderBottom: isMobile ? `1px solid ${eff.borderMedium}` : 'none', padding: isMobile ? '18px 20px' : '28px 32px', display:'flex', flexDirection:'column', justifyContent:'center', minWidth: 0 }
             const rightStyle = { flex:1, padding: isMobile ? '16px 18px' : '28px 36px', display:'flex', flexWrap:'wrap', alignContent:'center', gap:'10px 24px' }
             const badgeStyle = { background:a, color:'#050505', fontFamily:'Space Mono, monospace', fontSize:8, fontWeight:700, letterSpacing:'0.1em', padding:'4px 10px', borderRadius:4, display:'inline-block', marginBottom:16 }
             const priceStyle = { fontFamily:'Fraunces, serif', fontWeight:800, fontSize:isMobile ? 20 : 28, color:a, marginBottom:6 }
-            const titleStyle = { fontFamily:'Fraunces, serif', fontWeight:600, fontSize:isMobile ? 14 : 16, color:'#F5F5F0', marginBottom:8 }
+            const titleStyle = { fontFamily:'Fraunces, serif', fontWeight:600, fontSize:isMobile ? 14 : 16, color: eff.texte, marginBottom:8 }
             const delayStyle = { fontFamily:'Space Mono, monospace', fontSize:9, color:`rgba(${aRgb},0.45)`, display:'flex', alignItems:'center', gap:6 }
             return (
               <div key={sv.titre} className="pf-service-card pf-card" style={cardStyle}>
@@ -1505,7 +1561,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                   {sv.features.map((f, i) => (
                     <div key={f} style={{ display:'flex', alignItems:'center', gap:10, width: isMobile ? '100%' : 'calc(50% - 12px)', marginBottom:8 }}>
                       <div style={{ width: isMobile ? 16 : 18, height: isMobile ? 16 : 18, flexShrink:0, background:`rgba(${aRgb},0.1)`, border:`1px solid rgba(${aRgb},0.25)`, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontSize:isMobile ? 9 : 10, color:a }}>✓</div>
-                      <div style={{ fontFamily:'Inter, sans-serif', fontWeight:300, fontSize:isMobile ? 11 : 12, color:'rgba(245,245,240,0.65)' }}>{f}</div>
+                      <div style={{ fontFamily:'Inter, sans-serif', fontWeight:300, fontSize:isMobile ? 11 : 12, color: eff.textMuted }}>{f}</div>
                     </div>
                   ))}
                 </div>
@@ -1542,7 +1598,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                   padding: isMobile ? '20px 18px' : '36px 32px',
                   background: i % 2 === 0
                     ? `rgba(${aRgb},0.04)`
-                    : 'rgba(255,255,255,0.02)',
+                    : eff.cardBg,
                   border: `1px solid rgba(${aRgb},${i % 2 === 0 ? '0.15' : '0.07'})`,
                   borderRadius: 20,
                   margin: isMobile ? 6 : 8,
@@ -1562,7 +1618,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                   e.currentTarget.style.borderColor = `rgba(${aRgb},${i % 2 === 0 ? '0.15' : '0.07'})`
                   e.currentTarget.style.background = i % 2 === 0
                     ? `rgba(${aRgb},0.04)`
-                    : 'rgba(255,255,255,0.02)'
+                    : eff.cardBg
                 }}
               >
                 {/* Ligne de connexion top */}
@@ -1615,7 +1671,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                   fontFamily: 'Fraunces, serif',
                   fontWeight: 700,
                   fontSize: isMobile ? 14 : 16,
-                  color: '#F5F5F0',
+                  color: eff.texte,
                   lineHeight: 1.3,
                 }}>{e.titre}</div>
 
@@ -1624,7 +1680,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                   fontFamily: 'Inter, sans-serif',
                   fontWeight: 300,
                   fontSize: isMobile ? 11 : 12,
-                  color: 'rgba(245,245,240,0.5)',
+                  color: eff.textMuted,
                   lineHeight: 1.7,
                 }}>{e.desc}</div>
 
@@ -1676,7 +1732,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           borderLeft: `3px solid ${a}`,
           borderRadius: 12,
         }}>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, color: 'rgba(255,255,255,0.75)', lineHeight: 1.8, margin: 0 }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, color: eff.textMedium, lineHeight: 1.8, margin: 0 }}>
             Vous avez un projet web, une idée à concrétiser ou vous cherchez un développeur fullstack passionné par l'IA ? Je suis disponible pour des missions freelance, des collaborations et des opportunités à temps plein.
           </p>
         </div>
@@ -1709,7 +1765,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               className="pf-card"
               style={{ ...s.card, padding: isMobile ? '12px 12px' : s.card.padding, textDecoration: 'none', display: 'block', transition: 'border-color 0.2s, transform 0.2s', marginBottom: isMobile ? 0 : 20 }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = `rgba(${aRgb},0.35)`; e.currentTarget.style.transform = 'translateY(-3px)' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.transform = 'translateY(0)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = eff.borderStrong; e.currentTarget.style.transform = 'translateY(0)' }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                 <div style={{ fontSize: 8, color: `rgba(${aRgb},0.5)`, letterSpacing: '0.2em', fontFamily: 'Space Mono, monospace' }}>{label.toUpperCase()}</div>
@@ -1758,10 +1814,10 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         gap: 16,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, fontSize: 14, color: '#F5F5F0', letterSpacing: '0.06em' }}>
+          <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, fontSize: 14, color: eff.texte, letterSpacing: '0.06em' }}>
             &lt;<span style={{ color: a }}>/DevJ</span>&gt;
           </div>
-          <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.08)' }} />
+          <div style={{ width: 1, height: 20, background: eff.borderStrong }} />
           <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: `rgba(${aRgb},0.45)`, letterSpacing: '0.15em', display: isMobile ? 'none' : 'block' }}>
             FRÉJUS KOUADIO · DEV FULLSTACK & IA
           </div>
@@ -1808,14 +1864,14 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           }}
         >
           <div style={{
-            background: 'rgba(3,6,4,0.95)',
+            background: eff.glassOverlay,
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             border: `1px solid ${a}`,
             borderRadius: 10,
             padding: '10px 14px',
             minWidth: 160,
-            boxShadow: `0 0 20px rgba(${aRgb},0.3), 0 8px 32px rgba(0,0,0,0.5)`,
+            boxShadow: `${eff.shadow}, 0 8px 32px ${eff.shadow}`,
             position: 'relative',
             overflow: 'hidden',
           }}>
@@ -1856,7 +1912,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             </div>
             <div style={{
               fontFamily: 'Inter, sans-serif', fontSize: 10,
-              color: 'rgba(255,255,255,0.4)',
+              color: eff.textFaint,
             }}>
               contribution{tooltipInfo.count > 1 ? 's' : ''}
             </div>
@@ -1864,7 +1920,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             {/* Barre visuelle */}
             <div style={{
               marginTop: 8, height: 2,
-              background: 'rgba(255,255,255,0.05)',
+              background: eff.borderLight,
               borderRadius: 2, overflow: 'hidden',
             }}>
               <div style={{
