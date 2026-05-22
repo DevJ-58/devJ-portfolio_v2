@@ -47,8 +47,9 @@ const utiliserTheme = create(
           accentFonce: theme.accentFonce,
           accentRgb: theme.accentRgb,
           // fonds
-          fond: isLight ? '#e8eaef' : theme.fond,
-          fondSecondaire: isLight ? '#dde0e8' : theme.fondSecondaire,
+          fond: isLight ? '#d8dce5' : theme.fond,
+          fondPage: isLight ? '#cdd2dc' : theme.fondPage,
+          fondSecondaire: isLight ? '#cdd2dc' : theme.fondSecondaire,
           // texte principal
           texte: isLight ? '#0f172a' : theme.texte,
           // grille (conserve le pattern du thème)
@@ -64,9 +65,9 @@ const utiliserTheme = create(
           borderMedium: isLight ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.06)',
           borderLight: isLight ? 'rgba(15,23,42,0.06)' : 'rgba(255,255,255,0.04)',
           // cards / glass
-          cardBg: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.03)',
-          glassOverlay: isLight ? 'rgba(240,242,245,0.88)' : 'rgba(5,5,5,0.85)',
-          navOverlay: isLight ? 'rgba(240,242,245,0.92)' : 'rgba(5,5,5,0.85)',
+          cardBg: isLight ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.03)',
+          glassOverlay: isLight ? 'rgba(232,235,241,0.92)' : 'rgba(5,5,5,0.85)',
+          navOverlay: isLight ? 'rgba(228,231,238,0.95)' : 'rgba(5,5,5,0.85)',
           // shadows
           shadow: isLight ? 'rgba(15,23,42,0.15)' : 'rgba(0,0,0,0.5)',
         }

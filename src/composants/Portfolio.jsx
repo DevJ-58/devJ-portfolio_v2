@@ -1805,7 +1805,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
       <footer style={{
         padding: isMobile ? '24px 20px' : '40px 80px',
         borderTop: `1px solid rgba(${aRgb},0.08)`,
-        background: 'rgba(0,0,0,0.4)',
+        background: isLight ? 'rgba(220,224,230,0.7)' : 'rgba(0,0,0,0.4)',
         display: 'flex',
         flexDirection: isMobile ? 'column' : 'row',
         justifyContent: 'space-between',

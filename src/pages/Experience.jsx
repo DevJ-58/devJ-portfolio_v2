@@ -750,7 +750,7 @@ export default function Experience() {
 
         <div style={{ position: 'absolute', left: '50%', top: '50%', transform: avatarTransform, transition: 'transform 0.5s cubic-bezier(0.16,1,0.3,1)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, zIndex: 20, width: '100%' }}>
           <AvatarStable width={200} height={200} etat={aiState} />
-          <div style={{ textAlign: 'center', fontFamily: 'Space Mono, monospace', color: 'rgba(255,255,255,0.9)', fontSize: 9, lineHeight: 1.4, maxWidth: '88vw' }}>
+          <div style={{ textAlign: 'center', fontFamily: 'Space Mono, monospace', color: isLight ? eff.texte : 'rgba(255,255,255,0.9)', fontSize: 9, lineHeight: 1.4, maxWidth: '88vw' }}>
             <div>// FRÉJUS KOUADIO</div>
             <div style={{ color: aiState === 'idle' ? `rgba(${aRgb},0.4)` : a }}>
               {aiState === 'idle' ? '// EN ATTENTE' : aiState === 'thinking' ? '// TRAITEMENT...' : '// EN TRAIN DE PARLER'}
@@ -759,7 +759,7 @@ export default function Experience() {
           {modeChat && bulleVisible && !modePortfolio && (
             <div style={{ width: 'calc(100vw - 64px)', maxWidth: 340, background: eff.glassOverlay, border: `1px solid rgba(${aRgb},0.1)`, borderRadius: 14, padding: 16, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', color: eff.texte }}>
               <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: a, letterSpacing: '0.25em', marginBottom: 8 }}>AXIS // TRANSMISSION</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6 }}>{dernierMessage}</div>
+              <div style={{ fontSize: 12, color: eff.textHigh, lineHeight: 1.6 }}>{dernierMessage}</div>
             </div>
           )}
         </div>
@@ -825,8 +825,8 @@ export default function Experience() {
           <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid rgba(${aRgb},0.08)` }}>
             <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: isLight ? '#475569' : 'rgba(255,255,255,0.45)', letterSpacing: '0.18em', marginBottom: 10 }}>SYS_STATUS</div>
             {[['MODÈLE','GROQ'],['SESSION','ACTIVE'],['VOIX','FR-FR']].map(([k,v]) => (
-              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'rgba(255,255,255,0.75)', marginBottom: 8 }}>
-                <span>{k}</span><span style={{ color: a }}>{v}</span>
+              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: isLight ? '#334155' : 'rgba(255,255,255,0.75)', marginBottom: 8 }}>
+                <span style={{ color: isLight ? '#64748b' : 'rgba(255,255,255,0.3)' }}>{k}</span><span style={{ color: a }}>{v}</span>
               </div>
             ))}
           </div>
@@ -1047,7 +1047,7 @@ export default function Experience() {
         <path d="M28 0 L28 28 L0 28" fill="none" stroke={`rgba(${aRgb},0.4)`} strokeWidth="1"/>
       </svg>
 
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20, background: isLight ? 'rgba(240,242,245,0.55)' : 'rgba(0,0,0,0.75)', borderBottom: `1px solid rgba(${aRgb},0.12)` }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20, background: isLight ? 'rgba(216,220,229,0.92)' : 'rgba(0,0,0,0.75)', borderBottom: `1px solid rgba(${aRgb},0.12)` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 20px 4px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Space Mono, monospace', color: isLight ? 'rgba(15,23,42,0.55)' : 'rgba(255,255,255,0.25)' }}>
             <span>&lt;</span>
@@ -1062,7 +1062,7 @@ export default function Experience() {
           </div>
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <button onClick={() => setModeVocal((prev) => !prev)} style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1px solid', borderColor: modeVocal ? a : `rgba(${aRgb},0.25)`, background: modeVocal ? `rgba(${aRgb},0.15)` : 'transparent', color: modeVocal ? '#ffffff' : a, padding: '6px 14px', fontFamily: 'Space Mono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', borderRadius: '6px', transition: 'all .2s' }}>
+            <button onClick={() => setModeVocal((prev) => !prev)} style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1px solid', borderColor: modeVocal ? a : `rgba(${aRgb},0.25)`, background: modeVocal ? `rgba(${aRgb},0.15)` : isLight ? `rgba(${aRgb},0.06)` : 'transparent', color: modeVocal ? '#ffffff' : a, padding: '6px 14px', fontFamily: 'Space Mono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', borderRadius: '6px', transition: 'all .2s' }}>
               <Volume2 size={12} />
               <span>AUDIO</span>
             </button>
@@ -1070,7 +1070,7 @@ export default function Experience() {
             <div
               className={`mode-item ${modeParler ? 'actif' : ''}`}
               onClick={toggleParler}
-              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, border: '1px solid', borderColor: modeParler ? a : `rgba(${aRgb},0.25)`, background: modeParler ? `rgba(${aRgb},0.15)` : 'transparent', color: modeParler ? '#ffffff' : a, padding: '6px 14px', fontFamily: 'Space Mono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', borderRadius: '6px', transition: 'all .2s' }}
+              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, border: '1px solid', borderColor: modeParler ? a : `rgba(${aRgb},0.25)`, background: modeParler ? `rgba(${aRgb},0.15)` : isLight ? `rgba(${aRgb},0.06)` : 'transparent', color: modeParler ? '#ffffff' : a, padding: '6px 14px', fontFamily: 'Space Mono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', borderRadius: '6px', transition: 'all .2s' }}
             >
               <span className="mode-label">
                 {ecoute ? '⬤ ÉCOUTE' : 'PARLER'}
@@ -1079,10 +1079,10 @@ export default function Experience() {
                 {modeParler ? 'ON' : 'OFF'}
               </span>
             </div>
-            <button onClick={() => setModeChat((prev) => !prev)} style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1px solid', borderColor: modeChat ? a : `rgba(${aRgb},0.25)`, background: modeChat ? `rgba(${aRgb},0.15)` : 'transparent', color: modeChat ? '#ffffff' : 'rgba(255,255,255,0.3)', padding: '6px 14px', fontFamily: 'Space Mono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', borderRadius: '6px', transition: 'all .2s' }}>
+            <button onClick={() => setModeChat((prev) => !prev)} style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1px solid', borderColor: modeChat ? a : `rgba(${aRgb},0.25)`, background: modeChat ? `rgba(${aRgb},0.15)` : isLight ? `rgba(${aRgb},0.06)` : 'transparent', color: modeChat ? (isLight ? '#0f172a' : '#ffffff') : (isLight ? '#64748b' : 'rgba(255,255,255,0.3)'), padding: '6px 14px', fontFamily: 'Space Mono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', borderRadius: '6px', transition: 'all .2s' }}>
               <span>TEXTE</span>
             </button>
-            <div style={{ width: 1, height: 20, background: '#2d2d2d' }} />
+            <div style={{ width: 1, height: 20, background: isLight ? '#cbd5e1' : '#2d2d2d' }} />
             <button onClick={() => setModePortfolio(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, border: `1px solid rgba(${aRgb},0.25)`, background: `rgba(${aRgb},0.05)`, color: a, padding: '6px 14px', fontFamily: 'Space Mono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', borderRadius: '6px', transition: 'all .2s' }}>
               <Layout size={12} />
               <span>PORTFOLIO</span>
@@ -1126,7 +1126,7 @@ export default function Experience() {
 
       {bulleVisible && (modeChat || !modeVocal) && (
         <div style={{ position: 'absolute', top: 90, left: '50%', transform: 'translateX(-50%)', width: 380, zIndex: 25, opacity: bulleVisible ? 1 : 0, transition: 'opacity 0.4s' }}>
-          <div style={{ position: 'relative', background: isLight ? 'rgba(255,255,255,0.92)' : 'rgba(3,3,3,0.82)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderRadius: '14px', border: `1px solid rgba(${aRgb},0.1)`, padding: '16px 20px', fontFamily: 'Syne, sans-serif', color: eff.texte }}>
+          <div style={{ position: 'relative', background: isLight ? '#e8eaef' : 'rgba(3,3,3,0.82)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderRadius: '14px', border: `1px solid rgba(${aRgb},0.1)`, padding: '16px 20px', fontFamily: 'Syne, sans-serif', color: eff.texte }}>
             <div style={{ position:'absolute',top:0,left:20,right:20,height:1, background:`linear-gradient(90deg,transparent,rgba(${aRgb},0.22),transparent)` }} />
             <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: a, letterSpacing: '0.25em', marginBottom: 8 }}>AXIS // TRANSMISSION</div>
             <div style={{ fontSize: 14, color: eff.texte, lineHeight: 1.7 }}>{dernierMessage}</div>
@@ -1195,11 +1195,11 @@ export default function Experience() {
             <span style={{ position: 'absolute', top: 1, left: 2, width: 6, height: 6, background: `rgba(${aRgb},0.3)` }} />
           </span>
         </button>
-        <div style={{ marginTop: 16, padding: '10px 12px', borderRadius: 8, background: `rgba(${aRgb},0.02)`, border: `1px solid rgba(${aRgb},0.07)` }}>
+        <div style={{ marginTop: 16, padding: '10px 12px', borderRadius: 8, background: isLight ? `rgba(${aRgb},0.05)` : `rgba(${aRgb},0.02)`, border: isLight ? `1px solid rgba(${aRgb},0.18)` : `1px solid rgba(${aRgb},0.07)` }}>
           <div style={{fontSize:7,color:`rgba(${aRgb},0.3)`, letterSpacing:'0.25em',marginBottom:8}}>SYS_STATUS</div>
           {[['MODÈLE','GROQ'],['SESSION','ACTIVE'],['VOIX','FR-FR']].map(([k,v])=>(
             <div key={k} style={{display:'flex',justifyContent:'space-between', fontSize:7,marginBottom:4}}>
-              <span style={{color:'rgba(255,255,255,0.3)'}}>{k}</span>
+              <span style={{color:isLight ? '#64748b' : 'rgba(255,255,255,0.3)'}}>{k}</span>
               <span style={{color:`rgba(${aRgb},0.85)`}}>{v}</span>
             </div>
           ))}
@@ -1332,7 +1332,7 @@ export default function Experience() {
                     padding: isMobile ? '14px 16px' : '14px 20px',
                     fontFamily: 'Space Mono, monospace',
                     fontSize: isMobile ? 11 : 12,
-                    color: '#fff',
+                    color: isLight ? '#0f172a' : '#fff',
                     caretColor: a,
                   }}
                 />

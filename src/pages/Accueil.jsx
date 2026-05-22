@@ -156,10 +156,10 @@ export default function Accueil() {
                     const Icon = c.icon
                     const selected = profil === c.key
                     return (
-                      <button key={c.key} onClick={() => choisirProfil(c.key)} className="group relative overflow-hidden text-left p-[18px_16px] flex flex-col items-start gap-2 transition-[border-color,background] duration-200 rounded-none border" style={{ borderColor: selected ? a : `rgba(${aRgb},0.18)`, background: selected ? `rgba(${aRgb},0.1)` : `rgba(${aRgb},0.025)` }} onMouseEnter={(e) => { if (!selected) e.currentTarget.style.borderColor = `rgba(${aRgb},0.45)` }} onMouseLeave={(e) => { if (!selected) e.currentTarget.style.borderColor = `rgba(${aRgb},0.18)` }}>
+                      <button key={c.key} onClick={() => choisirProfil(c.key)} className="group relative overflow-hidden text-left p-[18px_16px] flex flex-col items-start gap-2 transition-[border-color,background] duration-200 rounded-none border" style={{ borderColor: selected ? a : (isLight ? `rgba(${aRgb},0.35)` : `rgba(${aRgb},0.18)`), background: selected ? `rgba(${aRgb},0.1)` : (isLight ? 'rgba(0,0,0,0.04)' : `rgba(${aRgb},0.025)`) }} onMouseEnter={(e) => { if (!selected) e.currentTarget.style.borderColor = `rgba(${aRgb},0.45)` }} onMouseLeave={(e) => { if (!selected) e.currentTarget.style.borderColor = selected ? a : (isLight ? `rgba(${aRgb},0.35)` : `rgba(${aRgb},0.18)`) }}>
                         <div className={`absolute top-0 left-0 right-0 h-px origin-left transform transition-transform duration-300 ${selected ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} style={{ background: a }} />
                         <div className="flex items-center gap-3">
-                          <Icon size={20} style={{ color: selected ? a : 'rgba(255,255,255,0.35)' }} />
+                          <Icon size={20} style={{ color: selected ? a : (isLight ? '#64748b' : 'rgba(255,255,255,0.35)') }} />
                         </div>
                         <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.18em', color: selected ? a : eff.textFaint, textTransform: 'uppercase' }}>{c.title}</div>
                         <div style={{ fontSize: 11, color: eff.textFaint, lineHeight: 1.4 }}>{c.subtitle}</div>
@@ -189,8 +189,8 @@ export default function Accueil() {
                     <span>Activer le microphone</span>
                   </button>
 
-                  <button onClick={continuerSansMicro} className="mt-4" style={{ fontFamily: 'Space Mono, monospace', fontSize: 10, color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', textDecoration: 'none' }}>
-                    <PenLine size={11} color="rgba(255,255,255,0.3)" style={{ marginRight: 8 }} />
+                  <button onClick={continuerSansMicro} className="mt-4" style={{ fontFamily: 'Space Mono, monospace', fontSize: 10, color: isLight ? '#64748b' : 'rgba(255,255,255,0.3)', background: 'none', border: 'none', textDecoration: 'none' }}>
+                    <PenLine size={11} color={isLight ? '#64748b' : 'rgba(255,255,255,0.3)'} style={{ marginRight: 8 }} />
                     Continuer sans micro
                   </button>
                 </div>
