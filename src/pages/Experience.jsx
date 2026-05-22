@@ -60,6 +60,8 @@ export default function Experience() {
   const [dateStr, setDateStr] = useState('')
   const [sectionActive, setSectionActive] = useState(null)
   const [cartesActives, setCartesActives] = useState([])
+  // CORRECTION 2B — État pour afficher/masquer la zone d'écriture dans le portfolio
+  const [inputPortfolioVisible, setInputPortfolioVisible] = useState(false)
   const inputRef = useRef(null)
   const recognitionRef = useRef(null)
   const modeParlerRef  = useRef(false)
@@ -596,7 +598,36 @@ export default function Experience() {
           setEcoute(false)
         }
 
-        rec.onend = () => setEcoute(false)
+        // CORRECTION 2A — Redémarrage automatique du micro si toujours en mode parler
+        rec.onend = () => {
+          setEcoute(false)
+          // Redémarrer seulement si modeParler toujours actif et IA en attente
+          if (modeParlerRef.current && aiState === 'idle') {
+            setTimeout(() => {
+              if (!modeParlerRef.current) return
+              try {
+                const RecVocale = window.SpeechRecognition || window.webkitSpeechRecognition
+                if (!RecVocale) return
+                const newRec = new RecVocale()
+                newRec.lang = 'fr-FR'
+                newRec.continuous = false
+                newRec.interimResults = false
+                newRec.onstart = () => setEcoute(true)
+                newRec.onresult = rec.onresult
+                newRec.onerror = (e) => {
+                  console.warn('[rec] erreur redém:', e.error)
+                  setEcoute(false)
+                }
+                // Redémarrage récursif — même logique à la fin du nouveau cycle
+                newRec.onend = rec.onend
+                recognitionRef.current = newRec
+                newRec.start()
+              } catch (e) {
+                console.warn('[rec] redémarrage échoué:', e)
+              }
+            }, 600)
+          }
+        }
 
         recognitionRef.current = rec
         try { rec.start() } catch (e) { console.warn('[rec] start error:', e) }
@@ -838,7 +869,123 @@ export default function Experience() {
 
         {modePortfolio && (
           <div style={{ position: 'fixed', inset: 0, zIndex: 50, overflow: 'hidden' }}>
-            <Portfolio ref={portfolioRef} onClose={() => setModePortfolio(false)} />
+            <Portfolio ref={portfolioRef} onClose={() => { setModePortfolio(false); setInputPortfolioVisible(false) }} />
+            {/* CORRECTION 2B — Bouton classeur + zone d'écriture dans le portfolio mobile */}
+            <div style={{
+              position: 'fixed',
+              bottom: 90,
+              left: 12,
+              zIndex: 52,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+              gap: 8,
+            }}>
+              {inputPortfolioVisible && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0,
+                  background: 'rgba(5,5,5,0.88)',
+                  border: `1px solid rgba(${aRgb},0.25)`,
+                  borderRadius: 14,
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                  overflow: 'hidden',
+                  width: 'calc(100vw - 100px)',
+                  maxWidth: 400,
+                }}>
+                  <button
+                    onClick={() => setInputPortfolioVisible(false)}
+                    style={{
+                      padding: '12px 12px',
+                      border: 'none',
+                      borderRight: `1px solid rgba(${aRgb},0.12)`,
+                      background: 'transparent',
+                      color: `rgba(${aRgb},0.5)`,
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      flexShrink: 0,
+                    }}
+                  >✕</button>
+                  <input
+                    value={inputCmd}
+                    onChange={e => setInputCmd(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        soumettre()
+                        setInputPortfolioVisible(false)
+                      }
+                    }}
+                    placeholder="Message à AXIS..."
+                    autoFocus
+                    style={{
+                      flex: 1,
+                      background: 'transparent',
+                      border: 'none',
+                      outline: 'none',
+                      padding: '12px 14px',
+                      fontFamily: 'Space Mono, monospace',
+                      fontSize: 11,
+                      color: '#fff',
+                      caretColor: a,
+                    }}
+                  />
+                  <button
+                    onClick={() => { soumettre(); setInputPortfolioVisible(false) }}
+                    style={{
+                      padding: '12px 14px',
+                      border: 'none',
+                      borderLeft: `1px solid rgba(${aRgb},0.12)`,
+                      background: `rgba(${aRgb},0.08)`,
+                      color: a,
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                      stroke={a} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="22" y1="2" x2="11" y2="13"/>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                  </button>
+                </div>
+              )}
+              <button
+                onClick={() => setInputPortfolioVisible(prev => !prev)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  background: inputPortfolioVisible ? `rgba(${aRgb},0.15)` : 'rgba(5,5,5,0.7)',
+                  border: `1px solid rgba(${aRgb},${inputPortfolioVisible ? '0.5' : '0.2'})`,
+                  borderRadius: 12,
+                  padding: '8px 14px',
+                  cursor: 'pointer',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke={a} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10 9 9 9 8 9"/>
+                </svg>
+                <span style={{
+                  fontFamily: 'Space Mono, monospace',
+                  fontSize: 8,
+                  color: a,
+                  letterSpacing: '0.15em',
+                }}>
+                  {inputPortfolioVisible ? 'FERMER' : 'ÉCRIRE'}
+                </span>
+              </button>
+            </div>
             <div style={{
               position: 'fixed',
               bottom: 16,
@@ -849,8 +996,29 @@ export default function Experience() {
               alignItems: 'center',
               gap: 6,
             }}>
+              {/* CORRECTION 1 — Bouton fermer explicite toujours visible sur mobile */}
+              <button
+                onClick={() => { setModePortfolio(false); setInputPortfolioVisible(false) }}
+                style={{
+                  background: 'rgba(0,0,0,0.7)',
+                  border: `1px solid rgba(${aRgb},0.3)`,
+                  borderRadius: 20,
+                  color: a,
+                  fontFamily: 'Space Mono, monospace',
+                  fontSize: 8,
+                  letterSpacing: '0.15em',
+                  padding: '6px 12px',
+                  cursor: 'pointer',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  marginBottom: 4,
+                  pointerEvents: 'auto',
+                }}
+              >
+                ✕ FERMER
+              </button>
               <div
-                onClick={() => setModePortfolio(false)}
+                onClick={() => { setModePortfolio(false); setInputPortfolioVisible(false) }}
                 style={{
                   position: 'relative',
                   cursor: 'pointer',
@@ -1214,7 +1382,7 @@ export default function Experience() {
             zIndex: 50,
             overflow: 'hidden'
           }}>
-            <Portfolio ref={portfolioRef} onClose={() => setModePortfolio(false)} />
+            <Portfolio ref={portfolioRef} onClose={() => { setModePortfolio(false); setInputPortfolioVisible(false) }} />
 
             <div style={{
               position: 'fixed',
@@ -1228,8 +1396,7 @@ export default function Experience() {
             }}>
             {/* Bouton glassmorphique pour masquer/afficher l'avatar */}
             <div
-              onClick={() => setModePortfolio(false)}
-              title="Fermer le portfolio"
+              onClick={() => { setModePortfolio(false); setInputPortfolioVisible(false) }}
               style={{
                 position: 'relative',
                 cursor: 'pointer',
@@ -1393,6 +1560,121 @@ export default function Experience() {
             )}
           </div>
         )}
+        {/* CORRECTION 2B — Zone d'écriture flottante pour portfolio desktop */}
+        <div style={{
+          position: 'fixed',
+          bottom: 24,
+          left: 24,
+          zIndex: 52,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          gap: 8,
+        }}>
+          {inputPortfolioVisible && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0,
+              background: 'rgba(5,5,5,0.88)',
+              border: `1px solid rgba(${aRgb},0.25)`,
+              borderRadius: 14,
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+              overflow: 'hidden',
+              width: 360,
+            }}>
+              <button
+                onClick={() => setInputPortfolioVisible(false)}
+                style={{
+                  padding: '12px 12px',
+                  border: 'none',
+                  borderRight: `1px solid rgba(${aRgb},0.12)`,
+                  background: 'transparent',
+                  color: `rgba(${aRgb},0.5)`,
+                  cursor: 'pointer',
+                  fontSize: 12,
+                  flexShrink: 0,
+                }}
+              >✕</button>
+              <input
+                value={inputCmd}
+                onChange={e => setInputCmd(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    soumettre()
+                    setInputPortfolioVisible(false)
+                  }
+                }}
+                placeholder="Message à AXIS..."
+                autoFocus
+                style={{
+                  flex: 1,
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  padding: '12px 14px',
+                  fontFamily: 'Space Mono, monospace',
+                  fontSize: 11,
+                  color: '#fff',
+                  caretColor: a,
+                }}
+              />
+              <button
+                onClick={() => { soumettre(); setInputPortfolioVisible(false) }}
+                style={{
+                  padding: '12px 14px',
+                  border: 'none',
+                  borderLeft: `1px solid rgba(${aRgb},0.12)`,
+                  background: `rgba(${aRgb},0.08)`,
+                  color: a,
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                  stroke={a} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </button>
+            </div>
+          )}
+          <button
+            onClick={() => setInputPortfolioVisible(prev => !prev)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              background: inputPortfolioVisible ? `rgba(${aRgb},0.15)` : 'rgba(5,5,5,0.7)',
+              border: `1px solid rgba(${aRgb},${inputPortfolioVisible ? '0.5' : '0.2'})`,
+              borderRadius: 12,
+              padding: '8px 14px',
+              cursor: 'pointer',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke={a} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            <span style={{
+              fontFamily: 'Space Mono, monospace',
+              fontSize: 8,
+              color: a,
+              letterSpacing: '0.15em',
+            }}>
+              {inputPortfolioVisible ? 'FERMER' : 'ÉCRIRE'}
+            </span>
+          </button>
+        </div>
         </>
       )}
 

@@ -121,15 +121,18 @@ export default function ProjetsFull() {
         display: 'flex', alignItems: 'center',
         justifyContent: 'space-between',
       }}>
-        <button onClick={() => navigate(-1)} style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          background: 'none', border: 'none',
-          color: 'rgba(255,255,255,0.4)',
-          fontFamily: 'Space Mono, monospace',
-          fontSize: 9, letterSpacing: '0.2em',
-          cursor: 'pointer', transition: 'color 0.2s',
-          padding: 0,
-        }}
+        {/* CORRECTION 3 — Navigation directe sans rechargement pour ne pas retriggerer AXIS */}
+        <button
+          onClick={() => navigate('/experience', { state: { skipGreeting: true } })}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            background: 'none', border: 'none',
+            color: 'rgba(255,255,255,0.4)',
+            fontFamily: 'Space Mono, monospace',
+            fontSize: 9, letterSpacing: '0.2em',
+            cursor: 'pointer', transition: 'color 0.2s',
+            padding: 0,
+          }}
           onMouseEnter={e => e.currentTarget.style.color = a}
           onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
         >
@@ -425,16 +428,19 @@ export default function ProjetsFull() {
         }}>
           {new Date().getFullYear()} · FRÉJUS KOUADIO
         </div>
-        <button onClick={() => navigate(-1)} style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          background: `rgba(${aRgb},0.08)`,
-          border: `1px solid rgba(${aRgb},0.2)`,
-          color: a, padding: isMobile ? '12px 20px' : '10px 24px',
-          fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9,
-          letterSpacing: '0.18em', borderRadius: 8,
-          cursor: 'pointer', transition: 'background 0.2s',
-          width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'center' : 'flex-start',
-        }}
+        {/* CORRECTION 3 — Idem footer : navigation directe vers /experience */}
+        <button
+          onClick={() => navigate('/portfolio', { state: { skipGreeting: true } })}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            background: `rgba(${aRgb},0.08)`,
+            border: `1px solid rgba(${aRgb},0.2)`,
+            color: a, padding: isMobile ? '12px 20px' : '10px 24px',
+            fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9,
+            letterSpacing: '0.18em', borderRadius: 8,
+            cursor: 'pointer', transition: 'background 0.2s',
+            width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'center' : 'flex-start',
+          }}
           onMouseEnter={e => e.currentTarget.style.background = `rgba(${aRgb},0.15)`}
           onMouseLeave={e => e.currentTarget.style.background = `rgba(${aRgb},0.08)`}
         >
