@@ -1,7 +1,9 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import utiliserStore from '@/store/utiliserStore'
 import { interrogerAxis, obtenirMessageAccueil, detecterSection } from '@/services/serviceIA'
 import { useVoix } from './utiliserVoix'
+import { db } from '@/services/firebase'
+import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore'
 
 // Hook principal renommé pour utiliser AXIS au lieu de l'ancien nom devJAI
 export function useAxis() {
@@ -11,6 +13,9 @@ export function useAxis() {
     definirAxisParle, definirAxisCharge,
     definirSectionActive,
   } = utiliserStore()
+  // Référence à la session Firestore en cours
+  const sessionIdRef = useRef(null)
+  const sessionStartRef = useRef(null)
 
   const { arreterParole, estEnEcoute, transcription, demarrerEcoute, arreterEcoute } =
     useVoix()
@@ -22,6 +27,25 @@ export function useAxis() {
       ajouterMessage('assistant', message)
       definirMessageCourant(message)
       definirAxisParle(false)
+
+      // Créer la session dans Firestore au démarrage
+      try {
+        const docRef = await addDoc(collection(db, 'sessions_axis'), {
+          created_at: serverTimestamp(),
+          prenom_visiteur: visiteur.prenom,
+          profil_visiteur: visiteur.profession,
+          historique: [],
+          nb_messages: 0,
+          duree_secondes: 0,
+          demande_contact: false,
+          demande_cv: false,
+          sections_visitees: [],
+        })
+        sessionIdRef.current = docRef.id
+        sessionStartRef.current = Date.now()
+      } catch (e) {
+        console.warn('[Firebase] Erreur création session:', e)
+      }
     }
     if (visiteur.prenom) lancerAccueil()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -44,6 +68,28 @@ export function useAxis() {
 
       ajouterMessage('assistant', reponse)
       definirMessageCourant(reponse)
+
+      // Mettre à jour la session Firestore après chaque échange
+      if (sessionIdRef.current) {
+        try {
+          const duree = Math.floor((Date.now() - sessionStartRef.current) / 1000)
+          const demandeContact = reponse.toLowerCase().includes('contact')
+            || texteUtilisateur.toLowerCase().includes('contact')
+            || texteUtilisateur.toLowerCase().includes('whatsapp')
+          const demandeCv = reponse.toLowerCase().includes('cv')
+            || texteUtilisateur.toLowerCase().includes('cv')
+
+          await updateDoc(doc(db, 'sessions_axis', sessionIdRef.current), {
+            historique: devjai.historiqueConversation,
+            nb_messages: devjai.historiqueConversation.length + 2,
+            duree_secondes: duree,
+            demande_contact: demandeContact,
+            demande_cv: demandeCv,
+          })
+        } catch (e) {
+          console.warn('[Firebase] Erreur mise à jour session:', e)
+        }
+      }
 
       // Navigation automatique selon le contenu de la réponse
       const sectionDetectee = detecterSection(reponse)
