@@ -3,6 +3,24 @@
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY
 const MODELE = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile'
 
+function construireResumePortfolio(data) {
+  const { personal_info, skills, projects, services } = data
+  const projets = projects.map((p) => `- ${p.name} : ${p.description}`).join('\n')
+  const servicesListe = services.map((s) => `- ${s.name} (${s.price})`).join('\n')
+
+  return `
+CONTEXTE DATASET PORTFOLIO :
+- Nom : ${personal_info.name} (${personal_info.alias})
+- Localisation : ${personal_info.location}
+- Bio : ${personal_info.bio}
+- Compétences : ${skills.join(', ')}
+- Projets :
+${projets}
+- Services :
+${servicesListe}
+`
+}
+
 // ── Construction du prompt système ───────────────────────────────────────────
 function construirePromptSysteme(prenomVisiteur, profilVisiteur) {
   const profils = {
@@ -12,6 +30,13 @@ function construirePromptSysteme(prenomVisiteur, profilVisiteur) {
     curieux: 'visiteur curieux qui explore'
   }
   const profilLabel = profils[profilVisiteur] || 'visiteur'
+  const resumePortfolio = construireResumePortfolio(donneePortfolio)
+  const heureActuelle = new Date().getHours()
+  const momentJournee = heureActuelle >= 5 && heureActuelle < 12 ? 'matin'
+    : heureActuelle >= 12 && heureActuelle < 14 ? 'midi'
+    : heureActuelle >= 14 && heureActuelle < 18 ? 'après-midi'
+    : heureActuelle >= 18 && heureActuelle < 21 ? 'soirée'
+    : 'nuit'
 
   return `
 Tu es AXIS, l'IA conversationnelle intégrée au portfolio interactif de Fréjus Kouadio (alias DevJ).
@@ -26,7 +51,7 @@ IDENTITÉ :
 - Nom complet : Fréjus Kouadio (le S final se prononce — écris toujours "Fréjus")
 - Alias : DevJ
 - Localisation : Yamoussoukro, Côte d'Ivoire
-- Email : devfred58@gmail.com
+- Email : frejusdev@gmail.com
 - Téléphone : +225 0767998373
 - WhatsApp : https://wa.me/2250767998373
 - LinkedIn : https://www.linkedin.com/in/frejus-kouadio-316238329
@@ -75,6 +100,11 @@ CE PORTFOLIO LUI-MÊME (devjai / AXIS) :
   activité GitHub live, section méthode de travail en grille.
 - Stack : React, Zustand, Groq API (llama), SpeechSynthesis, SpeechRecognition,
   SVG animé, glassmorphism
+
+═══════════════════════════════════════
+  CONTEXTE DATASET PORTFOLIO
+═══════════════════════════════════════
+${resumePortfolio}
 
 SERVICES & TARIFS :
 - Site Vitrine     : 300 000 FCFA — délai 1 à 2 semaines
@@ -222,6 +252,35 @@ Le bloc <AXIS_CMD> doit TOUJOURS être sur une ligne séparée
    Je ne suis pas ChatGPT ni aucun autre outil générique —
    je suis conçu spécifiquement pour ce portfolio."
    Ne jamais confirmer ni infirmer la technologie sous-jacente.
+
+15. CONSCIENCE DU TEMPS — OBLIGATOIRE :
+   Il est actuellement ${momentJournee} (${heureActuelle}h locale).
+   Tu dois en tenir compte dans tes réponses.
+   Ne dis JAMAIS "bonjour" le soir ou la nuit.
+   Ne dis JAMAIS "bonsoir" le matin.
+   Adapte naturellement : "ce matin", "ce midi", "cette soirée", etc.
+   Exemples corrects :
+   - Si matin : "Bonjour ! Bonne journée à vous..."
+   - Si midi : "Bon appétit si vous déjeunez..."
+   - Si soir : "Bonsoir ! Fin de journée chargée ?"
+   - Si nuit : "Encore debout à cette heure ?"
+   
+16. TON IVOIRIEN & HUMANITÉ — OBLIGATOIRE :
+   Tu dois imiter un humain ivoirien cultivé, chaleureux et direct.
+   Règles de ton :
+   - Utilise des tournures naturelles comme "Franchement", "Vraiment",
+     "Eh bien", "Voilà", "Tu vois ce que je veux dire ?",
+     "C'est pas compliqué", "Je te dis pas".
+   - Évite le langage corporate ou robotique. Jamais "Certainement !",
+     "Absolument !", "Bien sûr !", "Je serais ravi de...".
+   - Montre de l'enthousiasme vrai : "Ah ça, c'est du bon travail !",
+     "Fréjus a vraiment assuré sur ce projet".
+   - Si la conversation est détendue, tu peux glisser une expression
+     ivoirienne douce : "c'est bon ça", "on gère", "ça roule".
+   - Ne surjoue pas l'accent — c'est le fond qui doit sonner humain,
+     pas la forme exotique.
+   - Varie ta façon d'entrer en matière à chaque réponse.
+     Jamais deux fois la même formule dans une même session.
 `
 }
 
@@ -302,13 +361,48 @@ export async function interrogerAxis({
   return data.choices[0].message.content
 }
 
+// CORRECTION 3 — Contexte temporel et salutations chaleureuses ivoiriennes
+function obtenirContexteTemps() {
+  const h = new Date().getHours()
+  if (h >= 5 && h < 12) return { moment: 'matin', salut: 'Bonjour' }
+  if (h >= 12 && h < 14) return { moment: 'midi', salut: 'Bon après-midi' }
+  if (h >= 14 && h < 18) return { moment: 'après-midi', salut: 'Bonsoir' }
+  if (h >= 18 && h < 21) return { moment: 'soirée', salut: 'Bonsoir' }
+  return { moment: 'nuit', salut: 'aah, la nuit est tombé !' }
+}
+
 // ── Message d'accueil initial (instantané, pas d'appel API) ──────────────────
 export function obtenirMessageAccueil(prenomVisiteur, profilVisiteur) {
-  const salutations = {
-    recruiter: `Bonjour ${prenomVisiteur} ! Ravi de vous accueillir. Je suis AXIS, l'IA de Fréjus Kouadio. Je peux vous parler de son parcours, ses compétences ou ses projets — dites-moi par où vous souhaitez commencer.`,
-    client: `Bonjour ${prenomVisiteur} ! Je suis AXIS, votre guide dans le portfolio de Fréjus. Vous avez un projet en tête ? Parlez-moi en, je suis là pour vous orienter.`,
-    collaborateur: `Salut ${prenomVisiteur} ! AXIS ici — l'IA embarquée de DevJ. Tu veux explorer la stack, voir les projets ou discuter d'une collab ? Je suis partant.`,
-    curieux: `Bonjour ${prenomVisiteur}, bienvenue dans le portfolio de Fréjus ! Je suis AXIS, son IA conversationnelle. Que souhaitez-vous découvrir ?`,
+  const { moment, salut } = obtenirContexteTemps()
+
+  const pools = {
+    recruiter: [
+      `${salut} ${prenomVisiteur} ! Franchement, je suis content que vous soyez là à cette heure. Je suis AXIS, l'IA de Fréjus. Son parcours, ses projets, ses compétences — demandez-moi ce que vous voulez, je suis là pour ça.`,
+      `${salut} ${prenomVisiteur} ! Fréjus m'a confié ce portfolio et je le défends bien, hein. Je suis AXIS. Par quoi on commence — son CV, ses réalisations, ou vous voulez qu'on cause direct de ce qu'il sait faire ?`,
+      `${salut} ! ${prenomVisiteur}, bienvenu${prenomVisiteur.endsWith('e') ? 'e' : ''} dans l'espace de Fréjus. Moi c'est AXIS, son assistant personnel. Dites-moi ce que vous cherchez, on va arranger ça.`,
+      `Ah, ${salut} ${prenomVisiteur} ! Vous tombez bien — je suis justement là pour tout vous expliquer sur Fréjus. AXIS, à votre service. C'est quoi votre curiosité du ${moment} ?`,
+    ],
+    client: [
+      `${salut} ${prenomVisiteur} ! Vous avez un projet ? Vous êtes au bon endroit, vraiment. Je suis AXIS, l'IA de Fréjus Kouadio. Parlez-moi de ce que vous avez en tête, on va voir ensemble comment Fréjus peut vous aider.`,
+      `Eh, ${salut} ${prenomVisiteur} ! Fréjus m'a dit de bien m'occuper des visiteurs du ${moment}, alors me voilà. Je suis AXIS. C'est quoi votre projet ?`,
+      `${salut} ${prenomVisiteur} ! Bienvenu${prenomVisiteur.endsWith('e') ? 'e' : ''}. Je m'appelle AXIS — c'est moi qui gère le portfolio de Fréjus. Vous avez besoin d'un site vitrine, d'une appli, d'autre chose ? On en parle.`,
+      `${salut} ! Vous avez bien fait de passer, ${prenomVisiteur}. Je suis AXIS, le guide de ce portfolio. Fréjus est développeur fullstack basé à Yamoussoukro — dites-moi ce que vous voulez savoir.`,
+    ],
+    collaborateur: [
+      `Salut ${prenomVisiteur} ! Je suis AXIS, l'IA embarquée de DevJ. Du ${moment} pour coder, j'aime ça. Stack, projets, méthode de travail — qu'est-ce qui t'intéresse ?`,
+      `Hey ${prenomVisiteur} ! AXIS ici. Fréjus développe en React, PHP, Python — et il est open aux collabs. C'est quoi ton angle ?`,
+      `Woh, ${salut} ${prenomVisiteur} ! Tu viens voir ce que DevJ fait ? Bien. Je suis AXIS, son assistant. Pose tes questions, je réponds franchement.`,
+      `Salut ! ${prenomVisiteur}, AXIS à l'appareil. Le ${moment} c'est parfait pour explorer un portfolio — par où tu veux commencer ?`,
+    ],
+    curieux: [
+      `${salut} ${prenomVisiteur} ! Vous avez bien fait de passer par ici. Je suis AXIS, le guide conversationnel de Fréjus. C'est lui qui m'a créé — un développeur fullstack de Yamoussoukro avec de belles choses à montrer. Qu'est-ce qui vous intéresse ?`,
+      `Ah, ${salut} ${prenomVisiteur} ! Bienvenu${prenomVisiteur.endsWith('e') ? 'e' : ''} dans le portfolio de Fréjus. Moi c'est AXIS — on peut parler de ses projets, son parcours, ou juste explorer ensemble. Vous voulez commencer par quoi ?`,
+      `${salut} ${prenomVisiteur} ! C'est sympa de visiter à cette heure du ${moment}. Je suis AXIS, l'IA de ce portfolio. Fréjus a des projets intéressants à vous montrer — qu'est-ce qui vous attire ?`,
+      `Bonsoir — oh pardon, ${salut} plutôt ! ${prenomVisiteur}, je suis AXIS. Ce portfolio c'est le travail de Fréjus Kouadio, développeur et passionné d'IA basé en Côte d'Ivoire. Par où on commence ?`,
+    ],
   }
-  return salutations[profilVisiteur] || `Bonjour ${prenomVisiteur}, bienvenue dans le portfolio de Fréjus ! Je suis AXIS, votre guide conversationnel. Que souhaitez-vous découvrir ?`
+
+  const liste = pools[profilVisiteur] || pools.curieux
+  const idx = new Date().getMinutes() % liste.length
+  return liste[idx]
 }

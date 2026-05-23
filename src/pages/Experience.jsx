@@ -953,37 +953,39 @@ export default function Experience() {
                   </button>
                 </div>
               )}
+              {/* CORRECTION 1 — Icône crayon seule, sans label texte */}
               <button
+                type="button"
                 onClick={() => setInputPortfolioVisible(prev => !prev)}
+                title={inputPortfolioVisible ? 'Fermer' : 'Écrire à AXIS'}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 8,
-                  background: inputPortfolioVisible ? `rgba(${aRgb},0.15)` : 'rgba(5,5,5,0.7)',
-                  border: `1px solid rgba(${aRgb},${inputPortfolioVisible ? '0.5' : '0.2'})`,
-                  borderRadius: 12,
-                  padding: '8px 14px',
+                  justifyContent: 'center',
+                  width: 36,
+                  height: 36,
+                  background: inputPortfolioVisible ? `rgba(${aRgb},0.2)` : 'rgba(5,5,5,0.65)',
+                  border: `1px solid rgba(${aRgb},${inputPortfolioVisible ? '0.55' : '0.18'})`,
+                  borderRadius: '50%',
                   cursor: 'pointer',
                   backdropFilter: 'blur(16px)',
                   WebkitBackdropFilter: 'blur(16px)',
+                  transition: 'all 200ms',
                 }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                  stroke={a} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                  <line x1="16" y1="13" x2="8" y2="13"/>
-                  <line x1="16" y1="17" x2="8" y2="17"/>
-                  <polyline points="10 9 9 9 8 9"/>
-                </svg>
-                <span style={{
-                  fontFamily: 'Space Mono, monospace',
-                  fontSize: 8,
-                  color: a,
-                  letterSpacing: '0.15em',
-                }}>
-                  {inputPortfolioVisible ? 'FERMER' : 'ÉCRIRE'}
-                </span>
+                {inputPortfolioVisible ? (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    stroke={a} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                ) : (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                    stroke={a} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                )}
               </button>
             </div>
             <div style={{
@@ -1017,7 +1019,9 @@ export default function Experience() {
               >
                 ✕ FERMER
               </button>
-              <div
+              {/* CORRECTION 2 — button natif pour clic fiable sur mobile */}
+              <button
+                type="button"
                 onClick={() => { setModePortfolio(false); setInputPortfolioVisible(false) }}
                 style={{
                   position: 'relative',
@@ -1034,6 +1038,10 @@ export default function Experience() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  padding: 0,
+                  pointerEvents: 'auto',
+                  zIndex: 55,
+                  WebkitTapHighlightColor: 'transparent',
                 }}
               >
                 <div style={{
@@ -1045,7 +1053,7 @@ export default function Experience() {
                   pointerEvents: 'none',
                 }} />
                 <AvatarStable width={68} height={68} etat={aiState} />
-              </div>
+              </button>
               <div style={{
                 fontFamily: 'Space Mono, monospace',
                 fontSize: 7,
@@ -1395,8 +1403,11 @@ export default function Experience() {
               gap: 0,
             }}>
             {/* Bouton glassmorphique pour masquer/afficher l'avatar */}
-            <div
+            {/* CORRECTION 2 — button natif pour clic fiable sur desktop */}
+            <button
+              type="button"
               onClick={() => { setModePortfolio(false); setInputPortfolioVisible(false) }}
+              title="Fermer le portfolio"
               style={{
                 position: 'relative',
                 cursor: 'pointer',
@@ -1413,6 +1424,10 @@ export default function Experience() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 transition: 'box-shadow 0.3s',
+                padding: 0,
+                pointerEvents: 'auto',
+                zIndex: 55,
+                WebkitTapHighlightColor: 'transparent',
               }}
               onMouseEnter={e => {
                 e.currentTarget.style.boxShadow = `0 8px 40px rgba(0,0,0,0.5)`
@@ -1431,7 +1446,7 @@ export default function Experience() {
                 pointerEvents: 'none',
               }} />
               <AvatarStable etat={aiState} width={110} height={110} />
-            </div>
+            </button>
 
             {/* Statut sous l'avatar */}
             <div style={{
@@ -1642,37 +1657,39 @@ export default function Experience() {
               </button>
             </div>
           )}
+          {/* CORRECTION 1 — Icône crayon seule, sans label texte */}
           <button
+            type="button"
             onClick={() => setInputPortfolioVisible(prev => !prev)}
+            title={inputPortfolioVisible ? 'Fermer' : 'Écrire à AXIS'}
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 8,
-              background: inputPortfolioVisible ? `rgba(${aRgb},0.15)` : 'rgba(5,5,5,0.7)',
-              border: `1px solid rgba(${aRgb},${inputPortfolioVisible ? '0.5' : '0.2'})`,
-              borderRadius: 12,
-              padding: '8px 14px',
+              justifyContent: 'center',
+              width: 36,
+              height: 36,
+              background: inputPortfolioVisible ? `rgba(${aRgb},0.2)` : 'rgba(5,5,5,0.65)',
+              border: `1px solid rgba(${aRgb},${inputPortfolioVisible ? '0.55' : '0.18'})`,
+              borderRadius: '50%',
               cursor: 'pointer',
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
+              transition: 'all 200ms',
             }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke={a} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
-              <polyline points="10 9 9 9 8 9"/>
-            </svg>
-            <span style={{
-              fontFamily: 'Space Mono, monospace',
-              fontSize: 8,
-              color: a,
-              letterSpacing: '0.15em',
-            }}>
-              {inputPortfolioVisible ? 'FERMER' : 'ÉCRIRE'}
-            </span>
+            {inputPortfolioVisible ? (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                stroke={a} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            ) : (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                stroke={a} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+            )}
           </button>
         </div>
         </>
