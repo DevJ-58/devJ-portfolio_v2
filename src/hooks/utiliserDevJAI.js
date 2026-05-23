@@ -2,8 +2,70 @@ import { useEffect, useCallback, useRef } from 'react'
 import utiliserStore from '@/store/utiliserStore'
 import { interrogerAxis, obtenirMessageAccueil, detecterSection } from '@/services/serviceIA'
 import { useVoix } from './utiliserVoix'
-import { db } from '@/services/firebase'
-import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore'
+// Écriture Firestore via REST HTTP — évite le blocage WebChannel
+const FIREBASE_PROJECT = import.meta.env.VITE_FIREBASE_PROJECT_ID
+const FIREBASE_KEY = import.meta.env.VITE_FIREBASE_API_KEY
+const FIRESTORE_BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents`
+
+async function creerSessionREST(data) {
+  try {
+    const res = await fetch(`${FIRESTORE_BASE}/sessions_axis?key=${FIREBASE_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          prenom_visiteur:  { stringValue: data.prenom_visiteur },
+          profil_visiteur:  { stringValue: data.profil_visiteur },
+          nb_messages:      { integerValue: 0 },
+          duree_secondes:   { integerValue: 0 },
+          demande_contact:  { booleanValue: false },
+          demande_cv:       { booleanValue: false },
+          historique:       { arrayValue: { values: [] } },
+          created_at:       { stringValue: new Date().toISOString() },
+        }
+      })
+    })
+    const json = await res.json()
+    const parts = json.name?.split('/')
+    return parts?.[parts.length - 1] || null
+  } catch (e) {
+    console.warn('[Firebase REST] Erreur création session:', e)
+    return null
+  }
+}
+
+async function mettreAJourSessionREST(sessionId, data) {
+  if (!sessionId) return
+  try {
+    const valeursHistorique = (data.historique || []).map(msg => ({
+      mapValue: {
+        fields: {
+          role:    { stringValue: msg.role || '' },
+          contenu: { stringValue: msg.contenu || '' },
+        }
+      }
+    }))
+
+    await fetch(
+      `${FIRESTORE_BASE}/sessions_axis/${sessionId}?key=${FIREBASE_KEY}&updateMask.fieldPaths=nb_messages&updateMask.fieldPaths=duree_secondes&updateMask.fieldPaths=demande_contact&updateMask.fieldPaths=demande_cv&updateMask.fieldPaths=historique`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fields: {
+            nb_messages:     { integerValue: data.nb_messages },
+            duree_secondes:  { integerValue: data.duree_secondes },
+            demande_contact: { booleanValue: data.demande_contact },
+            demande_cv:      { booleanValue: data.demande_cv },
+            historique:      { arrayValue: { values: valeursHistorique } },
+          }
+        })
+      }
+    )
+  } catch (e) {
+    console.warn('[Firebase REST] Erreur mise à jour session:', e)
+  }
+}
 
 // Hook principal renommé pour utiliser AXIS au lieu de l'ancien nom devJAI
 export function useAxis() {
@@ -28,23 +90,16 @@ export function useAxis() {
       definirMessageCourant(message)
       definirAxisParle(false)
 
-      // Créer la session dans Firestore au démarrage
+      // Créer la session via REST — contourne le blocage WebChannel
       try {
-        const docRef = await addDoc(collection(db, 'sessions_axis'), {
-          created_at: serverTimestamp(),
+        const sessionId = await creerSessionREST({
           prenom_visiteur: visiteur.prenom,
           profil_visiteur: visiteur.profession,
-          historique: [],
-          nb_messages: 0,
-          duree_secondes: 0,
-          demande_contact: false,
-          demande_cv: false,
-          sections_visitees: [],
         })
-        sessionIdRef.current = docRef.id
+        sessionIdRef.current = sessionId
         sessionStartRef.current = Date.now()
       } catch (e) {
-        console.warn('[Firebase] Erreur création session:', e)
+        console.warn('[Firebase REST] Erreur création session:', e)
       }
     }
     if (visiteur.prenom) lancerAccueil()
@@ -69,7 +124,7 @@ export function useAxis() {
       ajouterMessage('assistant', reponse)
       definirMessageCourant(reponse)
 
-      // Mettre à jour la session Firestore après chaque échange
+      // Mettre à jour la session via REST
       if (sessionIdRef.current) {
         try {
           const duree = Math.floor((Date.now() - sessionStartRef.current) / 1000)
@@ -79,15 +134,15 @@ export function useAxis() {
           const demandeCv = reponse.toLowerCase().includes('cv')
             || texteUtilisateur.toLowerCase().includes('cv')
 
-          await updateDoc(doc(db, 'sessions_axis', sessionIdRef.current), {
-            historique: devjai.historiqueConversation,
+          await mettreAJourSessionREST(sessionIdRef.current, {
             nb_messages: devjai.historiqueConversation.length + 2,
             duree_secondes: duree,
             demande_contact: demandeContact,
             demande_cv: demandeCv,
+            historique: devjai.historiqueConversation,
           })
         } catch (e) {
-          console.warn('[Firebase] Erreur mise à jour session:', e)
+          console.warn('[Firebase REST] Erreur mise à jour session:', e)
         }
       }
 

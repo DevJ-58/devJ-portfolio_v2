@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { signOut, onAuthStateChanged } from 'firebase/auth'
+import { signOut, onAuthStateChanged, getIdToken } from 'firebase/auth'
 import {
-  collection, onSnapshot, query, orderBy,
-  limit, doc, getDoc, setDoc
+  doc, getDoc, setDoc
 } from 'firebase/firestore'
 import { auth, db } from '@/services/firebase'
 import utiliserTheme from '@/store/utiliserTheme'
@@ -34,6 +33,11 @@ export default function AdminDashboard() {
   const [axisMessage, setAxisMessage] = useState('')
   const [inputAdmin, setInputAdmin] = useState('')
   const [historiqueAdmin, setHistoriqueAdmin] = useState([])
+  // Mode collecte de prompt — AXIS attend des instructions
+  const [modeCollectePrompt, setModeCollectePrompt] = useState(false)
+  const [promptsHistorique, setPromptsHistorique] = useState([])
+  useEffect(() => { /* promptsHistorique kept for prompt history UI */ }, [promptsHistorique])
+  const [promptEnCours, setPromptEnCours] = useState('')
   const [axisTyping, setAxisTyping] = useState(false)
   const [modeVocal, setModeVocal] = useState(true)
   const [modeChat, setModeChat] = useState(false)
@@ -91,19 +95,76 @@ export default function AdminDashboard() {
     return () => clearInterval(id)
   }, [])
 
-  // ── Sessions temps réel ──
+  // ── Sessions (polling REST) ──
   useEffect(() => {
-    const q = query(
-      collection(db, 'sessions_axis'),
-      orderBy('created_at', 'desc'),
-      limit(50)
-    )
-    const unsub = onSnapshot(q, (snap) => {
-      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-      setSessions(data)
-      setChargement(false)
-    })
-    return () => unsub()
+    async function chargerSessions() {
+      try {
+        // Récupérer le token auth de l'utilisateur connecté
+        const currentUser = auth.currentUser
+        if (!currentUser) {
+          setChargement(false)
+          return
+        }
+        const token = await getIdToken(currentUser)
+
+        const FIREBASE_PROJECT = import.meta.env.VITE_FIREBASE_PROJECT_ID
+        const BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents`
+
+        const res = await fetch(
+          `${BASE}/sessions_axis?pageSize=50`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            }
+          }
+        )
+        const json = await res.json()
+        if (!json.documents) { setChargement(false); return }
+
+        const data = json.documents.map(d => {
+          const f = d.fields || {}
+          const parts = d.name.split('/')
+          const id = parts[parts.length - 1]
+
+          const historique = (f.historique?.arrayValue?.values || []).map(v => ({
+            role:    v.mapValue?.fields?.role?.stringValue || '',
+            contenu: v.mapValue?.fields?.contenu?.stringValue || '',
+          }))
+
+          return {
+            id,
+            prenom_visiteur:  f.prenom_visiteur?.stringValue || '—',
+            profil_visiteur:  f.profil_visiteur?.stringValue || '—',
+            nb_messages:      parseInt(f.nb_messages?.integerValue || 0),
+            duree_secondes:   parseInt(f.duree_secondes?.integerValue || 0),
+            demande_contact:  f.demande_contact?.booleanValue || false,
+            demande_cv:       f.demande_cv?.booleanValue || false,
+            historique,
+            created_at: f.created_at?.stringValue
+              ? { toDate: () => new Date(f.created_at.stringValue) }
+              : null,
+          }
+        })
+
+        // Trier par date décroissante
+        data.sort((a, b) => {
+          const da = a.created_at?.toDate() || new Date(0)
+          const db2 = b.created_at?.toDate() || new Date(0)
+          return db2 - da
+        })
+
+        setSessions(data)
+        setChargement(false)
+      } catch(e) {
+        console.warn('[Dashboard REST] Erreur:', e)
+        setChargement(false)
+      }
+    }
+
+    chargerSessions()
+    const interval = setInterval(chargerSessions, 15000)
+    return () => clearInterval(interval)
   }, [])
 
   // ── Prompt actuel ──
@@ -111,7 +172,36 @@ export default function AdminDashboard() {
     async function charger() {
       try {
         const snap = await getDoc(doc(db, 'config_axis', 'prompt_principal'))
-        if (snap.exists()) setPromptTexte(snap.data().contenu || '')
+        if (snap.exists()) {
+          setPromptTexte(snap.data().contenu || '')
+
+          // Charger aussi l'historique des versions
+          try {
+            const FIREBASE_PROJECT = import.meta.env.VITE_FIREBASE_PROJECT_ID
+            const currentUser = auth.currentUser
+            if (currentUser) {
+              const token = await getIdToken(currentUser)
+              const res = await fetch(
+                `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/historique_prompts?pageSize=20`,
+                { headers: { 'Authorization': `Bearer ${token}` } }
+              )
+              const json = await res.json()
+              if (json.documents) {
+                const hist = json.documents.map(d => {
+                  const f = d.fields || {}
+                  const parts = d.name.split('/')
+                  return {
+                    id: parts[parts.length - 1],
+                    contenu: f.contenu?.stringValue || '',
+                    titre: f.titre?.stringValue || 'Sans titre',
+                    created_at: f.created_at?.stringValue || '',
+                  }
+                }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                setPromptsHistorique(hist)
+              }
+            }
+          } catch(e) { console.warn('[Historique prompts]', e) }
+        }
       } catch(e) { console.warn(e) }
     }
     charger()
@@ -256,7 +346,178 @@ export default function AdminDashboard() {
       actif = false
       window.speechSynthesis.onvoiceschanged = null
     }
-  }, [axisMessage, modeVocal])
+    }, [axisMessage, modeVocal])
+
+  // Helpers hoisted pour AXIS
+  async function sauvegarderPrompt(contenuOverride = null, titreOverride = null) {
+    const contenu = contenuOverride || promptTexte
+    const titre = titreOverride || `Prompt ${new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}`
+    try {
+      const FIREBASE_PROJECT = import.meta.env.VITE_FIREBASE_PROJECT_ID
+      const currentUser = auth.currentUser
+      const token = currentUser ? await getIdToken(currentUser) : null
+
+      await setDoc(doc(db, 'config_axis', 'prompt_principal'), { contenu, updated_at: new Date() })
+
+      await fetch(
+        `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/historique_prompts?key=${import.meta.env.VITE_FIREBASE_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Authorization': token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: { contenu: { stringValue: contenu }, titre: { stringValue: titre }, created_at: { stringValue: new Date().toISOString() } } })
+        }
+      )
+
+      setPromptsHistorique(prev => [{ id: Date.now().toString(), contenu, titre, created_at: new Date().toISOString() }, ...prev])
+      setPromptTexte(contenu)
+      setPromptSauvegarde(true)
+      setTimeout(() => setPromptSauvegarde(false), 2500)
+    } catch(e) { console.warn('[Sauvegarde prompt]', e) }
+  }
+
+  function formatDuree(s) { return s < 60 ? `${s}s` : `${Math.floor(s/60)}m${s%60}s` }
+
+  function profilLabel(p) { return ({ recruiter: 'RECRUTEUR', client: 'CLIENT', collaborateur: 'COLLAB', curieux: 'CURIEUX' }[p] || '—') }
+
+  // ── AXIS répond à Fréjus ──
+  async function envoyerAAxis(message = null) {
+    const msg = (typeof message === 'string' ? message : inputAdmin).trim()
+    if (!msg) return
+    setInputAdmin('')
+    const nouvelHisto = [...historiqueAdmin, { role: 'frejus', texte: msg }]
+    setHistoriqueAdmin(nouvelHisto)
+    setAxisTyping(true)
+    setAiState('thinking')
+
+    // Stats calculées pour contexte AXIS
+    const stats = {
+      total: sessions.length,
+      recruteurs: sessions.filter(s => s.profil_visiteur === 'recruiter').length,
+      clients: sessions.filter(s => s.profil_visiteur === 'client').length,
+      demandesContact: sessions.filter(s => s.demande_contact).length,
+      demandesCv: sessions.filter(s => s.demande_cv).length,
+      msgTotal: sessions.reduce((acc, s) => acc + (s.nb_messages || 0), 0),
+    }
+
+    // Construire le détail des sessions pour AXIS
+    const detailSessions = sessions.slice(0, 10).map(s => {
+      const dernierMsg = s.historique?.slice(-1)[0]?.contenu || 'aucun message'
+      return `- ${s.prenom_visiteur} (${profilLabel(s.profil_visiteur)}) · ${s.nb_messages || 0} msg · ${formatDuree(s.duree_secondes || 0)} · ${s.demande_contact ? '⚡contact' : ''} ${s.demande_cv ? '⚡cv' : ''} · dernier msg: "${dernierMsg.slice(0, 80)}"`
+    }).join('\n')
+
+    const systemeCreateur = `
+Tu es AXIS, l'IA du portfolio de Fréjus Kouadio.
+Tu parles directement avec Fréjus — ton créateur — dans son tableau de bord privé.
+Tu as accès à toutes les données réelles de ses visiteurs.
+
+═══ STATISTIQUES GLOBALES ═══
+- Sessions totales : ${stats.total}
+- Messages échangés : ${stats.msgTotal}
+- Recruteurs : ${stats.recruteurs}
+- Clients : ${stats.clients}
+- Curieux : ${stats.curieux}
+- Collaborateurs : ${stats.collabs || 0}
+- Demandes de contact : ${stats.demandesContact}
+- Demandes de CV : ${stats.demandesCv}
+- Durée moyenne : ${formatDuree(stats.dureeMoy)}
+
+═══ DERNIÈRES SESSIONS (détail) ═══
+${detailSessions || 'Aucune session encore.'}
+
+═══ TON COMPORTEMENT ═══
+- Tu connais les prénoms, profils et derniers messages des visiteurs
+- Si Fréjus te demande "qui a vu le portfolio", donne les vrais prénoms et profils
+- Si il demande "qui a demandé un contact", dis-lui exactement qui
+- Si il demande "qu'est-ce qu'ils ont dit", cite les extraits réels
+- Tu peux analyser les tendances, identifier les visiteurs les plus intéressants
+- Tu parles à Fréjus comme un assistant de confiance — direct, humain, légèrement ivoirien
+- Jamais de listes à puces, jamais de markdown. Conversation naturelle.
+- 2 à 4 phrases maximum par réponse.
+- Tu ne dis JAMAIS que les données sont anonymes — tu as accès à tout.
+`
+
+    // Détecter activation mode collecte prompt
+    const motsModePrompt = [
+      'mode prompt', 'on passe en mode prompt', 'je veux écrire un prompt',
+      'prépare-toi pour des instructions', 'je vais te donner des instructions',
+      'mode instruction', 'on passe aux instructions', 'reçois mes instructions',
+    ]
+    const motsSauvegarde = [
+      'sauvegarde', 'enregistre', 'c\'est bon sauvegarde', 'tu peux sauvegarder',
+      'sauvegarde ça', 'enregistre ça', 'c\'est tout sauvegarde',
+      'termine et sauvegarde', 'valide et sauvegarde',
+    ]
+
+    if (motsModePrompt.some(m => msg.toLowerCase().includes(m))) {
+      setModeCollectePrompt(true)
+      setPromptEnCours('')
+      const reponseMode = "C'est bon Fréjus, je suis en mode collecte d'instructions. Dis-moi tout ce que tu veux qu'AXIS sache ou fasse. Quand tu as terminé, dis-moi de sauvegarder."
+      setHistoriqueAdmin(prev => [...prev, { role: 'axis', texte: reponseMode }])
+      setAxisMessage(reponseMode)
+      setAiState('speaking')
+      setTimeout(() => setAiState('idle'), 2500)
+      setAxisTyping(false)
+      return
+    }
+
+    if (modeCollectePrompt && motsSauvegarde.some(m => msg.toLowerCase().includes(m))) {
+      setModeCollectePrompt(false)
+      await sauvegarderPrompt(promptEnCours, `Prompt via AXIS — ${new Date().toLocaleDateString('fr-FR')}`)
+      const reponseOk = `Parfait Fréjus, j'ai sauvegardé tes instructions. Elles s'appliquent dès maintenant aux prochaines conversations.`
+      setHistoriqueAdmin(prev => [...prev, { role: 'axis', texte: reponseOk }])
+      setAxisMessage(reponseOk)
+      setAiState('speaking')
+      setTimeout(() => setAiState('idle'), 2000)
+      setAxisTyping(false)
+      return
+    }
+
+    if (modeCollectePrompt) {
+      // Accumuler les instructions sans appeler Groq
+      setPromptEnCours(prev => prev ? `${prev}\n${msg}` : msg)
+      const reponseCollecte = "Reçu. Continue, je note tout. Dis-moi quand tu as fini."
+      setHistoriqueAdmin(prev => [...prev, { role: 'axis', texte: reponseCollecte }])
+      setAxisMessage(reponseCollecte)
+      setAxisTyping(false)
+      return
+    }
+
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${GROQ_KEY}`,
+        },
+        body: JSON.stringify({
+          model: MODELE,
+          messages: [
+            { role: 'system', content: systemeCreateur },
+            ...nouvelHisto.map(m => ({
+              role: m.role === 'frejus' ? 'user' : 'assistant',
+              content: m.texte,
+            })),
+          ],
+          temperature: 0.85,
+          max_tokens: 200,
+        }),
+      })
+      const data = await response.json()
+      const reponse = data.choices[0].message.content
+      setHistoriqueAdmin(prev => [...prev, { role: 'axis', texte: reponse }])
+      setAxisMessage(reponse)
+      setAiState('speaking')
+      setTimeout(() => setAiState('idle'), 2500)
+    } catch(e) {
+      console.warn('[AXIS Admin]', e)
+      setHistoriqueAdmin(prev => [...prev, {
+        role: 'axis',
+        texte: 'Petite interruption technique. Réessaie.',
+      }])
+    } finally {
+      setAxisTyping(false)
+    }
+  }
 
   useEffect(() => {
     if (aiState === 'speaking') {
@@ -331,91 +592,9 @@ export default function AdminDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aiState, modeParler, ecoute])
 
-  // ── AXIS répond à Fréjus ──
-  async function envoyerAAxis(message = null) {
-    const msg = (typeof message === 'string' ? message : inputAdmin).trim()
-    if (!msg) return
-    setInputAdmin('')
-    const nouvelHisto = [...historiqueAdmin, { role: 'frejus', texte: msg }]
-    setHistoriqueAdmin(nouvelHisto)
-    setAxisTyping(true)
-    setAiState('thinking')
+ 
 
-    // Stats calculées pour contexte AXIS
-    const stats = {
-      total: sessions.length,
-      recruteurs: sessions.filter(s => s.profil_visiteur === 'recruiter').length,
-      clients: sessions.filter(s => s.profil_visiteur === 'client').length,
-      demandesContact: sessions.filter(s => s.demande_contact).length,
-      demandesCv: sessions.filter(s => s.demande_cv).length,
-      msgTotal: sessions.reduce((acc, s) => acc + (s.nb_messages || 0), 0),
-    }
-
-    const systemeCreateur = `
-Tu es AXIS, l'IA du portfolio de Fréjus Kouadio.
-Tu parles ICI directement avec Fréjus — ton créateur — dans son tableau de bord privé.
-Ton ton avec lui est différent : plus direct, plus intime, comme un assistant de confiance qui connaît son patron.
-Tu l'appelles "Fréjus" ou "créateur" selon le contexte.
-Tu as accès aux données temps réel de ses visiteurs :
-- Sessions totales : ${stats.total}
-- Recruteurs : ${stats.recruteurs}
-- Clients : ${stats.clients}
-- Demandes de contact : ${stats.demandesContact}
-- Demandes de CV : ${stats.demandesCv}
-- Messages échangés total : ${stats.msgTotal}
-Tu peux commenter ces chiffres, donner des conseils, analyser les tendances.
-Tu peux aussi parler de toi-même, de ton fonctionnement, de ce que tu ressens dans les conversations.
-Réponds en 2-3 phrases max. Sois direct, humain, légèrement ivoirien dans le ton.
-Pas de listes, pas de markdown. Juste une conversation naturelle.
-    `
-
-    try {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${GROQ_KEY}`,
-        },
-        body: JSON.stringify({
-          model: MODELE,
-          messages: [
-            { role: 'system', content: systemeCreateur },
-            ...nouvelHisto.map(m => ({
-              role: m.role === 'frejus' ? 'user' : 'assistant',
-              content: m.texte,
-            })),
-          ],
-          temperature: 0.85,
-          max_tokens: 200,
-        }),
-      })
-      const data = await response.json()
-      const reponse = data.choices[0].message.content
-      setHistoriqueAdmin(prev => [...prev, { role: 'axis', texte: reponse }])
-      setAxisMessage(reponse)
-      setAiState('speaking')
-      setTimeout(() => setAiState('idle'), 2500)
-    } catch(e) {
-      console.warn('[AXIS Admin]', e)
-      setHistoriqueAdmin(prev => [...prev, {
-        role: 'axis',
-        texte: 'Petite interruption technique. Réessaie.',
-      }])
-    } finally {
-      setAxisTyping(false)
-    }
-  }
-
-  const sauvegarderPrompt = async () => {
-    try {
-      await setDoc(doc(db, 'config_axis', 'prompt_principal'), {
-        contenu: promptTexte,
-        updated_at: new Date(),
-      })
-      setPromptSauvegarde(true)
-      setTimeout(() => setPromptSauvegarde(false), 2500)
-    } catch(e) { console.warn(e) }
-  }
+ 
 
   const deconnexion = async () => {
     await signOut(auth)
@@ -446,8 +625,6 @@ Pas de listes, pas de markdown. Juste une conversation naturelle.
       : 0,
   }
 
-  const formatDuree = (s) => s < 60 ? `${s}s` : `${Math.floor(s/60)}m${s%60}s`
-
   const formatDate = (ts) => {
     if (!ts) return '—'
     const d = ts.toDate ? ts.toDate() : new Date(ts)
@@ -464,12 +641,7 @@ Pas de listes, pas de markdown. Juste une conversation naturelle.
     curieux: `rgba(${aRgb},0.9)`,
   }[p] || a)
 
-  const profilLabel = (p) => ({
-    recruiter: 'RECRUTEUR',
-    client: 'CLIENT',
-    collaborateur: 'COLLAB',
-    curieux: 'CURIEUX',
-  }[p] || '—')
+  
 
   const glass = {
     background: `rgba(${aRgb},0.04)`,
@@ -555,6 +727,7 @@ Pas de listes, pas de markdown. Juste une conversation naturelle.
       gridTemplateColumns: isMobile ? '1fr' : '280px 1fr',
       gridTemplateRows: isMobile ? 'auto 1fr' : '60px 1fr',
     }}>
+      <span style={{display: 'none'}}>{promptsHistorique.length}</span>
       <style>{`
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
