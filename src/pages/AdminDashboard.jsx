@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { signOut, onAuthStateChanged, getIdToken } from 'firebase/auth'
 import {
-  doc, getDoc, setDoc
+  doc, getDoc
 } from 'firebase/firestore'
 import { auth, db } from '@/services/firebase'
 import utiliserTheme from '@/store/utiliserTheme'
@@ -37,7 +37,11 @@ export default function AdminDashboard() {
   const [modeCollectePrompt, setModeCollectePrompt] = useState(false)
   const [promptsHistorique, setPromptsHistorique] = useState([])
   useEffect(() => { /* promptsHistorique kept for prompt history UI */ }, [promptsHistorique])
-  const [promptEnCours, setPromptEnCours] = useState('')
+  const [, setPromptEnCours] = useState('')
+  const promptEnCoursRef = useRef('')
+  const [promptSysteme, setPromptSysteme] = useState('')
+  const [promptSystemeSauvegarde, setPromptSystemeSauvegarde] = useState(false)
+  const [ongletPrompt, setOngletPrompt] = useState('additionnel')
   const [axisTyping, setAxisTyping] = useState(false)
   const [modeVocal, setModeVocal] = useState(true)
   const [modeChat, setModeChat] = useState(false)
@@ -172,40 +176,86 @@ export default function AdminDashboard() {
     async function charger() {
       try {
         const snap = await getDoc(doc(db, 'config_axis', 'prompt_principal'))
-        if (snap.exists()) {
-          setPromptTexte(snap.data().contenu || '')
+        if (snap.exists()) setPromptTexte(snap.data().contenu || '')
 
-          // Charger aussi l'historique des versions
-          try {
-            const FIREBASE_PROJECT = import.meta.env.VITE_FIREBASE_PROJECT_ID
-            const currentUser = auth.currentUser
-            if (currentUser) {
-              const token = await getIdToken(currentUser)
-              const res = await fetch(
-                `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/historique_prompts?pageSize=20`,
-                { headers: { 'Authorization': `Bearer ${token}` } }
-              )
-              const json = await res.json()
-              if (json.documents) {
-                const hist = json.documents.map(d => {
-                  const f = d.fields || {}
-                  const parts = d.name.split('/')
-                  return {
-                    id: parts[parts.length - 1],
-                    contenu: f.contenu?.stringValue || '',
-                    titre: f.titre?.stringValue || 'Sans titre',
-                    created_at: f.created_at?.stringValue || '',
-                  }
-                }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-                setPromptsHistorique(hist)
-              }
+        // Charger le prompt système principal (indépendant)
+        try {
+          const snapSysteme = await getDoc(doc(db, 'config_axis', 'prompt_systeme'))
+          if (snapSysteme.exists()) setPromptSysteme(snapSysteme.data().contenu || '')
+          else setPromptSysteme('')
+        } catch(e) { console.warn('[prompt_systeme]', e) }
+
+        // Charger aussi l'historique des versions (indépendant)
+        try {
+          const FIREBASE_PROJECT = import.meta.env.VITE_FIREBASE_PROJECT_ID
+          const currentUser = auth.currentUser
+          if (currentUser) {
+            const token = await getIdToken(currentUser)
+            const res = await fetch(
+              `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/historique_prompts?pageSize=20`,
+              { headers: { 'Authorization': `Bearer ${token}` } }
+            )
+            const json = await res.json()
+            if (json.documents) {
+              const hist = json.documents.map(d => {
+                const f = d.fields || {}
+                const parts = d.name.split('/')
+                return {
+                  id: parts[parts.length - 1],
+                  contenu: f.contenu?.stringValue || '',
+                  titre: f.titre?.stringValue || 'Sans titre',
+                  created_at: f.created_at?.stringValue || '',
+                }
+              }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+              setPromptsHistorique(hist)
             }
-          } catch(e) { console.warn('[Historique prompts]', e) }
-        }
+          }
+        } catch(e) { console.warn('[Historique prompts]', e) }
       } catch(e) { console.warn(e) }
     }
     charger()
   }, [])
+
+  async function sauvegarderPromptSysteme() {
+    if (!promptSysteme || !promptSysteme.trim()) {
+      console.warn('[PROMPT SYSTÈME] Rien à sauvegarder — contenu vide')
+      return
+    }
+    try {
+      const FIREBASE_PROJECT = import.meta.env.VITE_FIREBASE_PROJECT_ID
+      const currentUser = auth.currentUser
+      const token = currentUser ? await getIdToken(currentUser) : null
+
+      // Utiliser PATCH REST pour contourner le blocage WebChannel
+      const res = await fetch(
+        `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/config_axis/prompt_systeme?updateMask.fieldPaths=contenu&updateMask.fieldPaths=updated_at`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            fields: {
+              contenu:    { stringValue: promptSysteme },
+              updated_at: { stringValue: new Date().toISOString() },
+            }
+          })
+        }
+      )
+
+      if (!res.ok) {
+        const err = await res.json()
+        console.error('[PROMPT SYSTÈME] Erreur REST:', err)
+        return
+      }
+
+      setPromptSystemeSauvegarde(true)
+      setTimeout(() => setPromptSystemeSauvegarde(false), 2500)
+    } catch(e) {
+      console.error('[prompt_systeme save REST]', e)
+    }
+  }
 
   // ── Scroll auto chat admin ──
   useEffect(() => {
@@ -352,12 +402,32 @@ export default function AdminDashboard() {
   async function sauvegarderPrompt(contenuOverride = null, titreOverride = null) {
     const contenu = contenuOverride || promptTexte
     const titre = titreOverride || `Prompt ${new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}`
+    if (!contenu || !contenu.trim()) {
+      console.warn('[PROMPT] Rien à sauvegarder — contenu vide')
+      return
+    }
     try {
       const FIREBASE_PROJECT = import.meta.env.VITE_FIREBASE_PROJECT_ID
       const currentUser = auth.currentUser
       const token = currentUser ? await getIdToken(currentUser) : null
 
-      await setDoc(doc(db, 'config_axis', 'prompt_principal'), { contenu, updated_at: new Date() })
+      const token2 = auth.currentUser ? await getIdToken(auth.currentUser) : null
+      await fetch(
+        `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/config_axis/prompt_principal?updateMask.fieldPaths=contenu&updateMask.fieldPaths=updated_at`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token2 ? { 'Authorization': `Bearer ${token2}` } : {}),
+          },
+          body: JSON.stringify({
+            fields: {
+              contenu:    { stringValue: contenu },
+              updated_at: { stringValue: new Date().toISOString() },
+            }
+          })
+        }
+      )
 
       await fetch(
         `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/historique_prompts?key=${import.meta.env.VITE_FIREBASE_API_KEY}`,
@@ -451,6 +521,7 @@ ${detailSessions || 'Aucune session encore.'}
     if (motsModePrompt.some(m => msg.toLowerCase().includes(m))) {
       setModeCollectePrompt(true)
       setPromptEnCours('')
+      promptEnCoursRef.current = ''
       const reponseMode = "C'est bon Fréjus, je suis en mode collecte d'instructions. Dis-moi tout ce que tu veux qu'AXIS sache ou fasse. Quand tu as terminé, dis-moi de sauvegarder."
       setHistoriqueAdmin(prev => [...prev, { role: 'axis', texte: reponseMode }])
       setAxisMessage(reponseMode)
@@ -462,7 +533,10 @@ ${detailSessions || 'Aucune session encore.'}
 
     if (modeCollectePrompt && motsSauvegarde.some(m => msg.toLowerCase().includes(m))) {
       setModeCollectePrompt(false)
-      await sauvegarderPrompt(promptEnCours, `Prompt via AXIS — ${new Date().toLocaleDateString('fr-FR')}`)
+      const contenuFinal = promptEnCoursRef.current
+      promptEnCoursRef.current = ''
+      setPromptEnCours('')
+      await sauvegarderPrompt(contenuFinal, `Prompt via AXIS — ${new Date().toLocaleDateString('fr-FR')}`)
       const reponseOk = `Parfait Fréjus, j'ai sauvegardé tes instructions. Elles s'appliquent dès maintenant aux prochaines conversations.`
       setHistoriqueAdmin(prev => [...prev, { role: 'axis', texte: reponseOk }])
       setAxisMessage(reponseOk)
@@ -474,7 +548,9 @@ ${detailSessions || 'Aucune session encore.'}
 
     if (modeCollectePrompt) {
       // Accumuler les instructions sans appeler Groq
-      setPromptEnCours(prev => prev ? `${prev}\n${msg}` : msg)
+      const nouveau = promptEnCoursRef.current ? `${promptEnCoursRef.current}\n${msg}` : msg
+      promptEnCoursRef.current = nouveau
+      setPromptEnCours(nouveau)
       const reponseCollecte = "Reçu. Continue, je note tout. Dis-moi quand tu as fini."
       setHistoriqueAdmin(prev => [...prev, { role: 'axis', texte: reponseCollecte }])
       setAxisMessage(reponseCollecte)
@@ -1929,67 +2005,183 @@ ${detailSessions || 'Aucune session encore.'}
 
         {/* ── PROMPT ── */}
         {onglet === 'prompt' && !isMobile && (
-          <div style={{ ...glass, padding: 28 }}>
-            <div style={{
-              display: 'flex', justifyContent: 'space-between',
-              alignItems: 'flex-start', marginBottom: 20,
-            }}>
-              <div>
-                <div style={{
-                  fontSize: 7, color: `rgba(${aRgb},0.4)`,
-                  letterSpacing: '0.25em', marginBottom: 5,
-                }}>
-                  // PERSONNALITÉ AXIS
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+            {/* Sous-onglets */}
+            <div style={{ display: 'flex', gap: 6 }}>
+              {[
+                { id: 'systeme', label: '// PROMPT SYSTÈME' },
+                { id: 'additionnel', label: '// INSTRUCTIONS ADDITIONNELLES' },
+                { id: 'historique', label: '// HISTORIQUE' },
+              ].map(({ id, label }) => (
+                <button
+                  key={id}
+                  onClick={() => setOngletPrompt(id)}
+                  style={{
+                    background: ongletPrompt === id ? `rgba(${aRgb},0.12)` : 'transparent',
+                    border: `1px solid rgba(${aRgb},${ongletPrompt === id ? '0.3' : '0.1'})`,
+                    color: ongletPrompt === id ? a : 'rgba(255,255,255,0.3)',
+                    borderRadius: 8, padding: '6px 14px',
+                    fontFamily: 'Space Mono, monospace',
+                    fontSize: 7, letterSpacing: '0.18em',
+                    cursor: 'pointer', transition: 'all 180ms',
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Sous-onglet : Prompt Système */}
+            {ongletPrompt === 'systeme' && (
+              <div style={{ ...glass, padding: 28 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+                  <div>
+                    <div style={{ fontSize: 7, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.25em', marginBottom: 5 }}>
+                      // PROMPT SYSTÈME PRINCIPAL
+                    </div>
+                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.08em' }}>
+                      Le prompt de base d'AXIS — appliqué à tous les visiteurs du portfolio
+                    </div>
+                  </div>
+                  <button
+                    onClick={sauvegarderPromptSysteme}
+                    style={{
+                      background: promptSystemeSauvegarde ? 'rgba(16,185,129,0.1)' : `rgba(${aRgb},0.08)`,
+                      border: `1px solid ${promptSystemeSauvegarde ? 'rgba(16,185,129,0.3)' : `rgba(${aRgb},0.2)`}`,
+                      color: promptSystemeSauvegarde ? '#10b981' : a,
+                      borderRadius: 10, padding: '9px 18px',
+                      fontFamily: 'Space Mono, monospace',
+                      fontSize: 8, letterSpacing: '0.2em',
+                      cursor: 'pointer', transition: 'all 280ms',
+                    }}
+                  >
+                    {promptSystemeSauvegarde ? '✓ SAUVEGARDÉ' : 'SAUVEGARDER'}
+                  </button>
                 </div>
-                <div style={{
-                  fontSize: 9, color: 'rgba(255,255,255,0.25)',
-                  letterSpacing: '0.08em',
-                }}>
-                  Modifie le comportement d'AXIS sans toucher au code
+                <textarea
+                  value={promptSysteme}
+                  onChange={e => setPromptSysteme(e.target.value)}
+                  placeholder="Colle ici le prompt système complet de serviceIA.js — il sera chargé depuis Firestore à chaque conversation visiteur..."
+                  style={{
+                    width: '100%', minHeight: 500,
+                    background: 'rgba(255,255,255,0.02)',
+                    border: `1px solid rgba(${aRgb},0.1)`,
+                    borderRadius: 12, padding: '18px',
+                    fontFamily: 'Space Mono, monospace',
+                    fontSize: 11, color: 'rgba(255,255,255,0.75)',
+                    lineHeight: 1.8, outline: 'none',
+                    resize: 'vertical', boxSizing: 'border-box',
+                    caretColor: a,
+                  }}
+                />
+                <div style={{ marginTop: 10, fontSize: 7, color: 'rgba(255,255,255,0.12)', letterSpacing: '0.15em' }}>
+                  {promptSysteme.length} caractères · remplace le prompt codé en dur dans serviceIA.js
                 </div>
               </div>
-              <button
-                onClick={sauvegarderPrompt}
-                style={{
-                  background: promptSauvegarde
-                    ? 'rgba(16,185,129,0.1)'
-                    : `rgba(${aRgb},0.08)`,
-                  border: `1px solid ${promptSauvegarde
-                    ? 'rgba(16,185,129,0.3)'
-                    : `rgba(${aRgb},0.2)`}`,
-                  color: promptSauvegarde ? '#10b981' : a,
-                  borderRadius: 10, padding: '9px 18px',
-                  fontFamily: 'Space Mono, monospace',
-                  fontSize: 8, letterSpacing: '0.2em',
-                  cursor: 'pointer', transition: 'all 280ms',
-                }}
-              >
-                {promptSauvegarde ? '✓ SAUVEGARDÉ' : 'SAUVEGARDER'}
-              </button>
-            </div>
-            <textarea
-              value={promptTexte}
-              onChange={e => setPromptTexte(e.target.value)}
-              placeholder="Instructions personnalisées pour AXIS — personnalité, exemples de réponses, comportements spécifiques..."
-              style={{
-                width: '100%', minHeight: 500,
-                background: 'rgba(255,255,255,0.02)',
-                border: `1px solid rgba(${aRgb},0.1)`,
-                borderRadius: 12, padding: '18px',
-                fontFamily: 'Space Mono, monospace',
-                fontSize: 11, color: 'rgba(255,255,255,0.75)',
-                lineHeight: 1.8, outline: 'none',
-                resize: 'vertical', boxSizing: 'border-box',
-                caretColor: a,
-              }}
-            />
-            <div style={{
-              marginTop: 10, fontSize: 7,
-              color: 'rgba(255,255,255,0.12)',
-              letterSpacing: '0.15em',
-            }}>
-              {promptTexte.length} caractères · s'applique aux prochaines conversations
-            </div>
+            )}
+
+            {/* Sous-onglet : Instructions additionnelles (prompt_principal existant) */}
+            {ongletPrompt === 'additionnel' && (
+              <div style={{ ...glass, padding: 28 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+                  <div>
+                    <div style={{ fontSize: 7, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.25em', marginBottom: 5 }}>
+                      // INSTRUCTIONS ADDITIONNELLES
+                    </div>
+                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.08em' }}>
+                      Ajoutées en fin de prompt système — personnalité, comportements spécifiques
+                    </div>
+                  </div>
+                  <button
+                    onClick={sauvegarderPrompt}
+                    style={{
+                      background: promptSauvegarde ? 'rgba(16,185,129,0.1)' : `rgba(${aRgb},0.08)`,
+                      border: `1px solid ${promptSauvegarde ? 'rgba(16,185,129,0.3)' : `rgba(${aRgb},0.2)`}`,
+                      color: promptSauvegarde ? '#10b981' : a,
+                      borderRadius: 10, padding: '9px 18px',
+                      fontFamily: 'Space Mono, monospace',
+                      fontSize: 8, letterSpacing: '0.2em',
+                      cursor: 'pointer', transition: 'all 280ms',
+                    }}
+                  >
+                    {promptSauvegarde ? '✓ SAUVEGARDÉ' : 'SAUVEGARDER'}
+                  </button>
+                </div>
+                <textarea
+                  value={promptTexte}
+                  onChange={e => setPromptTexte(e.target.value)}
+                  placeholder="Instructions personnalisées — comportements spécifiques, exemples de réponses..."
+                  style={{
+                    width: '100%', minHeight: 400,
+                    background: 'rgba(255,255,255,0.02)',
+                    border: `1px solid rgba(${aRgb},0.1)`,
+                    borderRadius: 12, padding: '18px',
+                    fontFamily: 'Space Mono, monospace',
+                    fontSize: 11, color: 'rgba(255,255,255,0.75)',
+                    lineHeight: 1.8, outline: 'none',
+                    resize: 'vertical', boxSizing: 'border-box',
+                    caretColor: a,
+                  }}
+                />
+                <div style={{ marginTop: 10, fontSize: 7, color: 'rgba(255,255,255,0.12)', letterSpacing: '0.15em' }}>
+                  {promptTexte.length} caractères · s'applique aux prochaines conversations
+                </div>
+              </div>
+            )}
+
+            {/* Sous-onglet : Historique */}
+            {ongletPrompt === 'historique' && (
+              <div style={{ ...glass, padding: 24 }}>
+                <div style={{ fontSize: 7, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.25em', marginBottom: 16 }}>
+                  // HISTORIQUE DES VERSIONS
+                </div>
+                {promptsHistorique.length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '40px 0', fontSize: 8, color: 'rgba(255,255,255,0.1)', letterSpacing: '0.2em' }}>
+                    Aucune version sauvegardée
+                  </div>
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {promptsHistorique.map(p => (
+                    <div
+                      key={p.id}
+                      style={{
+                        background: `rgba(${aRgb},0.04)`,
+                        border: `1px solid rgba(${aRgb},0.1)`,
+                        borderRadius: 12, padding: '16px 18px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: `rgba(${aRgb},0.8)` }}>{p.titre}</div>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <span style={{ fontSize: 7, color: 'rgba(255,255,255,0.2)' }}>
+                            {p.created_at ? new Date(p.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}
+                          </span>
+                          <button
+                            onClick={() => { setPromptTexte(p.contenu); setOngletPrompt('additionnel') }}
+                            style={{
+                              background: `rgba(${aRgb},0.08)`,
+                              border: `1px solid rgba(${aRgb},0.2)`,
+                              color: a, borderRadius: 6, padding: '4px 10px',
+                              fontSize: 7, letterSpacing: '0.15em', cursor: 'pointer',
+                            }}
+                          >
+                            RESTAURER
+                          </button>
+                        </div>
+                      </div>
+                      <div style={{
+                        fontSize: 9, color: 'rgba(255,255,255,0.35)', lineHeight: 1.5,
+                        overflow: 'hidden', display: '-webkit-box',
+                        WebkitLineClamp: 3, WebkitBoxOrient: 'vertical',
+                      }}>
+                        {p.contenu}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
