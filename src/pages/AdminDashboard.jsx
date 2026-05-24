@@ -1263,7 +1263,7 @@ ${detailSessions || 'Aucune session encore.'}
         )}
 
         {/* ── LIVE ── */}
-        {onglet === 'live' && (
+        {onglet === 'live' && !isMobile && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
             {/* Métriques rapides */}
@@ -1480,8 +1480,118 @@ ${detailSessions || 'Aucune session encore.'}
           </div>
         )}
 
+        {onglet === 'live' && isMobile && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+            {/* Métriques en grille 2x2 */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {[
+                { label: 'SESSIONS', val: stats.total },
+                { label: 'MESSAGES', val: stats.msgTotal },
+                { label: 'CONTACTS ⚡', val: stats.demandesContact },
+                { label: 'CV ⚡', val: stats.demandesCv },
+              ].map(({ label, val }, i) => (
+                <div key={i} style={{
+                  background: `rgba(${aRgb},0.06)`,
+                  border: `1px solid rgba(${aRgb},0.14)`,
+                  borderRadius: 12,
+                  padding: '12px 14px',
+                  position: 'relative', overflow: 'hidden',
+                }}>
+                  <div style={{ position: 'absolute', top: 0, left: 8, right: 8, height: 1, background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.2),transparent)` }} />
+                  <div style={{ fontSize: 6, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.18em', marginBottom: 6 }}>{label}</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: a, lineHeight: 1 }}>{val}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Liste sessions — pleine largeur, items compacts */}
+            <div style={{
+              background: `rgba(${aRgb},0.04)`,
+              border: `1px solid rgba(${aRgb},0.14)`,
+              borderRadius: 16,
+              padding: '14px',
+            }}>
+              <div style={{ fontSize: 6, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.25em', marginBottom: 10 }}>
+                // FLUX TEMPS RÉEL
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {sessions.slice(0, 15).map(s => (
+                  <div
+                    key={s.id}
+                    onClick={() => setSessionSelectee(sessionSelectee?.id === s.id ? null : s)}
+                    style={{
+                      padding: '10px 12px',
+                      background: sessionSelectee?.id === s.id ? `rgba(${aRgb},0.1)` : 'rgba(255,255,255,0.02)',
+                      border: `1px solid ${sessionSelectee?.id === s.id ? `rgba(${aRgb},0.25)` : 'rgba(255,255,255,0.04)'}`,
+                      borderRadius: 10,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div style={{ width: 5, height: 5, borderRadius: '50%', background: profilColor(s.profil_visiteur), flexShrink: 0 }} />
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>{s.prenom_visiteur || '—'}</span>
+                        <span style={{ fontSize: 6, color: profilColor(s.profil_visiteur), letterSpacing: '0.12em' }}>{profilLabel(s.profil_visiteur)}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        {s.demande_contact && <span style={{ fontSize: 7, color: a }}>⚡</span>}
+                        {s.demande_cv && <span style={{ fontSize: 7, color: '#f59e0b' }}>CV</span>}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.25)', display: 'flex', gap: 10 }}>
+                      <span>{s.nb_messages || 0} msg</span>
+                      <span>{formatDuree(s.duree_secondes || 0)}</span>
+                      <span style={{ marginLeft: 'auto' }}>{formatDate(s.created_at)}</span>
+                    </div>
+
+                    {/* Conversation dépliée si sélectionnée */}
+                    {sessionSelectee?.id === s.id && (
+                      <div style={{
+                        marginTop: 10,
+                        paddingTop: 10,
+                        borderTop: `1px solid rgba(${aRgb},0.1)`,
+                        display: 'flex', flexDirection: 'column', gap: 6,
+                        maxHeight: 220, overflowY: 'auto',
+                      }}>
+                        {(s.historique || []).length === 0 && (
+                          <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.2)', textAlign: 'center', padding: '10px 0' }}>Aucun message</div>
+                        )}
+                        {(s.historique || []).map((msg, i) => (
+                          <div key={i} style={{
+                            display: 'flex',
+                            flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
+                          }}>
+                            <div style={{
+                              maxWidth: '82%',
+                              background: msg.role === 'user' ? 'rgba(255,255,255,0.04)' : `rgba(${aRgb},0.06)`,
+                              border: `1px solid ${msg.role === 'user' ? 'rgba(255,255,255,0.06)' : `rgba(${aRgb},0.1)`}`,
+                              borderRadius: msg.role === 'user' ? '10px 2px 10px 10px' : '2px 10px 10px 10px',
+                              padding: '7px 10px',
+                              fontSize: 10,
+                              color: msg.role === 'user' ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.85)',
+                              lineHeight: 1.5,
+                            }}>
+                              {msg.contenu}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {sessions.length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '30px 0', fontSize: 8, color: 'rgba(255,255,255,0.1)', letterSpacing: '0.2em' }}>
+                    Aucune session enregistrée
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── SESSIONS ── */}
-        {onglet === 'sessions' && (
+        {onglet === 'sessions' && !isMobile && (
           <div style={{ ...glass, padding: 24 }}>
             <div style={{
               fontSize: 7, color: `rgba(${aRgb},0.4)`,
@@ -1592,8 +1702,55 @@ ${detailSessions || 'Aucune session encore.'}
           </div>
         )}
 
+        {onglet === 'sessions' && isMobile && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ fontSize: 6, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.25em', marginBottom: 4 }}>
+              // TOUTES LES SESSIONS — {sessions.length}
+            </div>
+            {sessions.map(s => (
+              <div
+                key={s.id}
+                onClick={() => { setSessionSelectee(s); setOnglet('live') }}
+                style={{
+                  background: `rgba(${aRgb},0.05)`,
+                  border: `1px solid rgba(${aRgb},0.12)`,
+                  borderRadius: 12,
+                  padding: '12px 14px',
+                  cursor: 'pointer',
+                  position: 'relative', overflow: 'hidden',
+                }}
+              >
+                <div style={{ position: 'absolute', top: 0, left: 10, right: 10, height: 1, background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.15),transparent)` }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 2 }}>{s.prenom_visiteur || '—'}</div>
+                    <div style={{ fontSize: 6, color: profilColor(s.profil_visiteur), letterSpacing: '0.12em' }}>{profilLabel(s.profil_visiteur)}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                    {s.demande_contact && <span style={{ fontSize: 6, color: a, border: `1px solid rgba(${aRgb},0.2)`, borderRadius: 4, padding: '2px 5px' }}>⚡ CONTACT</span>}
+                    {s.demande_cv && <span style={{ fontSize: 6, color: '#f59e0b', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 4, padding: '2px 5px' }}>⚡ CV</span>}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 16, borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: a }}>{s.nb_messages || 0}</div>
+                    <div style={{ fontSize: 6, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em' }}>msg</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: a }}>{formatDuree(s.duree_secondes || 0)}</div>
+                    <div style={{ fontSize: 6, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em' }}>durée</div>
+                  </div>
+                  <div style={{ marginLeft: 'auto', alignSelf: 'flex-end' }}>
+                    <div style={{ fontSize: 6, color: 'rgba(255,255,255,0.15)' }}>{formatDate(s.created_at)}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* ── STATS ── */}
-        {onglet === 'stats' && (
+        {onglet === 'stats' && !isMobile && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{
               display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12,
@@ -1706,8 +1863,72 @@ ${detailSessions || 'Aucune session encore.'}
           </div>
         )}
 
+        {onglet === 'stats' && isMobile && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+            {/* Métriques clés en 2x2 compact */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {[
+                { label: 'SESSIONS TOTALES', val: stats.total, sub: 'visiteurs' },
+                { label: 'MESSAGES', val: stats.msgTotal, sub: 'échangés' },
+                { label: 'DURÉE MOY.', val: formatDuree(stats.dureeMoy), sub: 'par session' },
+                { label: 'TAUX CONTACT', val: stats.total ? `${Math.round((stats.demandesContact/stats.total)*100)}%` : '0%', sub: 'des visiteurs' },
+              ].map(({ label, val, sub }, i) => (
+                <div key={i} style={{
+                  background: `rgba(${aRgb},0.06)`,
+                  border: `1px solid rgba(${aRgb},0.14)`,
+                  borderRadius: 12, padding: '12px 14px',
+                  position: 'relative', overflow: 'hidden',
+                }}>
+                  <div style={{ position: 'absolute', top: 0, left: 8, right: 8, height: 1, background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.2),transparent)` }} />
+                  <div style={{ fontSize: 6, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.15em', marginBottom: 6 }}>{label}</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: a, lineHeight: 1, marginBottom: 3 }}>{val}</div>
+                  <div style={{ fontSize: 6, color: 'rgba(255,255,255,0.18)' }}>{sub}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Profils en liste verticale */}
+            <div style={{ background: `rgba(${aRgb},0.04)`, border: `1px solid rgba(${aRgb},0.12)`, borderRadius: 14, padding: '14px' }}>
+              <div style={{ fontSize: 6, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.25em', marginBottom: 12 }}>// PROFILS</div>
+              {[
+                { label: 'Recruteurs', val: stats.recruteurs, color: '#3b82f6' },
+                { label: 'Clients', val: stats.clients, color: '#10b981' },
+                { label: 'Curieux', val: stats.curieux, color: a },
+                { label: 'Collaborateurs', val: stats.collabs, color: '#a855f7' },
+              ].map(({ label, val, color }) => (
+                <div key={label} style={{ marginBottom: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)' }}>{label}</span>
+                    <span style={{ fontSize: 9, color, fontWeight: 700 }}>{val}</span>
+                  </div>
+                  <div style={{ height: 2, background: 'rgba(255,255,255,0.05)', borderRadius: 2, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: stats.total ? `${(val/stats.total)*100}%` : '0%', background: color, borderRadius: 2, transition: 'width 0.8s ease' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Signaux chauds en liste */}
+            <div style={{ background: `rgba(${aRgb},0.04)`, border: `1px solid rgba(${aRgb},0.12)`, borderRadius: 14, padding: '14px' }}>
+              <div style={{ fontSize: 6, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.25em', marginBottom: 12 }}>// SIGNAUX CHAUDS</div>
+              {[
+                { label: 'Demandes contact', val: stats.demandesContact, color: a },
+                { label: 'Demandes CV', val: stats.demandesCv, color: '#f59e0b' },
+                { label: 'Taux CV', val: stats.total ? `${Math.round((stats.demandesCv/stats.total)*100)}%` : '0%', color: '#a855f7' },
+                { label: 'Moy. msg/session', val: stats.total ? Math.round(stats.msgTotal/stats.total) : 0, color: '#3b82f6' },
+              ].map(({ label, val, color }, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: i < 3 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                  <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>{label}</span>
+                  <span style={{ fontSize: 16, fontWeight: 800, color }}>{val}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* ── PROMPT ── */}
-        {onglet === 'prompt' && (
+        {onglet === 'prompt' && !isMobile && (
           <div style={{ ...glass, padding: 28 }}>
             <div style={{
               display: 'flex', justifyContent: 'space-between',
@@ -1769,6 +1990,88 @@ ${detailSessions || 'Aucune session encore.'}
             }}>
               {promptTexte.length} caractères · s'applique aux prochaines conversations
             </div>
+          </div>
+        )}
+
+        {onglet === 'prompt' && isMobile && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+            {/* En-tête + bouton sauvegarder */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: 6, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.25em', marginBottom: 3 }}>// PERSONNALITÉ AXIS</div>
+                <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)' }}>Modifie le comportement d'AXIS</div>
+              </div>
+              <button
+                onClick={sauvegarderPrompt}
+                style={{
+                  background: promptSauvegarde ? 'rgba(16,185,129,0.1)' : `rgba(${aRgb},0.08)`,
+                  border: `1px solid ${promptSauvegarde ? 'rgba(16,185,129,0.3)' : `rgba(${aRgb},0.2)`}`,
+                  color: promptSauvegarde ? '#10b981' : a,
+                  borderRadius: 8, padding: '7px 12px',
+                  fontFamily: 'Space Mono, monospace',
+                  fontSize: 7, letterSpacing: '0.15em',
+                  cursor: 'pointer',
+                }}
+              >
+                {promptSauvegarde ? '✓ OK' : 'SAUVER'}
+              </button>
+            </div>
+
+            {/* Zone de texte */}
+            <textarea
+              value={promptTexte}
+              onChange={e => setPromptTexte(e.target.value)}
+              placeholder="Instructions pour AXIS..."
+              style={{
+                width: '100%', minHeight: 200,
+                background: 'rgba(255,255,255,0.02)',
+                border: `1px solid rgba(${aRgb},0.1)`,
+                borderRadius: 12, padding: '14px',
+                fontFamily: 'Space Mono, monospace',
+                fontSize: 11, color: 'rgba(255,255,255,0.75)',
+                lineHeight: 1.7, outline: 'none',
+                resize: 'vertical', boxSizing: 'border-box',
+                caretColor: a,
+              }}
+            />
+            <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.12)', letterSpacing: '0.12em' }}>
+              {promptTexte.length} caractères
+            </div>
+
+            {/* Historique des prompts */}
+            {promptsHistorique.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ fontSize: 6, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.25em', marginBottom: 4 }}>// HISTORIQUE</div>
+                {promptsHistorique.map(p => (
+                  <div
+                    key={p.id}
+                    onClick={() => setPromptTexte(p.contenu)}
+                    style={{
+                      background: `rgba(${aRgb},0.04)`,
+                      border: `1px solid rgba(${aRgb},0.1)`,
+                      borderRadius: 10,
+                      padding: '10px 12px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                      <div style={{ fontSize: 8, fontWeight: 700, color: `rgba(${aRgb},0.8)` }}>{p.titre}</div>
+                      <div style={{ fontSize: 6, color: 'rgba(255,255,255,0.2)' }}>
+                        {p.created_at ? new Date(p.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : '—'}
+                      </div>
+                    </div>
+                    <div style={{
+                      fontSize: 9, color: 'rgba(255,255,255,0.35)', lineHeight: 1.4,
+                      overflow: 'hidden', display: '-webkit-box',
+                      WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                    }}>
+                      {p.contenu}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
