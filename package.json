@@ -11,6 +11,9 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.96.0",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
+    "@react-three/postprocessing": "^3.0.4",
     "@tailwindcss/postcss": "^4.3.0",
     "axios": "^1.16.1",
     "firebase": "^12.13.0",
@@ -19,6 +22,7 @@
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.15.1",
+    "three": "^0.185.1",
     "zustand": "^5.0.13"
   },
   "devDependencies": {

@@ -3,6 +3,572 @@ import { useNavigate } from 'react-router-dom'
 import utiliserTheme from '@/store/utiliserTheme'
 import PanneauParametres from '@/composants/ui/PanneauParametres'
 
+// Composant AcademicStaircase - défini au niveau module pour éviter les re-rendus
+function AcademicStaircase({ isMobile, a, aRgb, eff }) {
+  const niveaux = [
+    { lvl: 'LVL 01', label: 'BEPC', annee: '2020–2021', titre: "Brevet d'Études du Premier Cycle", desc: "Première étape du parcours scolaire, validée avec de bons résultats généraux.", done: true, hauteur: 70 },
+    { lvl: 'LVL 02', label: 'BAC', annee: '2023–2024', titre: 'Baccalauréat, série D', desc: "Obtention du baccalauréat scientifique, ouvrant la voie vers les études supérieures en ingénierie.", done: true, hauteur: 130 },
+    { lvl: 'LVL 03', label: 'LICENCE', annee: '2024–en cours', titre: '2ème année sur 3 — Génie Logiciel', desc: "Cursus de licence en génie logiciel (3 ans). Actuellement en 2ème année, avec une spécialisation progressive vers l'intelligence artificielle.", done: false, hauteur: 195 },
+  ]
+
+  const [etapeActiveIdx, setEtapeActiveIdx] = useState(niveaux.length - 1)
+  const etapeActive = niveaux[etapeActiveIdx]
+  
+  // Adapter les hauteurs sur mobile
+  const heightMultiplier = isMobile ? 0.65 : 1
+  
+  return (
+    <div style={{
+      background: eff.cardBg,
+      border: `1px solid ${eff.borderStrong}`,
+      borderRadius: 20,
+      padding: isMobile ? '24px 18px' : '44px 48px',
+      position: 'relative',
+      overflow: 'hidden',
+      WebkitBackdropFilter: 'blur(12px)',
+      backdropFilter: 'blur(12px)',
+    }}>
+      {/* Ligne lumineuse en haut */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 40,
+        right: 40,
+        height: 1,
+        background: `linear-gradient(90deg, transparent, rgba(${aRgb},0.3), transparent)`,
+        pointerEvents: 'none',
+      }} />
+
+      {/* ESCALIER */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'flex-end',
+        gap: isMobile ? 8 : 16,
+        height: isMobile ? 160 : 220,
+        padding: '0 4px',
+        position: 'relative',
+      }}>
+        {niveaux.map((niveau, i) => {
+          const isActive = i === etapeActiveIdx
+          const marheHauteur = niveau.hauteur * heightMultiplier
+          
+          return (
+            <div
+              key={niveau.lvl}
+              onClick={() => setEtapeActiveIdx(i)}
+              style={{
+                flex: isActive ? 1.3 : 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: isMobile ? 8 : 10,
+                cursor: 'pointer',
+                position: 'relative',
+                transition: 'flex 0.3s ease',
+              }}
+            >
+              {/* Label LVL */}
+              <div style={{
+                fontFamily: 'Space Mono, monospace',
+                fontSize: 8,
+                letterSpacing: '0.15em',
+                color: isActive ? a : `rgba(${aRgb},0.35)`,
+                textTransform: 'uppercase',
+                transition: 'color 0.2s ease',
+              }}>
+                {niveau.lvl}
+              </div>
+
+              {/* Marqueur lumineux sur l'étape active */}
+              {isActive && (
+                <div style={{
+                  position: 'absolute',
+                  top: -34,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  background: a,
+                  boxShadow: `0 0 16px rgba(${aRgb},0.6)`,
+                  zIndex: 5,
+                }}>
+                  {/* Trait fin reliant au sommet de la marche */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 10,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: 1,
+                    height: 24,
+                    background: a,
+                    opacity: 0.4,
+                  }} />
+                </div>
+              )}
+
+              {/* La marche */}
+              <div
+                style={{
+                  width: '100%',
+                  height: marheHauteur,
+                  borderRadius: '10px 10px 0 0',
+                  position: 'relative',
+                  transition: isActive ? 'all 0.3s ease' : 'background 0.2s ease, border 0.2s ease',
+                  ...(isActive
+                    ? {
+                        background: `linear-gradient(180deg, rgba(${aRgb},0.18), rgba(${aRgb},0.08))`,
+                        border: `1.5px solid ${a}`,
+                        boxShadow: `0 0 30px rgba(${aRgb},0.15)`,
+                      }
+                    : niveau.done
+                    ? {
+                        background: `rgba(${aRgb},0.08)`,
+                        border: `1px solid rgba(${aRgb},0.25)`,
+                      }
+                    : {
+                        background: `rgba(${aRgb},0.05)`,
+                        border: `1px solid rgba(${aRgb},0.15)`,
+                      }),
+                }}
+              >
+                {/* Badge EN COURS */}
+                {isActive && !niveau.done && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 8,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    fontFamily: 'Space Mono, monospace',
+                    fontSize: 7,
+                    letterSpacing: '0.1em',
+                    color: a,
+                    textTransform: 'uppercase',
+                    pointerEvents: 'none',
+                  }}>
+                    <span style={{
+                      width: 4,
+                      height: 4,
+                      borderRadius: '50%',
+                      background: a,
+                      animation: 'pulse 1.4s infinite',
+                    }} />
+                    EN COURS
+                  </div>
+                )}
+
+                {/* Coche pour les marches complétées (non active) */}
+                {!isActive && niveau.done && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    fontFamily: 'Fraunces, serif',
+                    fontSize: isMobile ? 20 : 28,
+                    fontWeight: 700,
+                    color: a,
+                    opacity: 0.6,
+                    pointerEvents: 'none',
+                  }}>
+                    ✓
+                  </div>
+                )}
+              </div>
+
+              {/* Label diplôme */}
+              <div style={{
+                fontFamily: 'Space Mono, monospace',
+                fontSize: 9,
+                fontWeight: 700,
+                color: isActive ? a : eff.texte,
+                transition: 'color 0.2s ease',
+                textAlign: 'center',
+              }}>
+                {niveau.label}
+              </div>
+
+              {/* Année */}
+              <div style={{
+                fontFamily: 'Space Mono, monospace',
+                fontSize: 8,
+                color: isActive ? `rgba(${aRgb},0.6)` : eff.textFaint,
+                transition: 'color 0.2s ease',
+                textAlign: 'center',
+                whiteSpace: 'nowrap',
+              }}>
+                {niveau.annee}
+              </div>
+            </div>
+          )
+        })}
+
+        {/* Marche fantôme (étape suivante) */}
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: isMobile ? 8 : 10,
+            opacity: 0.35,
+            cursor: 'default',
+          }}
+        >
+          <div style={{
+            fontFamily: 'Space Mono, monospace',
+            fontSize: 8,
+            letterSpacing: '0.15em',
+            color: eff.textFaint,
+            textTransform: 'uppercase',
+          }}>
+            LVL 0{niveaux.length + 1}
+          </div>
+
+          <div
+            style={{
+              width: '100%',
+              height: (niveaux[niveaux.length - 1].hauteur + 35) * heightMultiplier,
+              borderRadius: '10px 10px 0 0',
+              border: `1px dashed rgba(${aRgb},0.2)`,
+              background: 'transparent',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: isMobile ? 16 : 24,
+              fontWeight: 700,
+              color: eff.textFaint,
+            }}
+          >
+            ?
+          </div>
+
+          <div style={{
+            fontFamily: 'Space Mono, monospace',
+            fontSize: 9,
+            fontWeight: 700,
+            color: eff.textFaint,
+            opacity: 0.5,
+          }}>
+            À venir
+          </div>
+
+          <div style={{
+            fontFamily: 'Space Mono, monospace',
+            fontSize: 8,
+            color: eff.textFaint,
+            opacity: 0.3,
+          }}>
+            —
+          </div>
+        </div>
+      </div>
+
+      {/* Ligne de sol */}
+      <div style={{
+        height: 2,
+        background: eff.borderStrong,
+        marginTop: 0,
+        marginBottom: isMobile ? 24 : 28,
+      }} />
+
+      {/* Panneau de détail */}
+      <div
+        key={etapeActiveIdx}
+        style={{
+          padding: isMobile ? '18px 20px' : '22px 26px',
+          background: `rgba(${aRgb},0.02)`,
+          border: `1px solid rgba(${aRgb},0.15)`,
+          borderLeft: `3px solid ${a}`,
+          borderRadius: 12,
+          animation: 'fadeInUp 0.3s ease',
+        }}
+      >
+        {!etapeActive.done && (
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            fontFamily: 'Space Mono, monospace',
+            fontSize: 9,
+            color: a,
+            background: `rgba(${aRgb},0.08)`,
+            border: `1px solid rgba(${aRgb},0.25)`,
+            padding: '4px 10px',
+            borderRadius: 20,
+            letterSpacing: '0.1em',
+            marginBottom: 10,
+          }}>
+            <span style={{
+              width: 5,
+              height: 5,
+              borderRadius: '50%',
+              background: a,
+              animation: 'pulse 1.4s infinite',
+            }} />
+            EN COURS
+          </div>
+        )}
+
+        <div style={{
+          fontFamily: 'Space Mono, monospace',
+          fontSize: 9,
+          color: a,
+          marginBottom: 6,
+          letterSpacing: '0.1em',
+        }}>
+          {etapeActive.annee}
+        </div>
+
+        <div style={{
+          fontFamily: 'Fraunces, serif',
+          fontWeight: 700,
+          fontSize: isMobile ? 18 : 18,
+          color: eff.texte,
+          marginBottom: 8,
+        }}>
+          {etapeActive.titre}
+        </div>
+
+        <div style={{
+          fontFamily: 'Inter, sans-serif',
+          fontWeight: 300,
+          fontSize: 13,
+          color: eff.textMuted,
+          lineHeight: 1.6,
+        }}>
+          {etapeActive.desc}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AxisBouton({ isMobile, a, aRgb, navigate, eff }) {
+  const [survol, setSurvol] = useState(false)
+
+  return (
+    <div style={{
+      position: 'fixed',
+      bottom: isMobile ? 16 : 24,
+      right: isMobile ? 12 : 24,
+      zIndex: 40,
+    }}>
+      <style>{`
+        @keyframes axisRing {
+          0%   { transform: scale(1);   opacity: 0.6; }
+          100% { transform: scale(1.5); opacity: 0; }
+        }
+        @keyframes axisPulse {
+          0%,100% { opacity: 1; }
+          50%      { opacity: 0.4; }
+        }
+        @keyframes axisScan {
+          from { top: 0%; }
+          to   { top: 100%; }
+        }
+        @keyframes tooltipIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
+      {/* Tooltip au survol */}
+      {survol && (
+        <div style={{
+          position: 'absolute',
+          bottom: isMobile ? 52 : 62,
+          left: 0,
+          width: isMobile ? 200 : 220,
+          background: eff.glassOverlay,
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: `1px solid rgba(${aRgb},0.25)`,
+          borderRadius: 10,
+          padding: '10px 12px',
+          animation: 'tooltipIn 0.2s ease forwards',
+          pointerEvents: 'none',
+        }}>
+          {/* Ligne lumineuse top */}
+          <div style={{
+            position: 'absolute', top: 0, left: 12, right: 12, height: 1,
+            background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.4),transparent)`,
+          }} />
+
+          {/* Flèche bas */}
+          <div style={{
+            position: 'absolute',
+            bottom: -5, left: 18,
+            width: 8, height: 5,
+            clipPath: 'polygon(0 0, 100% 0, 50% 100%)',
+            background: `rgba(${aRgb},0.3)`,
+          }} />
+
+          <div style={{
+            fontFamily: 'Space Mono, monospace',
+            fontSize: 8,
+            color: `rgba(${aRgb},0.5)`,
+            letterSpacing: '0.2em',
+            marginBottom: 5,
+          }}>AXIS // IA</div>
+
+          <div style={{
+            fontFamily: 'Inter, sans-serif',
+            fontSize: isMobile ? 10 : 11,
+            color: eff.textMedium,
+            lineHeight: 1.55,
+          }}>
+            Optimisez votre expérience en conversant avec AXIS, l'IA de Fréjus.
+          </div>
+        </div>
+      )}
+
+      {/* Bouton principal */}
+      <div
+        onClick={() => navigate('/')}
+        onMouseEnter={() => setSurvol(true)}
+        onMouseLeave={() => setSurvol(false)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: isMobile ? 0 : 10,
+          cursor: 'pointer',
+        }}
+      >
+        {/* Cercle HUD */}
+        <div style={{
+          position: 'relative',
+          width: isMobile ? 44 : 52,
+          height: isMobile ? 44 : 52,
+          flexShrink: 0,
+        }}>
+          {/* Anneaux pulsants */}
+          <div style={{
+            position: 'absolute', inset: -4,
+            borderRadius: '50%',
+            border: `1px solid rgba(${aRgb},0.4)`,
+            animation: 'axisRing 2s ease-out infinite',
+            pointerEvents: 'none',
+          }} />
+          <div style={{
+            position: 'absolute', inset: -4,
+            borderRadius: '50%',
+            border: `1px solid rgba(${aRgb},0.2)`,
+            animation: 'axisRing 2s ease-out infinite',
+            animationDelay: '0.7s',
+            pointerEvents: 'none',
+          }} />
+
+          {/* Cercle principal */}
+          <div style={{
+            width: '100%', height: '100%',
+            borderRadius: '50%',
+            background: survol
+              ? `rgba(${aRgb},0.12)`
+              : eff.glassOverlay,
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: `1px solid rgba(${aRgb},${survol ? '0.6' : '0.35'})`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            overflow: 'hidden',
+            boxShadow: survol
+              ? `0 0 28px rgba(${aRgb},0.35)`
+              : `0 0 16px rgba(${aRgb},0.15)`,
+            transition: 'all 0.25s',
+          }}>
+            {/* Scan interne */}
+            <div style={{
+              position: 'absolute',
+              left: 0, right: 0, height: 1,
+              background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.6),transparent)`,
+              animation: 'axisScan 2s linear infinite',
+              zIndex: 2, pointerEvents: 'none',
+            }} />
+
+            {/* Hexagone SVG */}
+            <svg
+              width={isMobile ? 20 : 24}
+              height={isMobile ? 20 : 24}
+              viewBox="0 0 24 24"
+              fill="none"
+              style={{ position: 'relative', zIndex: 3 }}
+            >
+              <polygon
+                points="12,2 20,7 20,17 12,22 4,17 4,7"
+                stroke={a}
+                strokeWidth="1.2"
+                fill={`rgba(${aRgb},0.1)`}
+              />
+              <circle cx="12" cy="12" r="3" fill={a}
+                style={{ animation: 'axisPulse 1.8s infinite' }}
+              />
+            </svg>
+          </div>
+
+          {/* Point statut */}
+          <div style={{
+            position: 'absolute', bottom: 1, right: 1,
+            width: isMobile ? 7 : 8, height: isMobile ? 7 : 8,
+            borderRadius: '50%',
+            background: a,
+            border: `1.5px solid ${eff.fond}`,
+            boxShadow: `0 0 6px ${a}`,
+            animation: 'axisPulse 1.4s infinite',
+            zIndex: 4,
+          }} />
+        </div>
+
+        {/* Label — masqué sur mobile */}
+        {!isMobile && (
+          <div style={{
+            background: eff.navOverlay,
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: `1px solid rgba(${aRgb},${survol ? '0.35' : '0.18'})`,
+            borderRadius: 10,
+            padding: '8px 14px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+            transition: 'border-color 0.25s',
+          }}>
+            <div style={{
+              fontFamily: 'Space Mono, monospace',
+              fontSize: 7,
+              color: `rgba(${aRgb},0.45)`,
+              letterSpacing: '0.22em',
+            }}>AXIS // IA</div>
+            <div style={{
+              fontFamily: 'Space Mono, monospace',
+              fontSize: 9,
+              color: a,
+              letterSpacing: '0.15em',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+            }}>
+              <span style={{
+                width: 5, height: 5,
+                borderRadius: '50%',
+                background: a,
+                display: 'inline-block',
+                animation: 'axisPulse 1.4s infinite',
+              }} />
+              PARLER À AXIS
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false }, ref) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [showScrollTop, setShowScrollTop] = useState(false)
@@ -12,6 +578,8 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
   const [githubError, setGithubError] = useState(null)
   const [tooltipInfo, setTooltipInfo] = useState(null)
   const [citationIdx, setCitationIdx] = useState(0)
+  const [etapeActive, setEtapeActive] = useState(0)
+  const [serviceActif, setServiceActif] = useState(0)
   const wrapRef = useRef(null)
   const { theme, mode, getThemeEffectif } = utiliserTheme()
   const eff = getThemeEffectif ? getThemeEffectif() : theme
@@ -74,7 +642,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
   const citations = [
     "Je transforme des idées complexes en interfaces fluides et mémorables.",
     "Construire l'avenir du web, une ligne de code à la fois.",
-    "L'IA n'est pas un outil — c'est un nouveau langage que je parle."
+    "Chaque ligne de code est une brique vers un logiciel qui dure."
     ] // List of citations for display
 
   // Exposer la fonction naviguerVers au parent
@@ -161,11 +729,41 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
   ]
 
   const etapes = [
-    { n:'01', titre:'Analyse & Audit', desc:'Compréhension des besoins, définition des objectifs et cartographie complète du projet.' },
-    { n:'02', titre:'Conception & UI', desc:'Design des maquettes, prototypage interactif et création de l\'identité visuelle.' },
-    { n:'03', titre:'Développement', desc:'Codage propre et optimisé avec architecture scalable et maintenable.' },
-    { n:'04', titre:'Tests & Validation', desc:'Tests multi-navigateurs, validation performance, accessibilité et SEO.' },
-    { n:'05', titre:'Déploiement', desc:'Mise en ligne sécurisée, formation et documentation complète.' },
+    {
+      n: '01',
+      titre: 'Analyse & Audit',
+      desc: 'Compréhension des besoins, définition des objectifs et cartographie complète du projet.',
+      duree: '~1 semaine',
+      tags: ['Benchmark', 'Personas', 'Roadmap'],
+    },
+    {
+      n: '02',
+      titre: 'Conception & UI',
+      desc: 'Design des maquettes, prototypage interactif et création de l\'identité visuelle.',
+      duree: '~2 semaines',
+      tags: ['Wireframes', 'Design system', 'Prototype'],
+    },
+    {
+      n: '03',
+      titre: 'Développement',
+      desc: 'Codage propre et optimisé avec architecture scalable et maintenable.',
+      duree: '~4 semaines',
+      tags: ['Frontend', 'Backend', 'CI/CD'],
+    },
+    {
+      n: '04',
+      titre: 'Tests & Validation',
+      desc: 'Tests multi-navigateurs, validation performance, accessibilité et SEO.',
+      duree: '~1 semaine',
+      tags: ['QA', 'Tests E2E', 'Accessibilité'],
+    },
+    {
+      n: '05',
+      titre: 'Déploiement',
+      desc: 'Mise en ligne sécurisée, formation et documentation complète.',
+      duree: 'continu',
+      tags: ['Déploiement', 'Monitoring', 'Support'],
+    },
   ]
 
   const s = {
@@ -184,232 +782,9 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
 
   const navStyle = { ...s.nav, padding: isMobile ? '12px 20px' : s.nav.padding }
   const sectionStyle = { ...s.section, padding: isMobile ? '64px 24px' : s.section.padding, overflowX: 'hidden', maxWidth: '100%' }
-  const servicesGridStyle = { display: 'flex', flexDirection: 'column', gap: 12 }
   const contactGridStyle = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: isMobile ? 8 : 12 }
   const navLinksStyle = { display: isMobile ? 'none' : 'flex', gap: 16, fontSize: 9, color: eff.textFaint, letterSpacing: '0.2em', fontFamily: 'Space Mono, monospace', textTransform: 'uppercase' }
   const navSpanColor = isLight ? '#64748b' : eff.textFaint
-
-  function AxisBouton({ isMobile, a, aRgb, navigate }) {
-    const [survol, setSurvol] = useState(false)
-
-    return (
-      <div style={{
-        position: 'fixed',
-        bottom: isMobile ? 16 : 24,
-        right: isMobile ? 12 : 24,
-        zIndex: 40,
-      }}>
-        <style>{`
-          @keyframes axisRing {
-            0%   { transform: scale(1);   opacity: 0.6; }
-            100% { transform: scale(1.5); opacity: 0; }
-          }
-          @keyframes axisPulse {
-            0%,100% { opacity: 1; }
-            50%      { opacity: 0.4; }
-          }
-          @keyframes axisScan {
-            from { top: 0%; }
-            to   { top: 100%; }
-          }
-          @keyframes tooltipIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to   { opacity: 1; transform: translateY(0); }
-          }
-        `}</style>
-
-        {/* Tooltip au survol */}
-        {survol && (
-          <div style={{
-            position: 'absolute',
-            bottom: isMobile ? 52 : 62,
-            left: 0,
-            width: isMobile ? 200 : 220,
-            background: eff.glassOverlay,
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: `1px solid rgba(${aRgb},0.25)`,
-            borderRadius: 10,
-            padding: '10px 12px',
-            animation: 'tooltipIn 0.2s ease forwards',
-            pointerEvents: 'none',
-          }}>
-            {/* Ligne lumineuse top */}
-            <div style={{
-              position: 'absolute', top: 0, left: 12, right: 12, height: 1,
-              background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.4),transparent)`,
-            }} />
-
-            {/* Flèche bas */}
-            <div style={{
-              position: 'absolute',
-              bottom: -5, left: 18,
-              width: 8, height: 5,
-              clipPath: 'polygon(0 0, 100% 0, 50% 100%)',
-              background: `rgba(${aRgb},0.3)`,
-            }} />
-
-            <div style={{
-              fontFamily: 'Space Mono, monospace',
-              fontSize: 8,
-              color: `rgba(${aRgb},0.5)`,
-              letterSpacing: '0.2em',
-              marginBottom: 5,
-            }}>AXIS // IA</div>
-
-            <div style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: isMobile ? 10 : 11,
-              color: eff.textMedium,
-              lineHeight: 1.55,
-            }}>
-              Optimisez votre expérience en conversant avec AXIS, l'IA de Fréjus.
-            </div>
-          </div>
-        )}
-
-        {/* Bouton principal */}
-        <div
-          onClick={() => navigate('/')}
-          onMouseEnter={() => setSurvol(true)}
-          onMouseLeave={() => setSurvol(false)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: isMobile ? 0 : 10,
-            cursor: 'pointer',
-          }}
-        >
-          {/* Cercle HUD */}
-          <div style={{
-            position: 'relative',
-            width: isMobile ? 44 : 52,
-            height: isMobile ? 44 : 52,
-            flexShrink: 0,
-          }}>
-            {/* Anneaux pulsants */}
-            <div style={{
-              position: 'absolute', inset: -4,
-              borderRadius: '50%',
-              border: `1px solid rgba(${aRgb},0.4)`,
-              animation: 'axisRing 2s ease-out infinite',
-              pointerEvents: 'none',
-            }} />
-            <div style={{
-              position: 'absolute', inset: -4,
-              borderRadius: '50%',
-              border: `1px solid rgba(${aRgb},0.2)`,
-              animation: 'axisRing 2s ease-out infinite',
-              animationDelay: '0.7s',
-              pointerEvents: 'none',
-            }} />
-
-            {/* Cercle principal */}
-            <div style={{
-              width: '100%', height: '100%',
-              borderRadius: '50%',
-              background: survol
-                ? `rgba(${aRgb},0.12)`
-                : eff.glassOverlay,
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              border: `1px solid rgba(${aRgb},${survol ? '0.6' : '0.35'})`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              overflow: 'hidden',
-              boxShadow: survol
-                ? `0 0 28px rgba(${aRgb},0.35)`
-                : `0 0 16px rgba(${aRgb},0.15)`,
-              transition: 'all 0.25s',
-            }}>
-              {/* Scan interne */}
-              <div style={{
-                position: 'absolute',
-                left: 0, right: 0, height: 1,
-                background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.6),transparent)`,
-                animation: 'axisScan 2s linear infinite',
-                zIndex: 2, pointerEvents: 'none',
-              }} />
-
-              {/* Hexagone SVG */}
-              <svg
-                width={isMobile ? 20 : 24}
-                height={isMobile ? 20 : 24}
-                viewBox="0 0 24 24"
-                fill="none"
-                style={{ position: 'relative', zIndex: 3 }}
-              >
-                <polygon
-                  points="12,2 20,7 20,17 12,22 4,17 4,7"
-                  stroke={a}
-                  strokeWidth="1.2"
-                  fill={`rgba(${aRgb},0.1)`}
-                />
-                <circle cx="12" cy="12" r="3" fill={a}
-                  style={{ animation: 'axisPulse 1.8s infinite' }}
-                />
-              </svg>
-            </div>
-
-            {/* Point statut */}
-            <div style={{
-              position: 'absolute', bottom: 1, right: 1,
-              width: isMobile ? 7 : 8, height: isMobile ? 7 : 8,
-              borderRadius: '50%',
-              background: a,
-              border: `1.5px solid ${eff.fond}`,
-              boxShadow: `0 0 6px ${a}`,
-              animation: 'axisPulse 1.4s infinite',
-              zIndex: 4,
-            }} />
-          </div>
-
-          {/* Label — masqué sur mobile */}
-          {!isMobile && (
-            <div style={{
-              background: eff.navOverlay,
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              border: `1px solid rgba(${aRgb},${survol ? '0.35' : '0.18'})`,
-              borderRadius: 10,
-              padding: '8px 14px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 4,
-              transition: 'border-color 0.25s',
-            }}>
-              <div style={{
-                fontFamily: 'Space Mono, monospace',
-                fontSize: 7,
-                color: `rgba(${aRgb},0.45)`,
-                letterSpacing: '0.22em',
-              }}>AXIS // IA</div>
-              <div style={{
-                fontFamily: 'Space Mono, monospace',
-                fontSize: 9,
-                color: a,
-                letterSpacing: '0.15em',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-              }}>
-                <span style={{
-                  width: 5, height: 5,
-                  borderRadius: '50%',
-                  background: a,
-                  display: 'inline-block',
-                  animation: 'axisPulse 1.4s infinite',
-                }} />
-                PARLER À AXIS
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div style={s.wrap} id="pf-wrap">
@@ -438,7 +813,6 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         #pf-wrap nav span:hover { color: ${a}; transition: color 200ms; }
         #pf-wrap a.pf-btn:hover { background: ${a}; color: #050505; }
         #pf-wrap a.pf-ghost:hover { background: rgba(${aRgb},0.08); }
-        #pf-wrap #pf-academic .timeline-scroll::-webkit-scrollbar { display: none; }
         #pf-github .github-scroll::-webkit-scrollbar { display: none; }
       `}</style>
 
@@ -469,7 +843,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               width:'fit-content',
             }}>
               <div style={{ width:5, height:5, borderRadius:'50%', background:a, animation:'pulse 1.5s infinite' }}/>
-              DÉVELOPPEUR FRONTEND & IA
+              DÉVELOPPEUR LOGICIEL FULLSTACK
             </div>
 
             <div style={{
@@ -484,7 +858,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             </div>
 
             <p style={{ color:eff.textMuted, fontSize:13, lineHeight:1.8, maxWidth:isMobile ? '100%' : 520, margin:0, marginTop:12 }}>
-              Passionné par la création d'expériences web exceptionnelles et l'intelligence artificielle. De Yamoussoukro à l'international.
+              Passionné par la création d'expériences web exceptionnelles et d'applications robustes. De Yamoussoukro à l'international.
             </p>
 
             <div style={{
@@ -539,7 +913,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             </div>
 
             <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginTop:12 }}>
-              {['REACT','NODE.JS','PYTHON','IA & ML','FIGMA'].map(t => (
+              {['REACT','JAVASCRIPT','PHP','LARAVEL','FIGMA'].map(t => (
                 <span key={t} style={{
                   padding:'4px 12px',
                   border:`1px solid ${eff.borderStrong}`,
@@ -714,7 +1088,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                 fontSize:8, color:`rgba(${aRgb},0.7)`,
                 letterSpacing:'0.15em',
               }}>
-                DEV FULLSTACK · IA
+                DEV LOGICIEL · FULLSTACK
               </div>
             </div>
             {[['top','left'],['top','right'],['bottom','left'],['bottom','right']].map(([v,h], i) => (
@@ -729,7 +1103,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
 
           <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
             <div style={{ color: eff.textMuted, lineHeight:1.9, fontSize:13 }}>
-              Développeur Frontend passionné, spécialisé en <strong style={{ color: eff.textHigh, fontWeight:500 }}>React</strong> et <strong style={{ color: eff.textHigh, fontWeight:500 }}>intelligence artificielle</strong>. Conception d'interfaces performantes, accessibles et esthétiques, avec un souci du détail et de la performance.
+              Développeur logiciel fullstack passionné, spécialisé en <strong style={{ color: eff.textHigh, fontWeight:500 }}>UX , UI</strong> moderne <strong style={{ color: eff.textHigh, fontWeight:500 }}>fluide</strong>. Conception d'applications et d'interfaces performantes, accessibles et esthétiques, avec un souci du détail et de la qualité du code.
             </div>
 
             <div style={{
@@ -742,7 +1116,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               lineHeight:1.8,
               fontStyle:'italic',
             }}>
-              Actuellement en formation d'ingénieur en intelligence artificielle, basé à Yamoussoukro, Côte d'Ivoire. Disponible pour des projets locaux et internationaux.
+              Actuellement en 2ème année de Licence Génie Logiciel à l'UIYA, basé à Yamoussoukro, Côte d'Ivoire, avec une spécialisation progressive vers l'intelligence artificielle. Disponible pour des projets locaux et internationaux.
             </div>
 
             <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(2,1fr)', gap:12 }}>
@@ -841,185 +1215,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         <div style={s.secNum}>01.5 // PARCOURS</div>
         <h2 style={s.secTitle}>Parcours <span style={s.accent}>Académique</span></h2>
 
-        {/* Conteneur de la timeline */}
-        <div className="timeline-scroll" style={{ position: 'relative', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: 32, maxWidth: '100%' }}>
-
-          <div style={{ minWidth: 600 }}>
-          {/* Ligne sinusoïdale SVG */}
-          <svg
-            viewBox="0 0 900 160"
-            preserveAspectRatio="none"
-            style={{
-              width: '100%',
-              minWidth: 600,
-              height: 160,
-              display: 'block',
-              overflow: 'visible',
-            }}
-          >
-            {/* Dégradé pour la courbe */}
-            <defs>
-              <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor={a} stopOpacity="0.1" />
-                <stop offset="40%" stopColor={a} stopOpacity="0.6" />
-                <stop offset="70%" stopColor={a} stopOpacity="0.9" />
-                <stop offset="100%" stopColor={a} stopOpacity="0.4" />
-              </linearGradient>
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-            </defs>
-
-            {/* Courbe sinusoïdale */}
-            <path
-              d="M 0 80 C 100 80, 150 40, 225 80 S 375 120, 450 80 S 600 40, 675 80 S 825 120, 900 80"
-              fill="none"
-              stroke={`url(#waveGrad)`}
-              strokeWidth="2"
-              filter="url(#glow)"
-            />
-
-            {/* Points sur la courbe avec cercles */}
-            {[
-              { x: 225, y: 80, label: 'BEPC', annee: '2020 – 2021', desc: 'Brevet d\'Études du\nPremier Cycle', done: true },
-              { x: 450, y: 80, label: 'BAC', annee: '2023 – 2024', desc: 'Baccalauréat\nSérie D', done: true },
-              { x: 675, y: 80, label: 'LICENCE 2', annee: '2024 – 2025', desc: 'Génie Logiciel\nCycle Supérieur', done: false },
-            ].map((item, i) => (
-              <g key={i}>
-                {/* Halo extérieur */}
-                <circle
-                  cx={item.x} cy={item.y} r={item.done ? 22 : 26}
-                  fill="none"
-                  stroke={a}
-                  strokeWidth="1"
-                  strokeOpacity={item.done ? 0.2 : 0.5}
-                />
-                {/* Cercle principal */}
-                <circle
-                  cx={item.x} cy={item.y} r={item.done ? 14 : 18}
-                  fill={item.done ? `rgba(${aRgb},0.15)` : `rgba(${aRgb},0.25)`}
-                  stroke={a}
-                  strokeWidth={item.done ? 1.5 : 2}
-                  filter={item.done ? undefined : 'url(#glow)'}
-                />
-                {/* Point central */}
-                <circle
-                  cx={item.x} cy={item.y} r={item.done ? 4 : 6}
-                  fill={a}
-                  filter="url(#glow)"
-                />
-                {/* Ligne verticale vers le label */}
-                <line
-                  x1={item.x} y1={i % 2 === 0 ? item.y - 22 : item.y + 22}
-                  x2={item.x} y2={i % 2 === 0 ? item.y - 48 : item.y + 48}
-                  stroke={a}
-                  strokeWidth="1"
-                  strokeOpacity="0.4"
-                  strokeDasharray="3,3"
-                />
-              </g>
-            ))}
-          </svg>
-
-          {/* Labels texte positionnés sous/sur la courbe */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-around',
-            marginTop: -160,
-            minWidth: 600,
-            position: 'relative',
-            pointerEvents: 'none',
-          }}>
-            {[
-              { label: 'BEPC', annee: '2020 – 2021', desc: "Brevet d'Études\ndu Premier Cycle", done: true, top: false },
-              { label: 'BAC', annee: '2023 – 2024', desc: 'Baccalauréat\nSérie D', done: true, top: true },
-              { label: 'LICENCE 2', annee: '2024 – En cours', desc: 'Génie Logiciel\nCycle Supérieur', done: false, top: false },
-            ].map((item, i) => (
-              <div key={i} style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                width: '33%',
-                marginTop: item.top ? 0 : 100,
-              }}>
-                {/* Badge label */}
-                <div style={{
-                  fontFamily: 'Space Mono, monospace',
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: item.done ? a : eff.texte,
-                  letterSpacing: '0.2em',
-                  background: item.done
-                    ? `rgba(${aRgb},0.1)`
-                    : `rgba(${aRgb},0.2)`,
-                  border: `1px solid ${item.done ? `rgba(${aRgb},0.3)` : a}`,
-                  padding: '4px 14px',
-                  borderRadius: 4,
-                  marginBottom: 6,
-                  boxShadow: item.done ? 'none' : `0 0 12px rgba(${aRgb},0.3)`,
-                }}>
-                  {item.label}
-                </div>
-
-                {/* Année */}
-                <div style={{
-                  fontFamily: 'Space Mono, monospace',
-                  fontSize: 9,
-                  color: a,
-                  letterSpacing: '0.15em',
-                  marginBottom: 4,
-                  opacity: 0.7,
-                }}>
-                  {item.annee}
-                </div>
-
-                {/* Description */}
-                <div style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontSize: 11,
-                  color: eff.textMuted,
-                  textAlign: 'center',
-                  lineHeight: 1.5,
-                  whiteSpace: 'pre-line',
-                }}>
-                  {item.desc}
-                </div>
-
-                {/* Badge "EN COURS" pour le dernier */}
-                {!item.done && (
-                  <div style={{
-                    marginTop: 8,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    background: `rgba(${aRgb},0.08)`,
-                    border: `1px solid rgba(${aRgb},0.25)`,
-                    borderRadius: 20,
-                    padding: '3px 10px',
-                  }}>
-                    <div style={{
-                      width: 6, height: 6,
-                      borderRadius: '50%',
-                      background: a,
-                      animation: 'pulse 1.4s infinite',
-                    }} />
-                    <span style={{
-                      fontFamily: 'Space Mono, monospace',
-                      fontSize: 8,
-                      color: a,
-                      letterSpacing: '0.15em',
-                    }}>EN COURS</span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+        <AcademicStaircase isMobile={isMobile} a={a} aRgb={aRgb} eff={eff} />
       </section>
 
       {/* SKILLS */}
@@ -1052,132 +1248,135 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
 
       {/* PROJECTS */}
       <section id="pf-projects" style={sectionStyle}>
-        <div style={s.secNum}>03 // PROJETS</div>
-        <h2 style={s.secTitle}>Mes Projets <span style={s.accent}>Réalisés</span></h2>
-
-        {/* 3 cartes aperçu */}
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
-          gap: isMobile ? 10 : 20,
-          marginBottom: isMobile ? 24 : 40,
+          background: eff.cardBg,
+          border: `1px solid ${eff.borderStrong}`,
+          borderRadius: 24,
+          padding: isMobile ? '28px 20px' : '48px 56px',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          position: 'relative',
+          overflow: 'hidden',
         }}>
-          {projets.slice(0, 3).map((p) => (
-            <div key={p.num} style={{
-              position: 'relative',
-              borderRadius: 16,
-              overflow: 'hidden',
-              minWidth: 0,
-              border: `1px solid ${eff.borderMedium}`,
-              background: eff.cardBg,
-              cursor: 'pointer',
-              transition: 'transform 0.3s, border-color 0.3s',
-              maxWidth: '100%',
-            }}
-              onMouseEnter={e => {
-                e.currentTarget.style.transform = 'translateY(-6px)'
-                e.currentTarget.style.borderColor = `rgba(${aRgb},0.35)`
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.borderColor = eff.borderMedium
-              }}
-            >
-              {/* Image */}
-              <div style={{ position: 'relative', height: isMobile ? 100 : 160, overflow: 'hidden', maxHeight: isMobile ? 200 : 'none' }}>
-                <img src={p.img} alt={p.titre}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block', transition: 'transform 0.5s' }}
-                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                  onError={e => { e.currentTarget.style.display = 'none' }}
-                />
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  background: `linear-gradient(to top, ${eff.fond}d9 0%, transparent 60%)`,
-                }} />
-                <div style={{
-                  position: 'absolute', top: 12, left: 12,
-                  fontFamily: 'Space Mono, monospace', fontSize: 9,
-                  color: `rgba(${aRgb},0.7)`, letterSpacing: '0.2em',
-                  background: isLight ? 'rgba(15,23,42,0.4)' : 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)',
-                  padding: '3px 8px', borderRadius: 4,
-                }}>{p.num}</div>
-              </div>
+          <div style={{
+            position: 'absolute', top: 0, left: 40, right: 40, height: 1,
+            background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.3),transparent)`,
+          }} />
 
-              {/* Contenu */}
-              <div style={{ padding: isMobile ? '10px 12px 14px' : '16px 18px 20px' }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
-                  {p.tags.slice(0, isMobile ? 1 : 2).map(t => (
-                    <span key={t} style={{
-                      background: `rgba(${aRgb},0.08)`,
-                      border: `1px solid rgba(${aRgb},0.2)`,
-                      color: a, padding: '3px 10px',
-                      fontSize: 8, letterSpacing: '0.15em',
-                      borderRadius: 4, fontFamily: 'Space Mono, monospace',
-                    }}>{t}</span>
-                  ))}
+          <div style={s.secNum}>03 // PROJETS</div>
+          <h2 style={s.secTitle}>Mes Projets <span style={s.accent}>Réalisés</span></h2>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : 'minmax(340px, 420px) 1fr',
+            gap: isMobile ? 32 : 48,
+            alignItems: 'center',
+            maxWidth: isMobile ? '100%' : 820,
+          }}>
+
+          {/* MOSAÏQUE DE VIGNETTES */}
+          <div style={{
+            position: 'relative',
+            height: isMobile ? 320 : 280,
+          }}>
+            {projets.slice(0, 3).map((p, i) => {
+              const layouts = [
+                { top: 0, left: '0%', width: isMobile ? '58%' : 190, height: isMobile ? 150 : 150, rotate: -4 },
+                { top: isMobile ? 40 : 20, left: isMobile ? '35%' : 150, width: isMobile ? '58%' : 170, height: isMobile ? 140 : 140, rotate: 3 },
+                { top: isMobile ? 160 : 130, left: isMobile ? '0%' : 20, width: isMobile ? '55%' : 180, height: isMobile ? 130 : 135, rotate: 2 },
+              ]
+              const layout = layouts[i]
+              return (
+                <div key={p.num} style={{
+                  position: 'absolute',
+                  top: layout.top,
+                  left: layout.left,
+                  width: layout.width,
+                  height: layout.height,
+                  borderRadius: 14,
+                  overflow: 'hidden',
+                  border: `1px solid ${eff.borderMedium}`,
+                  transform: `rotate(${layout.rotate}deg)`,
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.35)',
+                  transition: 'transform 0.3s ease',
+                  cursor: 'pointer',
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = `rotate(0deg) scale(1.04)`; e.currentTarget.style.zIndex = 5 }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = `rotate(${layout.rotate}deg) scale(1)`; e.currentTarget.style.zIndex = 'auto' }}
+                >
+                  <img src={p.img} alt={p.titre} style={{
+                    width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block',
+                  }} onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement.style.background = `rgba(${aRgb},0.1)` }} />
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: `linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%)`,
+                  }} />
+                  <span style={{
+                    position: 'absolute', bottom: 10, left: 10,
+                    fontFamily: 'Space Mono, monospace', fontSize: 8,
+                    letterSpacing: '0.15em', color: 'rgba(255,255,255,0.85)',
+                    background: 'rgba(0,0,0,0.4)', padding: '3px 8px', borderRadius: 4,
+                  }}>{p.titre.toUpperCase()}</span>
                 </div>
-                <div style={{
-                  fontFamily: 'Fraunces, serif', fontWeight: 700,
-                  fontSize: isMobile ? 12 : 15, color: eff.texte, marginBottom: isMobile ? 4 : 8, lineHeight: 1.3,
-                }}>{p.titre}</div>
-                <div style={{
-                  fontFamily: 'Inter, sans-serif', fontWeight: 300,
-                  fontSize: isMobile ? 10 : 12, color: eff.textFaint,
-                  lineHeight: 1.65,
-                  display: '-webkit-box', WebkitLineClamp: isMobile ? 1 : 2,
-                  WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                }}>{p.desc}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+              )
+            })}
 
-        {/* CTA — Voir tous les projets */}
-        <div style={{
-          display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
-          alignItems: isMobile ? 'flex-start' : 'center',
-          justifyContent: 'space-between',
-          padding: isMobile ? '16px 18px' : '24px 32px',
-          background: `rgba(${aRgb},0.04)`,
-          border: `1px solid rgba(${aRgb},0.15)`,
-          borderRadius: 16,
-          gap: 16,
-        }}>
-          <div>
+            {/* Bloc "+N autres" intégré dans la mosaïque */}
             <div style={{
-              fontFamily: 'Fraunces, serif', fontWeight: 700,
-              fontSize: isMobile ? 15 : 18, color: eff.texte, marginBottom: 6,
+              position: 'absolute',
+              top: isMobile ? 160 : 150,
+              left: isMobile ? '58%' : 190,
+              width: isMobile ? '40%' : 150,
+              height: isMobile ? 130 : 110,
+              borderRadius: 14,
+              background: `rgba(${aRgb},0.08)`,
+              border: `1px solid rgba(${aRgb},0.3)`,
+              transform: 'rotate(-2deg)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
             }}>
-              Et {projets.length - 3} autres projets...
-            </div>
-            <div style={{
-              fontFamily: 'Inter, sans-serif', fontSize: isMobile ? 12 : 13,
-              color: eff.textFaint, lineHeight: 1.6,
-            }}>
-              GSB, ZikmuCI, Terasse — des réalisations variées qui témoignent de ma polyvalence.
+              <span style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: isMobile ? 18 : 22, color: a }}>
+                +{projets.length - 3}
+              </span>
+              <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.15em', color: `rgba(${aRgb},0.6)` }}>
+                AUTRES
+              </span>
             </div>
           </div>
 
-          <a href="/projets" style={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: isMobile ? 'center' : undefined, gap: 10,
-            background: a, color: '#050505',
-            padding: isMobile ? '11px 20px' : '12px 28px', borderRadius: 10,
-            fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 9 : 10,
-            letterSpacing: '0.18em', fontWeight: 700,
-            textDecoration: 'none', whiteSpace: 'nowrap',
-            flexShrink: 0,
-            transition: 'opacity 0.2s, transform 0.2s',
-            boxShadow: `0 0 24px rgba(${aRgb},0.25)`,
-            width: isMobile ? '100%' : 'auto'
-          }}
-            onMouseEnter={e => { e.currentTarget.style.opacity = '0.88'; e.currentTarget.style.transform = 'translateX(4px)' }}
-            onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateX(0)' }}
-          >
-            DÉCOUVRIR TOUS MES PROJETS →
-          </a>
+          {/* STAT + CTA */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+              <span style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: isMobile ? 40 : 52, color: a, lineHeight: 1 }}>
+                {String(projets.length).padStart(2, '0')}
+              </span>
+              <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.2em', color: eff.textFaint, lineHeight: 1.4 }}>
+                PROJETS<br/>DÉPLOYÉS
+              </span>
+            </div>
+
+            <p style={{ fontSize: 13, color: eff.textMuted, lineHeight: 1.7, margin: 0, fontFamily: 'Inter, sans-serif', fontWeight: 300 }}>
+              Du frontend à l'IA, en passant par la culture ivoirienne — une exploration complète de mon travail, présentée dans une expérience 3D immersive.
+            </p>
+
+            <a href="/projets" style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: isMobile ? 'center' : undefined, gap: 8,
+              background: a, color: '#050505',
+              padding: isMobile ? '14px 20px' : '14px 26px',
+              borderRadius: 10,
+              fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 10 : 10,
+              letterSpacing: '0.18em', fontWeight: 700,
+              textDecoration: 'none', width: isMobile ? '100%' : 'fit-content',
+              boxShadow: `0 0 30px rgba(${aRgb},0.3)`,
+              transition: 'opacity 0.2s, transform 0.2s',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = '0.88'; e.currentTarget.style.transform = 'translateX(4px)' }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateX(0)' }}
+            >
+              EXPLORER TOUS LES PROJETS →
+            </a>
+          </div>
         </div>
+      </div>
       </section>
 
       {/* GITHUB ACTIVITY */}
@@ -1536,180 +1735,374 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
       <section id="pf-services" style={sectionStyle}>
         <div style={s.secNum}>04 // SERVICES</div>
         <h2 style={s.secTitle}>Mes <span style={s.accent}>Services</span></h2>
-        <div style={servicesGridStyle}>
-          {services.map((sv, idx) => {
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: 16,
+          alignItems: 'stretch',
+        }}>
+          {(() => {
+            const sv = services[serviceActif]
             const isPopular = !!sv.badge
-            const cardStyle = { display:'flex', flexDirection: isMobile ? 'column' : 'row', alignItems:'stretch', background: eff.cardBg, border:`1px solid ${eff.borderStrong}`, WebkitBackdropFilter:'blur(16px)', backdropFilter:'blur(16px)', borderRadius:16, overflow:'hidden', maxWidth: '100%', transition:'border-color 300ms, transform 300ms', padding: isMobile ? '12px' : 0, minWidth: 0 }
-            if (isPopular) { cardStyle.border = `1px solid rgba(${aRgb},0.25)`; cardStyle.background = `rgba(${aRgb},0.04)` }
-            const leftStyle = { width: isMobile ? '100%' : 260, flexShrink:0, background:`rgba(${aRgb},0.05)`, borderRight: isMobile ? 'none' : `1px solid ${eff.borderMedium}`, borderBottom: isMobile ? `1px solid ${eff.borderMedium}` : 'none', padding: isMobile ? '18px 20px' : '28px 32px', display:'flex', flexDirection:'column', justifyContent:'center', minWidth: 0 }
-            const rightStyle = { flex:1, padding: isMobile ? '16px 18px' : '28px 36px', display:'flex', flexWrap:'wrap', alignContent:'center', gap:'10px 24px' }
-            const badgeStyle = { background:a, color:'#050505', fontFamily:'Space Mono, monospace', fontSize:8, fontWeight:700, letterSpacing:'0.1em', padding:'4px 10px', borderRadius:4, display:'inline-block', marginBottom:16 }
-            const priceStyle = { fontFamily:'Fraunces, serif', fontWeight:800, fontSize:isMobile ? 20 : 28, color:a, marginBottom:6 }
-            const titleStyle = { fontFamily:'Fraunces, serif', fontWeight:600, fontSize:isMobile ? 14 : 16, color: eff.texte, marginBottom:8 }
-            const delayStyle = { fontFamily:'Space Mono, monospace', fontSize:9, color:`rgba(${aRgb},0.45)`, display:'flex', alignItems:'center', gap:6 }
+            const prixParts = sv.prix.split(' ')
+            const hasCurrency = prixParts[prixParts.length - 1] === 'FCFA'
+            const priceMain = hasCurrency ? prixParts.slice(0, -1).join(' ') : sv.prix
+            const currency = hasCurrency ? 'FCFA' : ''
+            const half = Math.ceil(sv.features.length / 2)
+            const col1 = sv.features.slice(0, half)
+            const col2 = sv.features.slice(half)
+
             return (
-              <div key={sv.titre} className="pf-service-card pf-card" style={cardStyle}>
-                {sv.badge && <div style={{ position:'absolute', top:16, right:16 }}>{/* visual badge preserved for accessibility */}</div>}
-                <div style={leftStyle}>
-                  {sv.badge && <div style={badgeStyle}>{sv.badge}</div>}
-                  <div style={priceStyle}>{sv.prix}</div>
-                  <div style={titleStyle}>{sv.titre}</div>
-                  <div style={delayStyle}><span style={{ color:a }}>●</span><span>Délai : {sv.delai}</span></div>
-                  <a href="mailto:devfred58@gmail.com" style={{ marginTop: isMobile ? 14 : 24, background:`rgba(${aRgb},0.1)`, border:`1px solid rgba(${aRgb},0.3)`, color:a, fontFamily:'Space Mono, monospace', fontSize:isMobile ? 10 : 9, letterSpacing:'0.18em', padding:isMobile ? '12px 16px' : '10px 20px', borderRadius:8, textDecoration:'none', display:'block', textAlign:'center', width: isMobile ? '100%' : 'auto' }}>COMMANDER</a>
-                </div>
-                <div style={rightStyle}>
-                  {sv.features.map((f, i) => (
-                    <div key={f} style={{ display:'flex', alignItems:'center', gap:10, width: isMobile ? '100%' : 'calc(50% - 12px)', marginBottom:8 }}>
-                      <div style={{ width: isMobile ? 16 : 18, height: isMobile ? 16 : 18, flexShrink:0, background:`rgba(${aRgb},0.1)`, border:`1px solid rgba(${aRgb},0.25)`, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontSize:isMobile ? 9 : 10, color:a }}>✓</div>
-                      <div style={{ fontFamily:'Inter, sans-serif', fontWeight:300, fontSize:isMobile ? 11 : 12, color: eff.textMuted }}>{f}</div>
-                    </div>
-                  ))}
+              <div key={serviceActif} style={{
+                position: 'relative',
+                overflow: 'hidden',
+                borderRadius: 16,
+                border: `1px solid ${isPopular ? `rgba(${aRgb},0.3)` : eff.borderStrong}`,
+                background: isPopular ? `rgba(${aRgb},0.04)` : eff.cardBg,
+                WebkitBackdropFilter: 'blur(16px)',
+                backdropFilter: 'blur(16px)',
+                flex: 1,
+                minWidth: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'flex-end',
+                animation: 'fadeInUp 0.4s ease',
+                padding: isMobile ? '28px 24px' : '44px 48px',
+              }}>
+                {/* Prix en filigrane */}
+                <span style={{
+                  position: 'absolute',
+                  right: isMobile ? -14 : -30,
+                  bottom: isMobile ? -30 : -60,
+                  fontFamily: 'Space Mono, monospace',
+                  fontWeight: 700,
+                  fontSize: isMobile ? 90 : 170,
+                  color: a,
+                  opacity: 0.07,
+                  lineHeight: 1,
+                  userSelect: 'none',
+                  pointerEvents: 'none',
+                }}>
+                  {priceMain.replace(/\s/g, '')}
+                </span>
+
+                <div style={{ position: 'relative' }}>
+                  {sv.badge && (
+                    <div style={{
+                      display: 'inline-block',
+                      background: a, color: '#050505',
+                      fontFamily: 'Space Mono, monospace', fontSize: 8, fontWeight: 700,
+                      letterSpacing: '0.1em', padding: '4px 10px', borderRadius: 4,
+                      marginBottom: 16,
+                    }}>{sv.badge}</div>
+                  )}
+
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
+                    <span style={{
+                      fontFamily: 'Fraunces, serif', fontWeight: 800,
+                      fontSize: isMobile ? 32 : 48, color: a, lineHeight: 1,
+                    }}>{priceMain}</span>
+                    {currency && (
+                      <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, color: `rgba(${aRgb},0.6)` }}>
+                        {currency}
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{
+                    fontFamily: 'Fraunces, serif', fontWeight: 600,
+                    fontSize: isMobile ? 16 : 19, color: eff.texte, marginBottom: 6,
+                  }}>{sv.titre}</div>
+
+                  <div style={{
+                    fontFamily: 'Space Mono, monospace', fontSize: 9,
+                    color: `rgba(${aRgb},0.45)`, letterSpacing: '0.1em',
+                    marginBottom: 24, display: 'flex', alignItems: 'center', gap: 6,
+                  }}>
+                    <span style={{ color: a }}>●</span><span>Délai : {sv.delai}</span>
+                  </div>
+
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                    gap: '10px 24px',
+                    marginBottom: 28,
+                    maxWidth: isMobile ? '100%' : 480,
+                  }}>
+                    {[col1, col2].map((col, ci) => (
+                      <div key={ci} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {col.map(f => (
+                          <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{
+                              width: 16, height: 16, flexShrink: 0,
+                              background: `rgba(${aRgb},0.1)`, border: `1px solid rgba(${aRgb},0.25)`,
+                              borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: 9, color: a,
+                            }}>✓</div>
+                            <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300, fontSize: 12, color: eff.textMuted }}>{f}</div>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+
+                  <a href="mailto:devfred58@gmail.com" style={{
+                    display: 'inline-block',
+                    background: `rgba(${aRgb},0.1)`, border: `1px solid rgba(${aRgb},0.3)`,
+                    color: a, fontFamily: 'Space Mono, monospace', fontSize: 10,
+                    letterSpacing: '0.18em', padding: '12px 24px', borderRadius: 8,
+                    textDecoration: 'none', width: isMobile ? '100%' : 'fit-content', textAlign: 'center',
+                  }}>COMMANDER</a>
                 </div>
               </div>
             )
-          })}
+          })()}
+
+          {/* BLOCS D'INVITATION */}
+          <div style={{
+            display: isMobile ? 'grid' : 'flex',
+            gridTemplateColumns: isMobile ? '1fr 1fr' : undefined,
+            flexDirection: isMobile ? undefined : 'column',
+            gap: 12,
+            width: isMobile ? '100%' : 220,
+            flexShrink: 0,
+          }}>
+            {services.map((sv, i) => {
+              if (i === serviceActif) return null
+              const prixParts = sv.prix.split(' ')
+              const hasCurrency = prixParts[prixParts.length - 1] === 'FCFA'
+              const displayPrix = hasCurrency ? `dès ${sv.prix}` : sv.prix
+              return (
+                <div
+                  key={sv.titre}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Voir l'offre ${sv.titre}`}
+                  onClick={() => setServiceActif(i)}
+                  onKeyDown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') setServiceActif(i) }}
+                  style={{
+                    position: 'relative',
+                    borderRadius: 14,
+                    border: `1px solid ${eff.borderMedium}`,
+                    background: `rgba(${aRgb},0.02)`,
+                    padding: isMobile ? 16 : 20,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    flex: isMobile ? undefined : 1,
+                    minHeight: isMobile ? 90 : 100,
+                    transition: 'border-color 0.2s, background 0.2s, transform 0.2s',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = `rgba(${aRgb},0.35)`
+                    e.currentTarget.style.background = `rgba(${aRgb},0.06)`
+                    if (!isMobile) e.currentTarget.style.transform = 'translateX(-3px)'
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = eff.borderMedium
+                    e.currentTarget.style.background = `rgba(${aRgb},0.02)`
+                    e.currentTarget.style.transform = 'translateX(0)'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: 8,
+                      background: `rgba(${aRgb},0.1)`, border: `1px solid rgba(${aRgb},0.25)`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: 11, color: a,
+                    }}>{String(i + 1).padStart(2, '0')}</div>
+                    <span style={{ color: `rgba(${aRgb},0.4)`, fontSize: 13 }}>↗</span>
+                  </div>
+                  <div>
+                    <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: 12, color: eff.texte, marginBottom: 3 }}>
+                      {sv.titre}
+                    </div>
+                    <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: `rgba(${aRgb},0.5)` }}>
+                      {displayPrix}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       </section>
 
       {/* METHODOLOGY */}
-      <section id="pf-methodology" style={sectionStyle}>
-        <div style={s.secNum}>05 // MÉTHODE</div>
-        <h2 style={s.secTitle}>Ma <span style={s.accent}>Méthode</span> de Travail</h2>
-
+      <section id="pf-methodology" style={{ ...sectionStyle, position: 'relative', overflow: 'hidden' }}>
+        {/* Brume gauche */}
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
-          gap: isMobile ? 12 : 2,
-          position: 'relative',
-        }}>
-          {[
-            { n:'01', titre:'Analyse & Audit', desc:'Compréhension des besoins, définition des objectifs et cartographie complète du projet.', icon:'◈' },
-            { n:'02', titre:'Conception & UI', desc:'Design des maquettes, prototypage interactif et création de l\'identité visuelle.', icon:'◎' },
-            { n:'03', titre:'Développement', desc:'Codage propre et optimisé avec architecture scalable et maintenable.', icon:'⬡' },
-            { n:'04', titre:'Tests & Validation', desc:'Tests multi-navigateurs, validation performance, accessibilité et SEO.', icon:'◇' },
-            { n:'05', titre:'Déploiement', desc:'Mise en ligne sécurisée, formation et documentation complète.', icon:'◉' },
-          ].map((e, i) => {
-            const isLast = i === 4
-            return (
-              <div
-                key={e.n}
-                style={{
-                  position: 'relative',
-                  padding: isMobile ? '20px 18px' : '36px 32px',
-                  background: i % 2 === 0
-                    ? `rgba(${aRgb},0.04)`
-                    : eff.cardBg,
-                  border: `1px solid rgba(${aRgb},${i % 2 === 0 ? '0.15' : '0.07'})`,
-                  borderRadius: 20,
-                  margin: isMobile ? 6 : 8,
-                  transition: 'transform 0.3s, border-color 0.3s, background 0.3s',
-                  gridColumn: isLast ? (isMobile ? '1 / -1' : '2 / 3') : 'auto',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 16,
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.transform = 'translateY(-6px)'
-                  e.currentTarget.style.borderColor = `rgba(${aRgb},0.5)`
-                  e.currentTarget.style.background = `rgba(${aRgb},0.08)`
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.borderColor = `rgba(${aRgb},${i % 2 === 0 ? '0.15' : '0.07'})`
-                  e.currentTarget.style.background = i % 2 === 0
-                    ? `rgba(${aRgb},0.04)`
-                    : eff.cardBg
-                }}
-              >
-                {/* Ligne de connexion top */}
-                {i > 0 && !isMobile && (
-                  <div style={{
-                    position: 'absolute',
-                    top: -8,
-                    left: '50%',
-                    width: 1,
-                    height: 8,
-                    background: `linear-gradient(180deg, transparent, rgba(${aRgb},0.3))`,
-                  }} />
-                )}
+          position: 'absolute',
+          top: '50%',
+          left: 0,
+          transform: 'translateY(-50%)',
+          width: isMobile ? 160 : 320,
+          height: isMobile ? 300 : 460,
+          background: `radial-gradient(ellipse at center, rgba(${aRgb},0.16) 0%, rgba(${aRgb},0.06) 45%, transparent 75%)`,
+          filter: 'blur(40px)',
+          pointerEvents: 'none',
+          zIndex: 0,
+        }} />
 
-                {/* Header numéro + icône */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                }}>
-                  <div style={{
-                    fontFamily: 'Space Mono, monospace',
-                    fontSize: 11,
-                    color: `rgba(${aRgb},0.4)`,
-                    letterSpacing: '0.3em',
-                  }}>{e.n}</div>
-                  <div style={{
-                    width: isMobile ? 36 : 44,
-                    height: isMobile ? 36 : 44,
-                    borderRadius: '50%',
-                    background: `rgba(${aRgb},0.08)`,
-                    border: `1px solid rgba(${aRgb},0.2)`,
+        {/* Brume droite */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          right: 0,
+          transform: 'translateY(-50%)',
+          width: isMobile ? 160 : 320,
+          height: isMobile ? 300 : 460,
+          background: `radial-gradient(ellipse at center, rgba(${aRgb},0.16) 0%, rgba(${aRgb},0.06) 45%, transparent 75%)`,
+          filter: 'blur(40px)',
+          pointerEvents: 'none',
+          zIndex: 0,
+        }} />
+
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={s.secNum}>05 // MÉTHODE</div>
+          <h2 style={s.secTitle}>Ma <span style={s.accent}>Méthode</span> de Travail</h2>
+
+          <div style={{
+            background: eff.cardBg,
+            border: `1px solid ${eff.borderStrong}`,
+            borderRadius: 16,
+            overflow: 'hidden',
+            width: '100%',
+            padding: isMobile ? '20px' : '48px',
+            position: 'relative',
+          }}>
+          <div style={{
+            position: 'absolute', top: 0, left: 40, right: 40, height: 1,
+            background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.3),transparent)`,
+          }} />
+
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: 6,
+            height: isMobile ? 'auto' : 420,
+          }}>
+            {etapes.map((e, i) => {
+              const isActive = i === etapeActive
+              return (
+                <div
+                  key={e.n || i}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={e.titre}
+                  onClick={() => setEtapeActive(i)}
+                  onKeyDown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') setEtapeActive(i) }}
+                  style={{
+                    position: 'relative',
+                    flex: isMobile ? 'none' : (isActive ? 9 : 1),
+                    minWidth: 0,
+                    height: isMobile ? (isActive ? 320 : 56) : '100%',
+                    cursor: 'pointer',
+                    borderRadius: 14,
+                    border: `1px solid ${isActive ? eff.borderStrong : eff.borderMedium}`,
+                    borderLeft: isActive ? `2px solid ${a}` : `1px solid ${eff.borderMedium}`,
+                    background: isActive ? eff.cardBg : `rgba(${aRgb},0.02)`,
+                    overflow: 'hidden',
+                    transition: isMobile
+                      ? 'height 0.45s cubic-bezier(0.22,1,0.36,1), background 0.3s'
+                      : 'flex 0.45s cubic-bezier(0.22,1,0.36,1), background 0.3s',
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: isMobile ? 18 : 20,
+                  }}
+                >
+                  <span style={{
+                    position: 'absolute',
+                    fontFamily: 'Fraunces, serif',
+                    fontWeight: 800,
                     color: a,
-                  }}>{e.icon}</div>
+                    lineHeight: 1,
+                    userSelect: 'none',
+                    pointerEvents: 'none',
+                    ...(isActive
+                      ? { fontSize: isMobile ? 140 : 340, right: isMobile ? -20 : -40, bottom: isMobile ? -40 : -90, opacity: 0.09 }
+                      : isMobile
+                        ? { fontSize: 20, left: 18, top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }
+                        : { fontSize: 26, top: 14, left: '50%', transform: 'translateX(-50%)', opacity: 0.4 }
+                    ),
+                  }}>
+                    {e.n || String(i + 1).padStart(2, '0')}
+                  </span>
+
+                  {isActive ? (
+                    <div style={{
+                      position: 'relative',
+                      padding: isMobile ? '26px 24px' : '36px 40px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'flex-end',
+                      width: '100%',
+                      maxWidth: isMobile ? '100%' : 520,
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                        <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, color: a }}>
+                          {e.n || String(i + 1).padStart(2, '0')}
+                        </span>
+                        <span style={{ width: 3, height: 3, borderRadius: '50%', background: eff.textFaint }} />
+                        <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, color: eff.textFaint }}>
+                          {e.duree}
+                        </span>
+                      </div>
+
+                      <span style={{
+                        fontFamily: 'Fraunces, serif', fontWeight: 700,
+                        fontSize: isMobile ? 24 : 34, color: eff.textPrimary,
+                        marginBottom: 14, lineHeight: 1.15,
+                      }}>
+                        {e.titre}
+                      </span>
+
+                      <span style={{
+                        fontFamily: 'Inter, sans-serif', fontWeight: 300, fontSize: 14,
+                        color: eff.textMuted, lineHeight: 1.7, marginBottom: 18,
+                      }}>
+                        {e.desc}
+                      </span>
+
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        {(e.tags || []).map((t, ti) => (
+                          <span key={ti} style={{
+                            fontFamily: 'Space Mono, monospace', fontSize: 11, color: a,
+                            border: `1px solid rgba(${aRgb},0.35)`, borderRadius: 8, padding: '4px 10px',
+                          }}>
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : isMobile ? (
+                    <div style={{ display: 'flex', alignItems: 'center', width: '100%', padding: '0 18px 0 52px' }}>
+                      <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, color: eff.textMuted, letterSpacing: '0.05em' }}>
+                        {e.titre}
+                      </span>
+                    </div>
+                  ) : (
+                    <span style={{
+                      position: 'absolute',
+                      bottom: 24,
+                      left: '50%',
+                      transform: 'translateX(-50%) rotate(180deg)',
+                      writingMode: 'vertical-rl',
+                      fontFamily: 'Space Mono, monospace',
+                      fontSize: 13,
+                      letterSpacing: '0.05em',
+                      color: eff.textMuted,
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {e.titre}
+                    </span>
+                  )}
                 </div>
-
-                {/* Ligne accent */}
-                <div style={{
-                  width: 32, height: 2,
-                  background: `linear-gradient(90deg, ${a}, transparent)`,
-                  borderRadius: 2,
-                }} />
-
-                {/* Titre */}
-                <div style={{
-                  fontFamily: 'Fraunces, serif',
-                  fontWeight: 700,
-                  fontSize: isMobile ? 14 : 16,
-                  color: eff.texte,
-                  lineHeight: 1.3,
-                }}>{e.titre}</div>
-
-                {/* Description */}
-                <div style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 300,
-                  fontSize: isMobile ? 11 : 12,
-                  color: eff.textMuted,
-                  lineHeight: 1.7,
-                }}>{e.desc}</div>
-
-                {/* Indicateur de progression */}
-                <div style={{
-                  marginTop: 'auto',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                }}>
-                  {[...Array(5)].map((_, dot) => (
-                      <div key={dot} style={{
-                      width: dot <= i ? (isMobile ? 14 : 20) : 6,
-                      height: 3,
-                      borderRadius: 2,
-                      background: dot <= i
-                        ? a
-                        : `rgba(${aRgb},0.15)`,
-                      transition: 'width 0.3s',
-                    }} />
-                  ))}
-                </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
+      </div>
       </section>
-
-      {/* CONTACT */}
       <section id="pf-contact" style={sectionStyle}>
         <div style={s.secNum}>06 // CONTACT</div>
         <h2 style={s.secTitle}>Travaillons <span style={s.accent}>Ensemble</span></h2>
@@ -1720,6 +2113,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             a={a}
             aRgb={aRgb}
             navigate={navigate}
+            eff={eff}
           />
         )}
 
@@ -1819,7 +2213,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           </div>
           <div style={{ width: 1, height: 20, background: eff.borderStrong }} />
           <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: `rgba(${aRgb},0.45)`, letterSpacing: '0.15em', display: isMobile ? 'none' : 'block' }}>
-            FRÉJUS KOUADIO · DEV FULLSTACK & IA
+            FRÉJUS KOUADIO · DÉVELOPPEUR LOGICIEL 
           </div>
         </div>
 
