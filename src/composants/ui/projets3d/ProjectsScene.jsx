@@ -1,6 +1,6 @@
 import { Suspense, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Vector3 } from 'three'
+import { TOUCH, Vector3 } from 'three'
 import { OrbitControls } from '@react-three/drei'
 import ProjectShape from './ProjectShape'
 import SceneEnvironment from './SceneEnvironment'
@@ -114,10 +114,11 @@ export default function ProjectsScene({ projets, categories, filtreActif, projet
         enableZoom={introTermine && !hasSelection && !isTransitioning}
         minDistance={isMobile ? 8 : 6}
         maxDistance={isMobile ? 20 : 18}
-        enableRotate={!isMobile && !hasSelection && !isTransitioning}
+        enableRotate={!hasSelection && !isTransitioning}
         autoRotate={introTermine && !hasSelection && !isTransitioning}
         autoRotateSpeed={0.3}
         enabled={introTermine && !hasSelection && !isTransitioning}
+        touches={{ ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN }}
       />
       <CameraRig
         targetPosition={selectedPosition}

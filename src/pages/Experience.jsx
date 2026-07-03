@@ -10,6 +10,7 @@ import Portfolio from '@/composants/Portfolio'
 import PanneauParametres from '@/composants/ui/PanneauParametres'
 import { Volume2, Layout, RotateCcw, Send, MapPin, Briefcase, Zap } from 'lucide-react'
 import cartesPortfolio from '@/donnees/cartesPortfolio'
+import usePortfolioData from '@/hooks/usePortfolioData'
 
 const AvatarStable = React.memo(function AvatarStable({ etat }) {
   return (
@@ -174,6 +175,13 @@ export default function Experience() {
   useEffect(() => {
     if (!visiteur.prenom) naviguer('/')
   }, []) // eslint-disable-line
+
+  // Remplacer les données codées par défaut par le hook public (silent fallback)
+  // Renommez les tableaux codés en dur en projetsParDefaut / competencesParDefaut si présents
+  // Ici on utilise un fallback depuis cartesPortfolio si nécessaire
+  const projetsParDefaut = cartesPortfolio.projects || []
+  const competencesParDefaut = cartesPortfolio.skills || []
+  const { projets, competences } = usePortfolioData(projetsParDefaut, competencesParDefaut)
 
   useEffect(() => {
     function tick() {

@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import utiliserTheme from '@/store/utiliserTheme'
+import usePortfolioData from '@/hooks/usePortfolioData'
 import ProjectsScene from '@/composants/ui/projets3d/ProjectsScene'
 import { genererPositions } from '@/composants/ui/projets3d/scenePositions'
 import ProjectsVerticalRail from '@/composants/ui/projets3d/ProjectsVerticalRail'
 import ProjectDetailOverlay from '@/composants/ui/projets3d/ProjectDetailOverlay'
 
-const PROJETS = [
+const PROJETS_PAR_DEFAUT = [
   {
     num: '01', titre: 'Eliko Voyage',
     categorie: 'Agence de voyage',
@@ -92,6 +93,9 @@ export default function ProjetsFull() {
   const [projetSelectionne, setProjetSelectionne] = useState(null)
   const [projetApercuIndex, setProjetApercuIndex] = useState(0)
 
+  // Remplacer les projets codés par le hook public avec fallback silencieux
+  const { projets: projetsData } = usePortfolioData(PROJETS_PAR_DEFAUT, [])
+
   const fermerDetail = () => setProjetSelectionne(null)
 
   useEffect(() => {
@@ -111,8 +115,8 @@ export default function ProjetsFull() {
   }, [projetSelectionne])
 
   const projetsFiltres = filtre === 'TOUS'
-    ? PROJETS
-    : PROJETS.filter(p => p.type === filtre)
+    ? projetsData
+    : projetsData.filter(p => p.type === filtre)
 
   const previewIndex = projetsFiltres.length > 0
     ? Math.min(projetApercuIndex, projetsFiltres.length - 1)
@@ -291,7 +295,14 @@ export default function ProjetsFull() {
             positions={positions}
             previewTarget={previewTarget}
           />
-          <div style={{ position: 'absolute', left: 24, bottom: 24, zIndex: 15, pointerEvents: 'none' }}>
+          <div style={{
+            position: 'absolute',
+            left: 24,
+            bottom: isMobile ? 76 : 24,
+            right: isMobile ? 16 : 116,
+            zIndex: 15,
+            pointerEvents: 'none',
+          }}>
             {previewTarget && (
               <div style={{
                 fontFamily: 'Space Mono, monospace',
@@ -300,6 +311,8 @@ export default function ProjetsFull() {
                 color: CATEGORIES[projetsFiltres[previewIndex]?.type]?.color || a,
                 textTransform: 'uppercase',
                 whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
               }}>
                 {projetsFiltres[previewIndex]?.titre} · {CATEGORIES[projetsFiltres[previewIndex]?.type]?.label || ''} — EN APERÇU
               </div>
@@ -310,6 +323,7 @@ export default function ProjetsFull() {
             projetApercuIndex={projetApercuIndex}
             onNaviguerApercu={handleNaviguerApercu}
             categories={CATEGORIES}
+            isMobile={isMobile}
           />
         </div>
       </div>

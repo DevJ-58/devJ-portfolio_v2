@@ -12,8 +12,16 @@ export default function ProjectShape({ projet, position, categoryColor, onSelect
   const groupRef = useRef()
   const orbitRef = useRef()
   const [hovered, setHovered] = useState(false)
-  const texture = useTexture(projet.img)
-  const hasTexture = texture && texture.image
+  // Sécuriser le chargement de la texture : useTexture peut échouer si `projet.img` est undefined
+  let texture = null
+  try {
+    texture = useTexture(projet.img)
+  } catch (e) {
+    // Ne pas faire planter le rendu 3D si l'URL est invalide
+    console.warn('[ProjectShape] useTexture failed for', projet?.img, e)
+    texture = null
+  }
+  const hasTexture = Boolean(texture && texture.image && projet && projet.img)
   const safeStartTime = useMemo(() => (typeof sceneStartTime === 'number' ? sceneStartTime : 0), [sceneStartTime])
 
   useFrame((state, delta) => {
@@ -28,8 +36,10 @@ export default function ProjectShape({ projet, position, categoryColor, onSelect
     const introOpacity = Math.min(Math.max(progress, 0), 1)
 
     const shouldAnimate = !hasSelection || isSelected
-    const bob = shouldAnimate ? Math.sin(state.clock.elapsedTime * 1.2 + position[0] + position[1]) * 0.15 : 0
-    groupRef.current.position.y = position[1] + bob
+    // Sécuriser `position` — éviter les crashs si positions manquantes
+    const pos = Array.isArray(position) && position.length >= 3 ? position : [0, 0, 0]
+    const bob = shouldAnimate ? Math.sin(state.clock.elapsedTime * 1.2 + pos[0] + pos[1]) * 0.15 : 0
+    groupRef.current.position.y = pos[1] + bob
 
     const targetScale = isSelected ? 1.35 : hovered ? 1.15 : 1
     const scaleFallback = safeStartTime ? targetScale * introScale : targetScale
@@ -82,8 +92,11 @@ export default function ProjectShape({ projet, position, categoryColor, onSelect
     onSelect(projet)
   }
 
+  // Utiliser une position sûre pour le group root
+  const rootPos = Array.isArray(position) && position.length >= 3 ? position : [0, 0, 0]
+
   return (
-    <group position={position}>
+    <group position={rootPos}>
       <Billboard follow lockX={false} lockY={false} lockZ={false} raycast={() => null}>
         <group ref={groupRef} scale={[0, 0, 0]}>
           <mesh
