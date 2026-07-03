@@ -843,7 +843,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               width:'fit-content',
             }}>
               <div style={{ width:5, height:5, borderRadius:'50%', background:a, animation:'pulse 1.5s infinite' }}/>
-              DÉVELOPPEUR LOGICIEL FULLSTACK
+              DÉVELOPPEUR LOGICIEL UI/UX DESIGNER
             </div>
 
             <div style={{
@@ -1088,7 +1088,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                 fontSize:8, color:`rgba(${aRgb},0.7)`,
                 letterSpacing:'0.15em',
               }}>
-                DEV LOGICIEL · FULLSTACK
+                DEV LOGICIEL · UI/UX DESIGNER
               </div>
             </div>
             {[['top','left'],['top','right'],['bottom','left'],['bottom','right']].map(([v,h], i) => (
@@ -1103,7 +1103,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
 
           <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
             <div style={{ color: eff.textMuted, lineHeight:1.9, fontSize:13 }}>
-              Développeur logiciel fullstack passionné, spécialisé en <strong style={{ color: eff.textHigh, fontWeight:500 }}>UX , UI</strong> moderne <strong style={{ color: eff.textHigh, fontWeight:500 }}>fluide</strong>. Conception d'applications et d'interfaces performantes, accessibles et esthétiques, avec un souci du détail et de la qualité du code.
+              Développeur logiciel UI/UX DESIGNER passionné, spécialisé en <strong style={{ color: eff.textHigh, fontWeight:500 }}>UX , UI</strong> moderne <strong style={{ color: eff.textHigh, fontWeight:500 }}>fluide</strong>. Conception d'applications et d'interfaces performantes, accessibles et esthétiques, avec un souci du détail et de la qualité du code.
             </div>
 
             <div style={{
@@ -2127,7 +2127,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           borderRadius: 12,
         }}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, color: eff.textMedium, lineHeight: 1.8, margin: 0 }}>
-            Vous avez un projet web, une idée à concrétiser ou vous cherchez un développeur fullstack passionné par l'IA ? Je suis disponible pour des missions freelance, des collaborations et des opportunités à temps plein.
+            Vous avez un projet web, une idée à concrétiser ou vous cherchez un développeur  passionné par l'IA ? Je suis disponible pour des missions freelance, des collaborations et des opportunités à temps plein.
           </p>
         </div>
 
