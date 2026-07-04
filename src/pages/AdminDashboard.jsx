@@ -12,7 +12,23 @@ import {
 import utiliserTheme from '@/store/utiliserTheme'
 import AvatarParticulaire from '@/composants/ui/AvatarParticulaire'
 import PanneauParametres from '@/composants/ui/PanneauParametres'
-import { Volume2, Mic, MessageSquare, LayoutGrid } from 'lucide-react'
+import { Volume2, Mic, MessageSquare, LayoutGrid, Radio, BarChart3, SlidersHorizontal, FolderKanban, Star, Settings2 } from 'lucide-react'
+
+const PROJETS_DEFAUT_A_IMPORTER = [
+  { titre: 'Eliko Voyage', categorie: 'Agence de voyage', type: 'frontend', tags: ['HTML/CSS', 'JavaScript', 'React'], desc: "Interface moderne pour agence de voyage permettant la réservation en ligne et la gestion de séjours personnalisés.", img: '/asset/eliko.PNG', lien: 'https://devj-58.github.io/eliko_voyage/', annee: '2024', status: 'EN LIGNE', ordre: 0 },
+  { titre: 'SanteAI', categorie: 'Télémédecine & IA', type: 'ia', tags: ['React', 'Google AI', 'Python'], desc: "Plateforme de télémédecine avec IA intégrée, consultations vidéo et gestion de dossiers médicaux.", img: '/asset/santeAI.jpg', lien: 'https://devpost.com/software/santeai', annee: '2024', status: 'EN LIGNE', ordre: 1 },
+  { titre: 'Bibliothèque UIYA', categorie: 'Application éducative', type: 'fullstack', tags: ['HTML', 'CSS', 'JavaScript'], desc: "Système complet de gestion de bibliothèque déployé pour l'Université Internationale de Yamoussoukro.", img: '/asset/uiya.PNG', lien: 'https://bibliotheque.igl-uiya.com/', annee: '2024', status: 'EN PRODUCTION', ordre: 2 },
+  { titre: 'GSB — Gestion de Stock', categorie: 'Application de gestion', type: 'fullstack', tags: ['PHP', 'Laravel', 'MySQL'], desc: "Application full-stack de gestion d'inventaire avec alertes automatiques et rapports exportables.", img: '/asset/GSB.jpg', lien: null, annee: '2023', status: 'PRIVÉ', ordre: 3 },
+  { titre: 'ZikmuCI', categorie: 'Culture ivoirienne', type: 'impact', tags: ['HTML5', 'CSS3', 'JavaScript'], desc: "Plateforme musicale ivoirienne célébrant le Coupé-Décalé, Zouglou et l'Afrobeat.", img: '/asset/zikmu.jpg', lien: 'https://devj-58.github.io/ZikmuCi/index.html', annee: '2023', status: 'EN LIGNE', ordre: 4 },
+  { titre: 'Terasse', categorie: 'Sensibilisation environnement', type: 'impact', tags: ['HTML', 'CSS', 'JavaScript'], desc: "Site de sensibilisation au changement climatique en Côte d'Ivoire.", img: '/asset/terasse.jpg', lien: 'https://terasse-ivoire.vercel.app', annee: '2023', status: 'EN LIGNE', ordre: 5 },
+]
+
+const COMPETENCES_DEFAUT_A_IMPORTER = [
+  { cat: 'Frontend', ordre: 0, items: [{ nom: 'HTML5', pct: 95 }, { nom: 'CSS3', pct: 90 }, { nom: 'JavaScript', pct: 85 }, { nom: 'React', pct: 80 }, { nom: 'TypeScript', pct: 75 }, { nom: 'Bootstrap', pct: 90 }, { nom: 'GSAP', pct: 75 }] },
+  { cat: 'Backend', ordre: 1, items: [{ nom: 'PHP', pct: 85 }, { nom: 'Laravel', pct: 80 }] },
+  { cat: 'IA & ML', ordre: 2, items: [{ nom: 'Python', pct: 70 }, { nom: 'TensorFlow', pct: 65 }, { nom: 'NLP', pct: 60 }] },
+  { cat: 'Outils', ordre: 3, items: [{ nom: 'Git & GitHub', pct: 90 }, { nom: 'Figma', pct: 85 }, { nom: 'Canva', pct: 88 }, { nom: 'Docker', pct: 60 }] },
+]
 
 const AvatarStable = React.memo(function AvatarStable({ etat }) {
   return <AvatarParticulaire width={160} height={160} etat={etat} />
@@ -53,7 +69,8 @@ export default function AdminDashboard() {
   const [ecoute, setEcoute] = useState(false)
   const [splash, setSplash] = useState(true)
   const [messageTypewriter, setMessageTypewriter] = useState('')
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+  const [isTablet, setIsTablet] = useState(() => window.innerWidth >= 768 && window.innerWidth < 1100)
   const [drawerOuvert, setDrawerOuvert] = useState(false)
   const [projetsListe, setProjetsListe] = useState([])
   const [competencesListe, setCompetencesListe] = useState([])
@@ -61,6 +78,11 @@ export default function AdminDashboard() {
   const [projetEnEdition, setProjetEnEdition] = useState(null)
   const [competenceEnEdition, setCompetenceEnEdition] = useState(null)
   const [portfolioSauvegarde, setPortfolioSauvegarde] = useState(false)
+  const [importEnCours, setImportEnCours] = useState(false)
+  const [importReussi, setImportReussi] = useState(false)
+  const [parametresOuverts, setParametresOuverts] = useState(false)
+  const [labelTemporaire, setLabelTemporaire] = useState(null)
+  const [competenceDeplieMobile, setCompetenceDeplieMobile] = useState(null)
   const chatRef = useRef(null)
   const inputRef = useRef(null)
   const modeParlerRef = useRef(false)
@@ -275,7 +297,12 @@ export default function AdminDashboard() {
   }, [historiqueAdmin])
 
   useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth < 768)
+    const handler = () => {
+      const width = window.innerWidth
+      setIsMobile(width < 768)
+      setIsTablet(width >= 768 && width < 1100)
+    }
+    handler()
     window.addEventListener('resize', handler)
     return () => window.removeEventListener('resize', handler)
   }, [])
@@ -464,6 +491,39 @@ export default function AdminDashboard() {
   async function retirerCompetence(id) {
     const ok = await supprimerCompetence(id)
     if (ok) setCompetencesListe(prev => prev.filter(c => c.id !== id))
+  }
+
+  async function importerDonneesParDefaut() {
+    if (importEnCours) return
+    setImportEnCours(true)
+    try {
+      const projetsExistants = await listerProjets()
+      const titresExistants = new Set(projetsExistants.map(p => (p.titre || '').toLowerCase().trim()))
+      for (const p of PROJETS_DEFAUT_A_IMPORTER) {
+        if (!titresExistants.has(p.titre.toLowerCase().trim())) {
+          await creerProjet(p)
+        }
+      }
+
+      const competencesExistantes = await listerCompetences()
+      const catsExistantes = new Set(competencesExistantes.map(c => (c.cat || '').toLowerCase().trim()))
+      for (const c of COMPETENCES_DEFAUT_A_IMPORTER) {
+        if (!catsExistantes.has(c.cat.toLowerCase().trim())) {
+          await creerCompetence(c)
+        }
+      }
+
+      const nouveauxProjets = await listerProjets()
+      const nouvellesCompetences = await listerCompetences()
+      setProjetsListe(nouveauxProjets)
+      setCompetencesListe(nouvellesCompetences)
+      setImportReussi(true)
+      setTimeout(() => setImportReussi(false), 3000)
+    } catch (e) {
+      console.warn('[importerDonneesParDefaut]', e)
+    } finally {
+      setImportEnCours(false)
+    }
   }
 
   // Helpers hoisted pour AXIS
@@ -804,6 +864,10 @@ ${detailSessions || 'Aucune session encore.'}
     borderRadius: 16,
   }
 
+  const statLabelSize = 'clamp(7px, 0.9vw, 9px)'
+  const statValueSize = 'clamp(18px, 2.2vw, 30px)'
+  const axisBubbleSize = 'clamp(11px, 1.1vw, 13px)'
+
   const boutonModeStyle = (actif) => ({
     display: 'inline-flex',
     alignItems: 'center',
@@ -812,7 +876,7 @@ ${detailSessions || 'Aucune session encore.'}
     border: `1px solid rgba(${aRgb},0.25)`,
     color: actif ? '#fff' : 'rgba(255,255,255,0.68)',
     borderRadius: 8,
-    padding: '7px 12px',
+    padding: isMobile ? '10px 12px' : '7px 12px',
     fontSize: 8,
     letterSpacing: '0.18em',
     cursor: 'pointer',
@@ -869,7 +933,7 @@ ${detailSessions || 'Aucune session encore.'}
       fontFamily: 'Space Mono, monospace',
       color: '#fff',
       display: 'grid',
-      gridTemplateColumns: isMobile ? '1fr' : '280px 1fr',
+      gridTemplateColumns: isMobile ? '1fr' : isTablet ? '220px 1fr' : '280px 1fr',
       gridTemplateRows: isMobile ? 'auto 1fr' : '60px 1fr',
     }}>
       <span style={{display: 'none'}}>{promptsHistorique.length}</span>
@@ -878,6 +942,8 @@ ${detailSessions || 'Aucune session encore.'}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
         @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
         @keyframes scanAnim{from{top:0%}to{top:100%}}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+        @keyframes scanLine{0%{transform:translateY(-100%)}100%{transform:translateY(100%)}}
         ::-webkit-scrollbar{width:3px}
         ::-webkit-scrollbar-track{background:transparent}
         ::-webkit-scrollbar-thumb{background:rgba(${aRgb},0.15);border-radius:3px}
@@ -1041,8 +1107,9 @@ ${detailSessions || 'Aucune session encore.'}
           overflowY: 'auto',
           overflowX: 'hidden',
           height: '100%',
+          position: 'relative',
         }}>
-
+          
           {/* En-tête sidebar */}
           <div style={{
             padding: '20px 16px 16px',
@@ -1054,10 +1121,26 @@ ${detailSessions || 'Aucune session encore.'}
             <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.12em' }}>
               Admin Dashboard
             </div>
+            {/* Micro-ligne de statut avec curseur clignotant */}
+            <div style={{ 
+              fontSize: 6, 
+              color: `rgba(${aRgb},0.35)`, 
+              letterSpacing: '0.25em',
+              marginTop: 8,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 3,
+            }}>
+              SYSTÈME EN LIGNE
+              <span style={{ animation: 'blink 1s infinite' }}>_</span>
+            </div>
           </div>
 
-          {/* Bouton AXIS — mis en valeur, séparé des autres onglets */}
-          <div style={{ padding: '14px 12px 10px' }}>
+          {/* Accès AXIS — sans fond, juste borderBottom hairline */}
+          <div style={{ 
+            padding: '12px 16px 12px',
+            borderBottom: `1px solid rgba(${aRgb},0.08)`,
+          }}>
             <button
               onClick={() => setOnglet('axis')}
               style={{
@@ -1065,14 +1148,10 @@ ${detailSessions || 'Aucune session encore.'}
                 display: 'flex',
                 alignItems: 'center',
                 gap: 10,
-                padding: '11px 12px',
-                borderRadius: 12,
-                background: onglet === 'axis'
-                  ? `rgba(${aRgb},0.12)`
-                  : `rgba(${aRgb},0.04)`,
-                border: onglet === 'axis'
-                  ? `1px solid rgba(${aRgb},0.35)`
-                  : `1px solid rgba(${aRgb},0.1)`,
+                padding: '9px 0',
+                borderRadius: 0,
+                background: 'transparent',
+                border: 'none',
                 cursor: 'pointer',
                 transition: 'all 200ms',
                 textAlign: 'left',
@@ -1100,79 +1179,170 @@ ${detailSessions || 'Aucune session encore.'}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
                   fontSize: 9, fontWeight: 700,
-                  color: onglet === 'axis' ? '#fff' : a,
+                  color: '#fff',
                   letterSpacing: '0.1em', lineHeight: 1,
                 }}>
                   AXIS
                 </div>
                 <div style={{
                   fontSize: 6,
-                  color: `rgba(${aRgb},0.45)`,
+                  color: `rgba(${aRgb},0.35)`,
                   letterSpacing: '0.18em',
                   marginTop: 3,
                 }}>
                   {aiState === 'idle' ? 'EN ATTENTE' : aiState === 'thinking' ? 'TRAITEMENT...' : 'EN PAROLE'}
                 </div>
               </div>
-              <div style={{
-                width: 5, height: 5, borderRadius: '50%',
-                background: a,
-                animation: 'pulse 1.4s infinite',
-                flexShrink: 0,
-              }} />
             </button>
           </div>
 
-          {/* Séparateur */}
-          <div style={{
-            margin: '0 16px 10px',
-            height: 1,
-            background: `rgba(${aRgb},0.07)`,
-          }} />
-
-          {/* Autres onglets */}
+          {/* Liste des autres onglets — lignes indexées */}
           <div style={{
             flex: 1,
-            padding: '0 12px',
-            display: 'flex', flexDirection: 'column', gap: 3,
+            padding: '8px 0',
+            display: 'flex', 
+            flexDirection: 'column',
+            position: 'relative',
           }}>
-            {['live', 'sessions', 'stats', 'prompt', 'projets', 'competences'].map(o => (
-              <button
-                key={o}
-                onClick={() => setOnglet(o)}
-                style={{
-                  width: '100%',
-                  background: onglet === o ? `rgba(${aRgb},0.08)` : 'transparent',
-                  border: onglet === o
-                    ? `1px solid rgba(${aRgb},0.2)`
-                    : '1px solid transparent',
-                  borderRadius: 8,
-                  color: onglet === o ? a : 'rgba(255,255,255,0.3)',
-                  padding: '8px 10px',
-                  fontSize: 8, letterSpacing: '0.18em',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 150ms',
-                  display: 'flex', alignItems: 'center', gap: 8,
-                }}
-                onMouseEnter={e => {
-                  if (onglet !== o) e.currentTarget.style.color = `rgba(${aRgb},0.7)`
-                }}
-                onMouseLeave={e => {
-                  if (onglet !== o) e.currentTarget.style.color = 'rgba(255,255,255,0.3)'
-                }}
-              >
-                {ongletLabels[o]}
-              </button>
-            ))}
+            {['live', 'sessions', 'stats', 'prompt', 'projets', 'competences'].map((o, idx) => {
+              const icons = {
+                live: Radio,
+                sessions: LayoutGrid,
+                stats: BarChart3,
+                prompt: SlidersHorizontal,
+                projets: FolderKanban,
+                competences: Star,
+              }
+              const IconComponent = icons[o]
+              const isActive = onglet === o
+              
+              return (
+                <button
+                  key={o}
+                  onClick={() => setOnglet(o)}
+                  style={{
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    color: isActive ? a : 'rgba(255,255,255,0.3)',
+                    padding: '10px 16px',
+                    fontSize: 8, 
+                    letterSpacing: '0.18em',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 180ms',
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 10,
+                    position: 'relative',
+                    borderBottom: idx < 5 ? `1px solid rgba(${aRgb},0.05)` : 'none',
+                    overflow: 'hidden',
+                  }}
+                  onMouseEnter={e => {
+                    if (!isActive) e.currentTarget.style.color = `rgba(${aRgb},0.6)`
+                  }}
+                  onMouseLeave={e => {
+                    if (!isActive) e.currentTarget.style.color = 'rgba(255,255,255,0.3)'
+                  }}
+                >
+                  {/* Barre verticale active à gauche */}
+                  <div style={{
+                    position: 'absolute',
+                    left: 0, top: 0, bottom: 0,
+                    width: 2,
+                    background: isActive ? a : 'transparent',
+                    transition: 'all 250ms ease',
+                  }} />
+                  
+                  {/* Numéro indexé */}
+                  <div style={{
+                    fontSize: 7,
+                    opacity: isActive ? 0.6 : 0.2,
+                    transition: 'opacity 180ms',
+                    fontWeight: 700,
+                    minWidth: 16,
+                  }}>
+                    {String(idx + 1).padStart(2, '0')}
+                  </div>
+                  
+                  {/* Icône Lucide */}
+                  <IconComponent size={14} style={{ flexShrink: 0 }} />
+                  
+                  {/* Label */}
+                  <div style={{
+                    flex: 1,
+                    transition: 'color 180ms',
+                  }}>
+                    {o.charAt(0).toUpperCase() + o.slice(1).toUpperCase()}
+                  </div>
+                </button>
+              )
+            })}
           </div>
 
-          {/* PanneauParametres en bas */}
+          {/* Ligne de scan décorative */}
           <div style={{
-            padding: '12px 12px 16px',
+            position: 'absolute',
+            left: 0, right: 0, top: 0, bottom: 0,
+            pointerEvents: 'none',
+            zIndex: 1,
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              position: 'absolute',
+              left: 0, right: 0,
+              height: 1,
+              background: `rgba(${aRgb},0.15)`,
+              animation: 'scanLine 6s linear infinite',
+              opacity: 0.4,
+            }} />
+          </div>
+
+          {/* Bouton paramètres en bas */}
+          <div style={{
+            padding: '12px 16px',
             borderTop: `1px solid rgba(${aRgb},0.07)`,
           }}>
-            <PanneauParametres />
+            <button
+              onClick={() => setParametresOuverts(!parametresOuverts)}
+              style={{
+                width: '100%',
+                background: parametresOuverts ? `rgba(${aRgb},0.12)` : 'transparent',
+                border: parametresOuverts ? `1px solid rgba(${aRgb},0.15)` : `1px solid rgba(${aRgb},0.08)`,
+                borderRadius: 8,
+                color: parametresOuverts ? a : 'rgba(255,255,255,0.4)',
+                padding: '8px 10px',
+                cursor: 'pointer',
+                transition: 'all 180ms',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+              }}
+              onMouseEnter={e => {
+                if (!parametresOuverts) e.currentTarget.style.color = `rgba(${aRgb},0.7)`
+              }}
+              onMouseLeave={e => {
+                if (!parametresOuverts) e.currentTarget.style.color = 'rgba(255,255,255,0.4)'
+              }}
+            >
+              <Settings2 size={16} style={{ flexShrink: 0 }} />
+              <div style={{ fontSize: 7, letterSpacing: '0.15em', fontWeight: 600 }}>
+                PARAMÈTRES
+              </div>
+            </button>
+
+            {/* PanneauParametres avec transition */}
+            {parametresOuverts && (
+              <div style={{
+                marginTop: 12,
+                animation: 'fadeIn 0.2s ease',
+                maxHeight: '300px',
+                overflowY: 'auto',
+              }}>
+                <PanneauParametres />
+              </div>
+            )}
           </div>
 
         </div>
@@ -1182,34 +1352,165 @@ ${detailSessions || 'Aucune session encore.'}
       {isMobile && (
         <div style={{
           position: 'fixed',
-          bottom: 0, left: 0, right: 0,
-          height: 56,
+          bottom: 14, left: 14, right: 14,
+          height: 'auto',
           zIndex: 90,
           background: 'rgba(0,0,0,0.9)',
-          borderTop: `1px solid rgba(${aRgb},0.12)`,
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          borderRadius: 28,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
           display: 'flex',
           justifyContent: 'space-around',
-          alignItems: 'center',
+          alignItems: 'flex-end',
+          padding: '10px 8px 10px',
+          gap: 4,
         }}>
-          {onglets.map(o => (
+          {['live', 'sessions', 'stats', 'prompt', 'projets', 'competences'].map(o => {
+            const icons = {
+              live: Radio,
+              sessions: LayoutGrid,
+              stats: BarChart3,
+              prompt: SlidersHorizontal,
+              projets: FolderKanban,
+              competences: Star,
+            }
+            const IconComponent = icons[o]
+            const isActive = onglet === o
+            const showLabel = labelTemporaire === o
+            
+            const handleClick = () => {
+              setOnglet(o)
+              setLabelTemporaire(o)
+              const timer = setTimeout(() => setLabelTemporaire(null), 1200)
+              return () => clearTimeout(timer)
+            }
+            
+            return (
+              <button
+                key={o}
+                onClick={handleClick}
+                style={{
+                  flex: 1,
+                  height: 44,
+                  background: 'transparent',
+                  border: 'none',
+                  color: isActive ? a : 'rgba(255,255,255,0.5)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'relative',
+                  transition: 'all 180ms',
+                  minWidth: 0,
+                }}
+                onMouseEnter={e => {
+                  if (!isActive) e.currentTarget.style.color = `rgba(${aRgb},0.7)`
+                }}
+                onMouseLeave={e => {
+                  if (!isActive) e.currentTarget.style.color = 'rgba(255,255,255,0.5)'
+                }}
+              >
+                {/* Libellé temporaire au-dessus de l'icône */}
+                {showLabel && (
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '100%',
+                    marginBottom: 8,
+                    fontSize: 6,
+                    letterSpacing: '0.15em',
+                    fontWeight: 600,
+                    padding: '4px 8px',
+                    background: `rgba(${aRgb},0.15)`,
+                    borderRadius: 4,
+                    border: `1px solid rgba(${aRgb},0.25)`,
+                    color: a,
+                    whiteSpace: 'nowrap',
+                    animation: 'fadeIn 0.2s ease',
+                    pointerEvents: 'none',
+                  }}>
+                    {o.toUpperCase()}
+                  </div>
+                )}
+                
+                {/* Icône */}
+                <IconComponent 
+                  size={18} 
+                  style={{ 
+                    flexShrink: 0,
+                    transition: 'all 180ms',
+                  }} 
+                />
+                
+                {/* Point lumineux sous l'icône active */}
+                {isActive && (
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 4,
+                    width: 4,
+                    height: 4,
+                    borderRadius: '50%',
+                    background: a,
+                    animation: 'pulse 1.4s infinite',
+                  }} />
+                )}
+              </button>
+            )
+          })}
+          
+          {/* Bouton AXIS circulaire surélevé */}
+          <div style={{
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'flex-end',
+            marginLeft: 4,
+            marginRight: 2,
+          }}>
             <button
-              key={o}
-              onClick={() => setOnglet(o)}
+              onClick={() => setOnglet('axis')}
               style={{
-                flex: 1, height: '100%',
-                background: onglet === o ? `rgba(${aRgb},0.08)` : 'transparent',
-                border: 'none',
-                color: onglet === o ? a : 'rgba(255,255,255,0.4)',
-                fontSize: 6, letterSpacing: '0.12em',
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                background: onglet === 'axis'
+                  ? `rgba(${aRgb},0.15)`
+                  : `rgba(${aRgb},0.08)`,
+                border: onglet === 'axis'
+                  ? `1px solid rgba(${aRgb},0.25)`
+                  : `1px solid rgba(${aRgb},0.12)`,
+                color: a,
                 cursor: 'pointer',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                borderTop: onglet === o ? `2px solid ${a}` : 'none',
-                transition: 'all 180ms',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 200ms',
+                flexShrink: 0,
+                position: 'relative',
+                marginTop: -10,
               }}
             >
-              {ongletLabels[o]}
+              {aiState !== 'idle' && (
+                <div style={{
+                  position: 'absolute',
+                  inset: -4,
+                  borderRadius: '50%',
+                  border: `1px solid rgba(${aRgb},0.3)`,
+                  animation: 'pulse 1.4s infinite',
+                  pointerEvents: 'none',
+                }} />
+              )}
+              <div style={{ 
+                fontSize: 12, 
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                ◎
+              </div>
             </button>
-          ))}
+          </div>
         </div>
       )}
 
@@ -1231,7 +1532,7 @@ ${detailSessions || 'Aucune session encore.'}
             alignItems: 'center',
             height: '100%',
             minHeight: 0,
-            padding: '32px 28px 24px',
+            padding: isMobile ? '20px 14px 16px' : '32px 28px 24px',
             gap: 0,
           }}>
 
@@ -1306,7 +1607,7 @@ ${detailSessions || 'Aucune session encore.'}
                       ? '12px 3px 12px 12px'
                       : '3px 12px 12px 12px',
                     padding: '10px 14px',
-                    fontSize: 11,
+                    fontSize: axisBubbleSize,
                     color: msg.role === 'frejus'
                       ? `rgba(${aRgb},0.9)`
                       : 'rgba(255,255,255,0.82)',
@@ -1409,8 +1710,8 @@ ${detailSessions || 'Aucune session encore.'}
 
         {/* ── PROJETS ── */}
         {onglet === 'projets' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'relative' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
               <div>
                 <div style={{ fontSize: 7, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.25em' }}>// GESTION PROJETS</div>
                 <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)' }}>{projetsListe.length} projet{projetsListe.length>1?'s':''}</div>
@@ -1419,73 +1720,119 @@ ${detailSessions || 'Aucune session encore.'}
                 {portfolioSauvegarde && <div style={{ color: '#10b981', fontSize: 9 }}>✓ SAUVÉ</div>}
                 <button
                   onClick={() => setProjetEnEdition({ titre:'', categorie:'', type:'frontend', tags:[], desc:'', img:'', lien:'', annee:'', status:'EN LIGNE', ordre: projetsListe.length })}
-                  style={{ background: `rgba(${aRgb},0.08)`, border: `1px solid rgba(${aRgb},0.18)`, color: a, borderRadius: 8, padding: '8px 12px', cursor: 'pointer' }}
+                  style={{ background: 'transparent', border: 'none', borderBottom: `1px solid rgba(${aRgb},0.16)`, color: a, borderRadius: 0, padding: '6px 0', cursor: 'pointer', fontSize: 9, letterSpacing: '0.16em', fontFamily: 'Space Mono, monospace' }}
                 >+ NOUVEAU PROJET</button>
+                <button
+                  onClick={importerDonneesParDefaut}
+                  disabled={importEnCours}
+                  style={{ background: 'transparent', border: 'none', borderBottom: `1px solid rgba(${aRgb},0.1)`, color: importReussi ? '#10b981' : 'rgba(255,255,255,0.35)', padding: '6px 0', cursor: importEnCours ? 'wait' : 'pointer', fontSize: 8, letterSpacing: '0.14em', fontFamily: 'Space Mono, monospace', opacity: importEnCours ? 0.5 : 1 }}
+                >
+                  {importEnCours ? 'IMPORT EN COURS…' : importReussi ? '✓ IMPORTÉ' : '↓ IMPORTER LES DONNÉES PAR DÉFAUT'}
+                </button>
               </div>
             </div>
 
             {chargementPortfolio ? (
-              <div style={{ ...glass, padding: 24, textAlign: 'center' }}>Chargement…</div>
+              <div style={{ padding: 24, textAlign: 'center', color: 'rgba(255,255,255,0.22)', borderTop: `1px solid rgba(${aRgb},0.08)`, paddingTop: 24 }}>Chargement…</div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px,1fr))', gap: 12 }}>
-                {projetsListe.map(p => (
-                  <div key={p.id} style={{ ...glassAccent, padding: 14, position: 'relative' }}>
-                    <div style={{ position: 'absolute', top: -8, right: -8, width: 28, height: 28, borderRadius: 8, background: `linear-gradient(135deg, rgba(${aRgb},0.12), rgba(${aRgb},0.04))` }} />
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 700 }}>{p.titre || '—'}</div>
-                        <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)' }}>{p.categorie || '—'}</div>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-                        <div style={{ fontSize: 9, fontWeight: 700 }}>
-                          <span style={{ padding: '6px 8px', borderRadius: 8, background: (p.type==='frontend'? '#5DCAA5' : p.type==='fullstack'? '#378ADD' : p.type==='ia'? '#D4537E' : '#EF9F27'), color: '#000', fontSize: 10 }}>{p.type || '—'}</span>
+              <div style={{ position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', right: -80, top: 20, width: 320, height: 320, borderRadius: '50%', background: `rgba(${aRgb},0.04)`, filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14, position: 'relative', zIndex: 1 }}>
+                  {projetsListe.map((p) => {
+                    const typeColor = p.type === 'frontend' ? '#5DCAA5' : p.type === 'fullstack' ? '#378ADD' : p.type === 'ia' ? '#D4537E' : '#EF9F27'
+                    return (
+                      <div
+                        key={p.id}
+                        style={{
+                          borderRadius: 16,
+                          overflow: 'hidden',
+                          border: `1px solid rgba(${aRgb},0.14)`,
+                          background: `rgba(${aRgb},0.03)`,
+                          position: 'relative',
+                          transition: 'all 200ms',
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.borderColor = `rgba(${aRgb},0.35)`
+                          e.currentTarget.style.transform = 'translateY(-3px)'
+                          const actions = e.currentTarget.querySelector('[data-actions]')
+                          if (actions) { actions.style.opacity = '1'; actions.style.pointerEvents = 'auto' }
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.borderColor = `rgba(${aRgb},0.14)`
+                          e.currentTarget.style.transform = 'translateY(0)'
+                          const actions = e.currentTarget.querySelector('[data-actions]')
+                          if (actions) { actions.style.opacity = '0'; actions.style.pointerEvents = 'none' }
+                        }}
+                      >
+                        <div style={{ position: 'relative', width: '100%', height: 150, background: `rgba(${aRgb},0.06)`, overflow: 'hidden' }}>
+                          {p.img ? (
+                            <img
+                              src={p.img}
+                              alt={p.titre}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                              onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement.style.display = 'flex'; e.currentTarget.parentElement.style.alignItems = 'center'; e.currentTarget.parentElement.style.justifyContent = 'center' }}
+                            />
+                          ) : (
+                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, color: `rgba(${aRgb},0.25)`, letterSpacing: '0.15em' }}>PAS D'IMAGE</div>
+                          )}
+                          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 50%)' }} />
+                          <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(0,0,0,0.5)', borderRadius: 6, padding: '3px 8px' }}>
+                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: typeColor }} />
+                            <span style={{ fontSize: 8, color: typeColor, letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 700 }}>{p.type}</span>
+                          </div>
+                          <div style={{ position: 'absolute', bottom: 10, left: 12, right: 12 }}>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', fontFamily: 'Fraunces, serif', lineHeight: 1.1 }}>{p.titre || '—'}</div>
+                            <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.15em', textTransform: 'uppercase', marginTop: 3 }}>{p.categorie || '—'}</div>
+                          </div>
                         </div>
-                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.28)' }}>{p.status || '—'}</div>
+
+                        <div style={{ padding: '12px 14px' }}>
+                          <div style={{ fontSize: 9, color: `rgba(${aRgb},0.5)`, letterSpacing: '0.04em', marginBottom: 6, lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                            {(p.tags || []).join(' · ') || '—'}
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>{p.status || '—'} · {p.annee || ''}</span>
+                            <div data-actions style={{ display: 'flex', gap: 10, opacity: isMobile ? 1 : 0, pointerEvents: isMobile ? 'auto' : 'none', transition: 'opacity 180ms' }}>
+                              <button onClick={() => setProjetEnEdition(p)} style={{ background: 'transparent', border: 'none', padding: 0, color: a, cursor: 'pointer', fontSize: 8, letterSpacing: '0.14em', textDecoration: 'underline', textUnderlineOffset: 3 }}>MODIFIER</button>
+                              <button onClick={() => { if (confirm('Supprimer ce projet ?')) retirerProjet(p.id) }} style={{ background: 'transparent', border: 'none', padding: 0, color: 'rgba(255,255,255,0.42)', cursor: 'pointer', fontSize: 8, letterSpacing: '0.14em', textDecoration: 'underline', textUnderlineOffset: 3 }}>SUPPR</button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.28)', marginBottom: 8 }}>{p.annee || ''}</div>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-                      {(p.tags || []).map(t => (
-                        <div key={t} style={{ fontSize: 8, color: `rgba(${aRgb},0.6)`, background: 'rgba(255,255,255,0.02)', padding: '4px 8px', borderRadius: 6 }}>{t}</div>
-                      ))}
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                      <button onClick={() => setProjetEnEdition(p)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: a, padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>MODIFIER</button>
-                      <button onClick={() => { if (confirm('Supprimer ce projet ?')) retirerProjet(p.id) }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>SUPPRIMER</button>
-                    </div>
-                  </div>
-                ))}
-                {projetsListe.length === 0 && (
-                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 40, fontSize: 9, color: 'rgba(255,255,255,0.12)' }}>Aucun projet — ajoute ton premier projet</div>
-                )}
+                    )
+                  })}
+                  {projetsListe.length === 0 && (
+                    <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '48px 20px', fontSize: 9, color: 'rgba(255,255,255,0.12)' }}>Aucun projet — ajoute ton premier projet</div>
+                  )}
+                </div>
               </div>
             )}
 
             {/* Modal edition projet */}
             {projetEnEdition !== null && (
-              <div style={{ position: 'fixed', inset: 0, zIndex: 140, display: 'grid', placeItems: 'center', background: 'rgba(0,0,0,0.6)' }}>
-                <div style={{ width: 'min(860px,96%)', ...glass, padding: 18 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                    <div style={{ fontSize: 9, color: `rgba(${aRgb},0.4)` }}>ÉDITER PROJET</div>
+              <div style={{ position: 'fixed', inset: 0, zIndex: 140, display: 'grid', placeItems: 'center', background: 'rgba(5,5,5,0.97)' }}>
+                <div style={{ width: isMobile ? 'min(560px, 94vw)' : 'min(860px,96%)', background: 'rgba(8,8,8,0.98)', borderTop: `1px solid rgba(${aRgb},0.12)`, boxShadow: 'none', padding: isMobile ? 16 : 20 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, gap: 12 }}>
+                    <div style={{ fontSize: isMobile ? 14 : 16, fontFamily: 'Fraunces, serif', color: '#fff', letterSpacing: '0.02em' }}>ÉDITER PROJET</div>
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={() => setProjetEnEdition(null)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', padding: '6px 10px', borderRadius: 6 }}>ANNULER</button>
-                      <button onClick={() => sauvegarderProjet(projetEnEdition)} style={{ background: a, border: 'none', color: '#000', padding: '8px 12px', borderRadius: 8 }}>ENREGISTRER</button>
+                      <button onClick={() => setProjetEnEdition(null)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.55)', padding: '6px 0', borderRadius: 0, cursor: 'pointer', fontSize: 8, letterSpacing: '0.16em', textDecoration: 'underline', textUnderlineOffset: 3 }}>ANNULER</button>
+                      <button onClick={() => sauvegarderProjet(projetEnEdition)} style={{ background: a, border: 'none', color: '#000', padding: '8px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 8, letterSpacing: '0.16em' }}>ENREGISTRER</button>
                     </div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap: isMobile ? 14 : 18 }}>
                     <div>
-                      <div style={{ marginBottom: 8 }}>
-                        <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6 }}>// TITRE</div>
-                        <input value={projetEnEdition.titre || ''} onChange={e => setProjetEnEdition(prev => ({...prev, titre: e.target.value}))} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid rgba(${aRgb},0.08)`, background: 'transparent', color: '#fff' }} />
+                      <div style={{ marginBottom: 10 }}>
+                        <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6, letterSpacing: '0.2em', textTransform: 'uppercase' }}>// TITRE</div>
+                        <input value={projetEnEdition.titre || ''} onChange={e => setProjetEnEdition(prev => ({...prev, titre: e.target.value}))} style={{ width: '100%', padding: '10px 0 8px', borderRadius: 0, border: 'none', borderBottom: `1px solid rgba(${aRgb},0.15)`, background: 'transparent', color: '#fff', outline: 'none' }} />
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 8 }}>
                         <div>
-                          <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6 }}>// CATEGORIE</div>
-                          <input value={projetEnEdition.categorie || ''} onChange={e => setProjetEnEdition(prev => ({...prev, categorie: e.target.value}))} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid rgba(${aRgb},0.08)`, background: 'transparent', color: '#fff' }} />
+                          <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6, letterSpacing: '0.2em', textTransform: 'uppercase' }}>// CATEGORIE</div>
+                          <input value={projetEnEdition.categorie || ''} onChange={e => setProjetEnEdition(prev => ({...prev, categorie: e.target.value}))} style={{ width: '100%', padding: '10px 0 8px', borderRadius: 0, border: 'none', borderBottom: `1px solid rgba(${aRgb},0.15)`, background: 'transparent', color: '#fff', outline: 'none' }} />
                         </div>
                         <div>
-                          <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6 }}>// TYPE</div>
-                          <select value={projetEnEdition.type || 'frontend'} onChange={e => setProjetEnEdition(prev => ({...prev, type: e.target.value}))} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid rgba(${aRgb},0.08)`, background: 'transparent', color: '#fff' }}>
+                          <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6, letterSpacing: '0.2em', textTransform: 'uppercase' }}>// TYPE</div>
+                          <select value={projetEnEdition.type || 'frontend'} onChange={e => setProjetEnEdition(prev => ({...prev, type: e.target.value}))} style={{ width: '100%', padding: '10px 0 8px', borderRadius: 0, border: 'none', borderBottom: `1px solid rgba(${aRgb},0.15)`, background: 'transparent', color: '#fff', outline: 'none' }}>
                             <option value="frontend">frontend</option>
                             <option value="fullstack">fullstack</option>
                             <option value="ia">ia</option>
@@ -1495,32 +1842,48 @@ ${detailSessions || 'Aucune session encore.'}
                       </div>
 
                       <div style={{ marginTop: 10 }}>
-                        <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6 }}>// TAGS (séparés par des virgules)</div>
-                        <input value={(projetEnEdition.tags || []).join(', ')} onChange={e => setProjetEnEdition(prev => ({...prev, tags: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}))} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid rgba(${aRgb},0.08)`, background: 'transparent', color: '#fff' }} />
+                        <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6, letterSpacing: '0.2em', textTransform: 'uppercase' }}>// TAGS (séparés par des virgules)</div>
+                        <input value={(projetEnEdition.tags || []).join(', ')} onChange={e => setProjetEnEdition(prev => ({...prev, tags: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}))} style={{ width: '100%', padding: '10px 0 8px', borderRadius: 0, border: 'none', borderBottom: `1px solid rgba(${aRgb},0.15)`, background: 'transparent', color: '#fff', outline: 'none' }} />
                       </div>
 
                       <div style={{ marginTop: 10 }}>
-                        <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6 }}>// DESCRIPTION</div>
-                        <textarea value={projetEnEdition.desc || ''} onChange={e => setProjetEnEdition(prev => ({...prev, desc: e.target.value}))} style={{ width: '100%', minHeight: 120, padding: 10, borderRadius: 8, border: `1px solid rgba(${aRgb},0.08)`, background: 'transparent', color: '#fff' }} />
+                        <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6, letterSpacing: '0.2em', textTransform: 'uppercase' }}>// DESCRIPTION</div>
+                        <textarea value={projetEnEdition.desc || ''} onChange={e => setProjetEnEdition(prev => ({...prev, desc: e.target.value}))} style={{ width: '100%', minHeight: 120, padding: '10px 0 8px', borderRadius: 0, border: 'none', borderBottom: `1px solid rgba(${aRgb},0.15)`, background: 'transparent', color: '#fff', outline: 'none', resize: 'vertical' }} />
                       </div>
                     </div>
                     <div>
-                      <div style={{ marginBottom: 8 }}>
-                        <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6 }}>// IMAGE</div>
-                        <input value={projetEnEdition.img || ''} onChange={e => setProjetEnEdition(prev => ({...prev, img: e.target.value}))} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid rgba(${aRgb},0.08)`, background: 'transparent', color: '#fff' }} />
+                      <div style={{ marginBottom: 10 }}>
+                        <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6, letterSpacing: '0.2em', textTransform: 'uppercase' }}>// IMAGE</div>
+                        <input
+                          value={projetEnEdition.img || ''}
+                          onChange={e => setProjetEnEdition(prev => ({ ...prev, img: e.target.value }))}
+                          placeholder="/asset/mon-projet.jpg ou https://..."
+                          style={{ width: '100%', padding: '10px 0 8px', borderRadius: 0, border: 'none', borderBottom: `1px solid rgba(${aRgb},0.15)`, background: 'transparent', color: '#fff', outline: 'none' }}
+                        />
+                        {projetEnEdition.img && (
+                          <div style={{ marginTop: 8 }}>
+                            <img
+                              src={projetEnEdition.img}
+                              alt="aperçu"
+                              style={{ maxWidth: '100%', maxHeight: 100, borderRadius: 6, objectFit: 'cover', display: 'block' }}
+                              onError={e => { e.currentTarget.style.display = 'none' }}
+                              onLoad={e => { e.currentTarget.style.display = 'block' }}
+                            />
+                          </div>
+                        )}
                       </div>
-                      <div style={{ marginBottom: 8 }}>
-                        <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6 }}>// LIEN</div>
-                        <input value={projetEnEdition.lien || ''} onChange={e => setProjetEnEdition(prev => ({...prev, lien: e.target.value}))} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid rgba(${aRgb},0.08)`, background: 'transparent', color: '#fff' }} />
+                      <div style={{ marginBottom: 10 }}>
+                        <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6, letterSpacing: '0.2em', textTransform: 'uppercase' }}>// LIEN</div>
+                        <input value={projetEnEdition.lien || ''} onChange={e => setProjetEnEdition(prev => ({...prev, lien: e.target.value}))} style={{ width: '100%', padding: '10px 0 8px', borderRadius: 0, border: 'none', borderBottom: `1px solid rgba(${aRgb},0.15)`, background: 'transparent', color: '#fff', outline: 'none' }} />
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6 }}>// ANNÉE</div>
-                          <input value={projetEnEdition.annee || ''} onChange={e => setProjetEnEdition(prev => ({...prev, annee: e.target.value}))} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid rgba(${aRgb},0.08)`, background: 'transparent', color: '#fff' }} />
+                          <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6, letterSpacing: '0.2em', textTransform: 'uppercase' }}>// ANNÉE</div>
+                          <input value={projetEnEdition.annee || ''} onChange={e => setProjetEnEdition(prev => ({...prev, annee: e.target.value}))} style={{ width: '100%', padding: '10px 0 8px', borderRadius: 0, border: 'none', borderBottom: `1px solid rgba(${aRgb},0.15)`, background: 'transparent', color: '#fff', outline: 'none' }} />
                         </div>
                         <div style={{ width: 120 }}>
-                          <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6 }}>// STATUS</div>
-                          <select value={projetEnEdition.status || 'EN LIGNE'} onChange={e => setProjetEnEdition(prev => ({...prev, status: e.target.value}))} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid rgba(${aRgb},0.08)`, background: 'transparent', color: '#fff' }}>
+                          <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6, letterSpacing: '0.2em', textTransform: 'uppercase' }}>// STATUS</div>
+                          <select value={projetEnEdition.status || 'EN LIGNE'} onChange={e => setProjetEnEdition(prev => ({...prev, status: e.target.value}))} style={{ width: '100%', padding: '10px 0 8px', borderRadius: 0, border: 'none', borderBottom: `1px solid rgba(${aRgb},0.15)`, background: 'transparent', color: '#fff', outline: 'none' }}>
                             <option>EN LIGNE</option>
                             <option>EN PRODUCTION</option>
                             <option>PRIVÉ</option>
@@ -1528,8 +1891,8 @@ ${detailSessions || 'Aucune session encore.'}
                         </div>
                       </div>
                       <div style={{ marginTop: 10 }}>
-                        <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6 }}>// ORDRE</div>
-                        <input type="number" value={projetEnEdition.ordre || 0} onChange={e => setProjetEnEdition(prev => ({...prev, ordre: Number(e.target.value)}))} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid rgba(${aRgb},0.08)`, background: 'transparent', color: '#fff' }} />
+                        <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6, letterSpacing: '0.2em', textTransform: 'uppercase' }}>// ORDRE</div>
+                        <input type="number" value={projetEnEdition.ordre || 0} onChange={e => setProjetEnEdition(prev => ({...prev, ordre: Number(e.target.value)}))} style={{ width: '100%', padding: '10px 0 8px', borderRadius: 0, border: 'none', borderBottom: `1px solid rgba(${aRgb},0.15)`, background: 'transparent', color: '#fff', outline: 'none' }} />
                       </div>
                     </div>
                   </div>
@@ -1542,72 +1905,113 @@ ${detailSessions || 'Aucune session encore.'}
         {/* ── COMPÉTENCES ── */}
         {onglet === 'competences' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
               <div>
                 <div style={{ fontSize: 7, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.25em' }}>// GESTION COMPÉTENCES</div>
                 <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)' }}>{competencesListe.length} catégorie{competencesListe.length>1?'s':''}</div>
               </div>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 {portfolioSauvegarde && <div style={{ color: '#10b981', fontSize: 9 }}>✓ SAUVÉ</div>}
-                <button onClick={() => setCompetenceEnEdition({ cat:'', items:[], ordre: competencesListe.length })} style={{ background: `rgba(${aRgb},0.08)`, border: `1px solid rgba(${aRgb},0.18)`, color: a, borderRadius: 8, padding: '8px 12px', cursor: 'pointer' }}>+ NOUVELLE CATÉGORIE</button>
+                <button onClick={() => setCompetenceEnEdition({ cat:'', items:[], ordre: competencesListe.length })} style={{ background: 'transparent', border: 'none', borderBottom: `1px solid rgba(${aRgb},0.16)`, color: a, borderRadius: 0, padding: '6px 0', cursor: 'pointer', fontSize: 9, letterSpacing: '0.16em', fontFamily: 'Space Mono, monospace' }}>+ NOUVELLE CATÉGORIE</button>
+                <button
+                  onClick={importerDonneesParDefaut}
+                  disabled={importEnCours}
+                  style={{ background: 'transparent', border: 'none', borderBottom: `1px solid rgba(${aRgb},0.1)`, color: importReussi ? '#10b981' : 'rgba(255,255,255,0.35)', padding: '6px 0', cursor: importEnCours ? 'wait' : 'pointer', fontSize: 8, letterSpacing: '0.14em', fontFamily: 'Space Mono, monospace', opacity: importEnCours ? 0.5 : 1 }}
+                >
+                  {importEnCours ? 'IMPORT EN COURS…' : importReussi ? '✓ IMPORTÉ' : '↓ IMPORTER LES DONNÉES PAR DÉFAUT'}
+                </button>
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {competencesListe.map(c => (
-                <div key={c.id} style={{ ...glassAccent, padding: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ fontSize: 11, fontWeight: 700 }}>{c.cat}</div>
-                    <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.28)' }}>{(c.items||[]).length} item(s) · ordre {c.ordre || 0}</div>
-                    <div style={{ marginTop: 8 }}>
-                      {(c.items||[]).map((it, i) => (
-                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                          <div style={{ width: 160, fontSize: 9 }}>{it.nom}</div>
-                          <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', height: 8, borderRadius: 6, overflow: 'hidden' }}>
-                            <div style={{ width: `${it.pct}%`, height: '100%', background: a }} />
-                          </div>
-                          <div style={{ width: 36, fontSize: 9, textAlign: 'right' }}>{it.pct}%</div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {competencesListe.map((c, idx) => {
+                const isActiveMobile = competenceDeplieMobile === c.id
+                return (
+                  <div key={c.id} style={{ padding: '24px 0 20px', borderTop: idx === 0 ? 'none' : `1px solid rgba(${aRgb},0.08)` }}>
+                    <div
+                      onClick={() => { if (isMobile) setCompetenceDeplieMobile(isActiveMobile ? null : c.id) }}
+                      onMouseEnter={e => {
+                        if (!isMobile) {
+                          const actions = e.currentTarget.querySelector('[data-actions]')
+                          if (actions) {
+                            actions.style.opacity = '1'
+                            actions.style.transform = 'translateY(0)'
+                            actions.style.pointerEvents = 'auto'
+                          }
+                        }
+                      }}
+                      onMouseLeave={e => {
+                        if (!isMobile) {
+                          const actions = e.currentTarget.querySelector('[data-actions]')
+                          if (actions) {
+                            actions.style.opacity = '0'
+                            actions.style.transform = 'translateY(4px)'
+                            actions.style.pointerEvents = 'none'
+                          }
+                        }
+                      }}
+                      style={{ cursor: isMobile ? 'pointer' : 'default' }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                        <div>
+                          <div style={{ fontSize: isMobile ? 20 : 28, fontWeight: 700, color: '#fff', fontFamily: 'Fraunces, serif', letterSpacing: '0.01em', lineHeight: 1.05 }}>{c.cat}</div>
+                          <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.24)', letterSpacing: '0.18em', textTransform: 'uppercase', marginTop: 8 }}>{(c.items||[]).length} item(s) · ordre {c.ordre || 0}</div>
                         </div>
-                      ))}
+                        <div data-actions style={{ display: 'flex', gap: 12, alignItems: 'center', opacity: isMobile ? (isActiveMobile ? 1 : 0) : 0, transform: isMobile ? 'translateY(0)' : 'translateY(4px)', transition: 'all 180ms ease', pointerEvents: isMobile ? (isActiveMobile ? 'auto' : 'none') : 'none', maxHeight: isMobile ? (isActiveMobile ? 60 : 0) : 'none', overflow: 'hidden' }}>
+                          <button onClick={e => { e.stopPropagation(); setCompetenceEnEdition(c) }} style={{ background: 'transparent', border: 'none', padding: 0, color: a, cursor: 'pointer', fontSize: 8, letterSpacing: '0.18em', textDecoration: 'underline', textUnderlineOffset: 3 }}>MODIFIER</button>
+                          <button onClick={e => { e.stopPropagation(); if (confirm('Supprimer cette catégorie ?')) retirerCompetence(c.id) }} style={{ background: 'transparent', border: 'none', padding: 0, color: 'rgba(255,255,255,0.42)', cursor: 'pointer', fontSize: 8, letterSpacing: '0.18em', textDecoration: 'underline', textUnderlineOffset: 3 }}>SUPPRIMER</button>
+                        </div>
+                      </div>
+
+                      <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {(c.items||[]).map((it, i) => (
+                          <div key={i} style={{ position: 'relative', paddingTop: 6, paddingBottom: 8, borderBottom: i < (c.items||[]).length - 1 ? `1px solid rgba(${aRgb},0.05)` : 'none' }}>
+                            <div style={{ position: 'absolute', right: 0, top: -2, fontFamily: 'Fraunces, serif', fontSize: 32, color: `rgba(${aRgb},0.1)`, pointerEvents: 'none', userSelect: 'none' }}>{it.pct}</div>
+                            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.82)', letterSpacing: '0.16em', textTransform: 'uppercase', flex: 1 }}>{it.nom}</div>
+                              <div style={{ fontSize: 11, color: '#fff', fontWeight: 600, minWidth: 34, textAlign: 'right' }}>{it.pct}%</div>
+                            </div>
+                            <div style={{ position: 'relative', zIndex: 1, marginTop: 8, height: 1, background: `rgba(${aRgb},0.12)`, overflow: 'hidden' }}>
+                              <div style={{ width: `${it.pct}%`, height: '100%', background: a, transition: 'width 220ms ease' }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={() => setCompetenceEnEdition(c)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: a, padding: '6px 10px', borderRadius: 6 }}>MODIFIER</button>
-                    <button onClick={() => { if (confirm('Supprimer cette catégorie ?')) retirerCompetence(c.id) }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', padding: '6px 10px', borderRadius: 6 }}>SUPPRIMER</button>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
 
             {/* Modal edition competence */}
             {competenceEnEdition !== null && (
-              <div style={{ position: 'fixed', inset: 0, zIndex: 140, display: 'grid', placeItems: 'center', background: 'rgba(0,0,0,0.6)' }}>
-                <div style={{ width: 'min(760px,96%)', ...glass, padding: 18 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                    <div style={{ fontSize: 9, color: `rgba(${aRgb},0.4)` }}>ÉDITER CATÉGORIE</div>
+              <div style={{ position: 'fixed', inset: 0, zIndex: 140, display: 'grid', placeItems: 'center', background: 'rgba(5,5,5,0.97)' }}>
+                <div style={{ width: isMobile ? 'min(560px, 94vw)' : 'min(760px,96%)', background: 'rgba(8,8,8,0.98)', borderTop: `1px solid rgba(${aRgb},0.12)`, boxShadow: 'none', padding: isMobile ? 16 : 20 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, gap: 12 }}>
+                    <div style={{ fontSize: isMobile ? 14 : 16, fontFamily: 'Fraunces, serif', color: '#fff', letterSpacing: '0.02em' }}>ÉDITER CATÉGORIE</div>
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={() => setCompetenceEnEdition(null)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', padding: '6px 10px', borderRadius: 6 }}>ANNULER</button>
-                      <button onClick={() => sauvegarderCompetence(competenceEnEdition)} style={{ background: a, border: 'none', color: '#000', padding: '8px 12px', borderRadius: 8 }}>ENREGISTRER</button>
+                      <button onClick={() => setCompetenceEnEdition(null)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.55)', padding: '6px 0', borderRadius: 0, cursor: 'pointer', fontSize: 8, letterSpacing: '0.16em', textDecoration: 'underline', textUnderlineOffset: 3 }}>ANNULER</button>
+                      <button onClick={() => sauvegarderCompetence(competenceEnEdition)} style={{ background: a, border: 'none', color: '#000', padding: '8px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 8, letterSpacing: '0.16em' }}>ENREGISTRER</button>
                     </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6 }}>// NOM CATÉGORIE</div>
-                    <input value={competenceEnEdition.cat || ''} onChange={e => setCompetenceEnEdition(prev => ({...prev, cat: e.target.value}))} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid rgba(${aRgb},0.08)`, background: 'transparent', color: '#fff', marginBottom: 12 }} />
+                    <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6, letterSpacing: '0.2em', textTransform: 'uppercase' }}>// NOM CATÉGORIE</div>
+                    <input value={competenceEnEdition.cat || ''} onChange={e => setCompetenceEnEdition(prev => ({...prev, cat: e.target.value}))} style={{ width: '100%', padding: '10px 0 8px', borderRadius: 0, border: 'none', borderBottom: `1px solid rgba(${aRgb},0.15)`, background: 'transparent', color: '#fff', outline: 'none', marginBottom: 12 }} />
 
-                    <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6 }}>// ITEMS</div>
+                    <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6, letterSpacing: '0.2em', textTransform: 'uppercase' }}>// ITEMS</div>
                     {(competenceEnEdition.items || []).map((it, idx) => (
-                      <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+                      <div key={idx} style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 8, alignItems: isMobile ? 'stretch' : 'center', marginBottom: 8 }}>
                         <input value={it.nom} onChange={e => {
                           const items = (competenceEnEdition.items||[]).slice(); items[idx] = {...items[idx], nom: e.target.value}; setCompetenceEnEdition(prev => ({...prev, items}))
-                        }} style={{ flex: 1, padding: 8, borderRadius: 8, border: `1px solid rgba(${aRgb},0.08)`, background: 'transparent', color: '#fff' }} />
+                        }} style={{ flex: 1, padding: '10px 0 8px', borderRadius: 0, border: 'none', borderBottom: `1px solid rgba(${aRgb},0.15)`, background: 'transparent', color: '#fff', outline: 'none' }} />
                         <input type="number" value={it.pct} onChange={e => {
                           const items = (competenceEnEdition.items||[]).slice(); items[idx] = {...items[idx], pct: Number(e.target.value)}; setCompetenceEnEdition(prev => ({...prev, items}))
-                        }} style={{ width: 96, padding: 8, borderRadius: 8, border: `1px solid rgba(${aRgb},0.08)`, background: 'transparent', color: '#fff' }} />
-                        <button onClick={() => { const items = (competenceEnEdition.items||[]).filter((_,i)=>i!==idx); setCompetenceEnEdition(prev=>({...prev, items})) }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', padding: '6px 8px', borderRadius: 6 }}>SUPPR</button>
+                        }} style={{ width: 96, padding: '10px 0 8px', borderRadius: 0, border: 'none', borderBottom: `1px solid rgba(${aRgb},0.15)`, background: 'transparent', color: '#fff', outline: 'none' }} />
+                        <button onClick={() => { const items = (competenceEnEdition.items||[]).filter((_,i)=>i!==idx); setCompetenceEnEdition(prev=>({...prev, items})) }} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.6)', padding: '6px 8px', borderRadius: 6, cursor: 'pointer' }}>SUPPR</button>
                       </div>
                     ))}
                     <div style={{ marginTop: 8 }}>
-                      <button onClick={() => { const items = [...(competenceEnEdition.items||[]), { nom: '', pct: 0 }]; setCompetenceEnEdition(prev => ({...prev, items})) }} style={{ background: `rgba(${aRgb},0.06)`, border: `1px solid rgba(${aRgb},0.12)`, color: a, padding: '8px 12px', borderRadius: 8 }}>+ AJOUTER UNE COMPÉTENCE</button>
+                      <button onClick={() => { const items = [...(competenceEnEdition.items||[]), { nom: '', pct: 0 }]; setCompetenceEnEdition(prev => ({...prev, items})) }} style={{ background: 'transparent', border: 'none', borderBottom: `1px solid rgba(${aRgb},0.16)`, color: a, padding: '6px 0', borderRadius: 0, cursor: 'pointer', fontSize: 9, letterSpacing: '0.16em', fontFamily: 'Space Mono, monospace' }}>+ AJOUTER UNE COMPÉTENCE</button>
                     </div>
                   </div>
                 </div>
@@ -1623,7 +2027,7 @@ ${detailSessions || 'Aucune session encore.'}
             {/* Métriques rapides */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
               gap: 12,
             }}>
               {[
@@ -1642,11 +2046,11 @@ ${detailSessions || 'Aucune session encore.'}
                     background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.2),transparent)`,
                   }} />
                   <div style={{
-                    fontSize: 7, color: `rgba(${aRgb},0.4)`,
+                    fontSize: statLabelSize, color: `rgba(${aRgb},0.4)`,
                     letterSpacing: '0.22em', marginBottom: 8,
                   }}>{label}</div>
                   <div style={{
-                    fontSize: 26, fontWeight: 800,
+                    fontSize: statValueSize, fontWeight: 800,
                     color: a, fontFamily: 'Fraunces, serif',
                     lineHeight: 1,
                   }}>{val}</div>
@@ -1656,7 +2060,7 @@ ${detailSessions || 'Aucune session encore.'}
 
             {/* Sessions récentes + détail */}
             <div style={{
-              display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16,
+              display: 'grid', gridTemplateColumns: isTablet ? '1fr' : '1fr 1fr', gap: 16,
             }}>
               {/* Liste sessions */}
               <div style={{ ...glass, padding: 20 }}>
@@ -1853,8 +2257,8 @@ ${detailSessions || 'Aucune session encore.'}
                   position: 'relative', overflow: 'hidden',
                 }}>
                   <div style={{ position: 'absolute', top: 0, left: 8, right: 8, height: 1, background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.2),transparent)` }} />
-                  <div style={{ fontSize: 6, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.18em', marginBottom: 6 }}>{label}</div>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: a, lineHeight: 1 }}>{val}</div>
+                  <div style={{ fontSize: statLabelSize, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.18em', marginBottom: 6 }}>{label}</div>
+                  <div style={{ fontSize: statValueSize, fontWeight: 800, color: a, lineHeight: 1 }}>{val}</div>
                 </div>
               ))}
             </div>
@@ -2107,7 +2511,7 @@ ${detailSessions || 'Aucune session encore.'}
         {onglet === 'stats' && !isMobile && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{
-              display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12,
+              display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12,
             }}>
               {[
                 { label: 'SESSIONS TOTALES', val: stats.total, sub: 'visiteurs uniques' },
@@ -2125,11 +2529,11 @@ ${detailSessions || 'Aucune session encore.'}
                     background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.22),transparent)`,
                   }} />
                   <div style={{
-                    fontSize: 7, color: `rgba(${aRgb},0.4)`,
+                    fontSize: statLabelSize, color: `rgba(${aRgb},0.4)`,
                     letterSpacing: '0.22em', marginBottom: 10,
                   }}>{label}</div>
                   <div style={{
-                    fontSize: 30, fontWeight: 800,
+                    fontSize: statValueSize, fontWeight: 800,
                     color: a, lineHeight: 1, marginBottom: 6,
                     fontFamily: 'Fraunces, serif',
                   }}>{val}</div>
@@ -2235,8 +2639,8 @@ ${detailSessions || 'Aucune session encore.'}
                   position: 'relative', overflow: 'hidden',
                 }}>
                   <div style={{ position: 'absolute', top: 0, left: 8, right: 8, height: 1, background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.2),transparent)` }} />
-                  <div style={{ fontSize: 6, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.15em', marginBottom: 6 }}>{label}</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: a, lineHeight: 1, marginBottom: 3 }}>{val}</div>
+                  <div style={{ fontSize: statLabelSize, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.15em', marginBottom: 6 }}>{label}</div>
+                  <div style={{ fontSize: statValueSize, fontWeight: 800, color: a, lineHeight: 1, marginBottom: 3 }}>{val}</div>
                   <div style={{ fontSize: 6, color: 'rgba(255,255,255,0.18)' }}>{sub}</div>
                 </div>
               ))}

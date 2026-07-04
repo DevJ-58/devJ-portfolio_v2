@@ -1,6 +1,7 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Billboard, useTexture } from '@react-three/drei'
+import { Billboard } from '@react-three/drei'
+import { TextureLoader, SRGBColorSpace } from 'three'
 
 const easeOutBack = (t) => {
   const c1 = 1.70158
@@ -12,17 +13,41 @@ export default function ProjectShape({ projet, position, categoryColor, onSelect
   const groupRef = useRef()
   const orbitRef = useRef()
   const [hovered, setHovered] = useState(false)
-  // Sécuriser le chargement de la texture : useTexture peut échouer si `projet.img` est undefined
-  let texture = null
-  try {
-    texture = useTexture(projet.img)
-  } catch (e) {
-    // Ne pas faire planter le rendu 3D si l'URL est invalide
-    console.warn('[ProjectShape] useTexture failed for', projet?.img, e)
-    texture = null
-  }
-  const hasTexture = Boolean(texture && texture.image && projet && projet.img)
+  const [texture, setTexture] = useState(null)
+  const safeImageUrl = typeof projet?.img === 'string' && projet.img.trim() ? projet.img : null
   const safeStartTime = useMemo(() => (typeof sceneStartTime === 'number' ? sceneStartTime : 0), [sceneStartTime])
+
+  useEffect(() => {
+    if (!safeImageUrl) {
+      setTexture(null)
+      return
+    }
+
+    let active = true
+    const loader = new TextureLoader()
+
+    loader.load(
+      safeImageUrl,
+      (loadedTexture) => {
+        if (!active) return
+        loadedTexture.colorSpace = SRGBColorSpace
+        console.log('[ProjectShape] Texture chargée avec succès:', safeImageUrl)
+        setTexture(loadedTexture)
+      },
+      undefined,
+      (error) => {
+        if (!active) return
+        console.warn('[ProjectShape] Échec de chargement de la texture:', safeImageUrl, error)
+        setTexture(null)
+      }
+    )
+
+    return () => {
+      active = false
+    }
+  }, [safeImageUrl])
+
+  const hasTexture = Boolean(texture && safeImageUrl)
 
   useFrame((state, delta) => {
     if (!groupRef.current || !orbitRef.current) return
@@ -71,7 +96,6 @@ export default function ProjectShape({ projet, position, categoryColor, onSelect
   })
 
   const baseOpacity = isDimmed ? 0.35 : 1
-  const emissiveIntensity = isSelected ? 0.22 : hovered ? 0.12 : 0.08
 
   const handlePointerOver = (e) => {
     if (isDimmed || isMobile) return
@@ -103,21 +127,17 @@ export default function ProjectShape({ projet, position, categoryColor, onSelect
             onPointerOver={handlePointerOver}
             onPointerOut={handlePointerOut}
             onClick={handleClick}
-            castShadow
-            receiveShadow
             transparent
             opacity={baseOpacity}
           >
-            <boxGeometry args={[1.7, 1.05, 0.01]} />
-            <meshStandardMaterial
+            <planeGeometry args={[1.7, 1.05]} />
+            <meshBasicMaterial
               map={hasTexture ? texture : null}
-              color={hasTexture ? '#FFFFFF' : '#ffffff'}
-              metalness={0.15}
-              roughness={0.5}
-              emissive={categoryColor}
-              emissiveIntensity={emissiveIntensity}
+              color={hasTexture ? '#FFFFFF' : categoryColor}
               transparent
               opacity={baseOpacity}
+              toneMapped={false}
+              side={2}
             />
           </mesh>
 

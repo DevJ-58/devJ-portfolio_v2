@@ -3,32 +3,52 @@ import { useNavigate } from 'react-router-dom'
 import utiliserTheme from '@/store/utiliserTheme'
 import PanneauParametres from '@/composants/ui/PanneauParametres'
 
-// Composant AcademicStaircase - défini au niveau module pour éviter les re-rendus
-function AcademicStaircase({ isMobile, a, aRgb, eff }) {
-  const niveaux = [
-    { lvl: 'LVL 01', label: 'BEPC', annee: '2020–2021', titre: "Brevet d'Études du Premier Cycle", desc: "Première étape du parcours scolaire, validée avec de bons résultats généraux.", done: true, hauteur: 70 },
-    { lvl: 'LVL 02', label: 'BAC', annee: '2023–2024', titre: 'Baccalauréat, série D', desc: "Obtention du baccalauréat scientifique, ouvrant la voie vers les études supérieures en ingénierie.", done: true, hauteur: 130 },
-    { lvl: 'LVL 03', label: 'LICENCE', annee: '2024–en cours', titre: '2ème année sur 3 — Génie Logiciel', desc: "Cursus de licence en génie logiciel (3 ans). Actuellement en 2ème année, avec une spécialisation progressive vers l'intelligence artificielle.", done: false, hauteur: 195 },
-  ]
+const commits = [
+  {
+    hash: '1e5d0f2',
+    tag: 'tag: bepc',
+    periode: '2020–2021',
+    message: "init: Brevet d'Études du Premier Cycle",
+    detail: null,
+    desc: "Première étape du parcours scolaire, validée avec de bons résultats généraux.",
+    statut: 'done',
+  },
+  {
+    hash: '7c2b8a4',
+    tag: 'tag: bac-serie-d',
+    periode: '2023–2024',
+    message: 'feat: Baccalauréat, série D',
+    detail: 'Ouverture vers les études supérieures en ingénierie',
+    desc: "Obtention du baccalauréat scientifique, ouvrant la voie vers les études supérieures en ingénierie.",
+    statut: 'done',
+  },
+  {
+    hash: 'a3f9c1e',
+    tag: 'HEAD → licence-2',
+    periode: '2024–en cours',
+    message: 'feat: Génie Logiciel — 2ème année sur 3',
+    detail: "Spécialisation progressive vers l'IA",
+    desc: "Cursus de licence en génie logiciel (3 ans) à l'UIYA. Actuellement en 2ème année, avec une spécialisation progressive vers l'intelligence artificielle.",
+    statut: 'current',
+  },
+]
 
-  const [etapeActiveIdx, setEtapeActiveIdx] = useState(niveaux.length - 1)
-  const etapeActive = niveaux[etapeActiveIdx]
-  
-  // Adapter les hauteurs sur mobile
-  const heightMultiplier = isMobile ? 0.65 : 1
-  
+function AcademicGitLog({ isMobile, a, aRgb, eff }) {
+  const [commitActifIdx, setCommitActifIdx] = useState(commits.length - 1)
+  const commitActif = commits[commitActifIdx]
+
   return (
     <div style={{
       background: eff.cardBg,
       border: `1px solid ${eff.borderStrong}`,
       borderRadius: 20,
-      padding: isMobile ? '24px 18px' : '44px 48px',
+      padding: isMobile ? '24px 20px' : '36px 40px',
+      fontFamily: 'Space Mono, monospace',
       position: 'relative',
       overflow: 'hidden',
       WebkitBackdropFilter: 'blur(12px)',
       backdropFilter: 'blur(12px)',
     }}>
-      {/* Ligne lumineuse en haut */}
       <div style={{
         position: 'absolute',
         top: 0,
@@ -39,308 +59,174 @@ function AcademicStaircase({ isMobile, a, aRgb, eff }) {
         pointerEvents: 'none',
       }} />
 
-      {/* ESCALIER */}
       <div style={{
-        display: 'flex',
-        alignItems: 'flex-end',
-        gap: isMobile ? 8 : 16,
-        height: isMobile ? 160 : 220,
-        padding: '0 4px',
-        position: 'relative',
+        fontFamily: 'Space Mono, monospace',
+        fontSize: isMobile ? 9 : 10,
+        color: `rgba(255,255,255,0.3)`,
+        marginBottom: isMobile ? 20 : 24,
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
       }}>
-        {niveaux.map((niveau, i) => {
-          const isActive = i === etapeActiveIdx
-          const marheHauteur = niveau.hauteur * heightMultiplier
-          
+        git log --graph --oneline --decorate
+      </div>
+
+      <div style={{ position: 'relative' }}>
+        {commits.length > 1 && (
+          <div style={{
+            position: 'absolute',
+            left: 9,
+            top: 8,
+            bottom: 8,
+            width: 1,
+            background: `rgba(${aRgb},0.25)`,
+            pointerEvents: 'none',
+          }} />
+        )}
+
+        {commits.map((commit, i) => {
+          const isActive = i === commitActifIdx
+          const distance = Math.abs(i - commitActifIdx)
+          const opacity = isActive ? 1 : distance === 1 ? 0.8 : distance === 2 ? 0.6 : 0.45
+
           return (
-            <div
-              key={niveau.lvl}
-              onClick={() => setEtapeActiveIdx(i)}
-              style={{
-                flex: isActive ? 1.3 : 1,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: isMobile ? 8 : 10,
-                cursor: 'pointer',
-                position: 'relative',
-                transition: 'flex 0.3s ease',
-              }}
-            >
-              {/* Label LVL */}
-              <div style={{
-                fontFamily: 'Space Mono, monospace',
-                fontSize: 8,
-                letterSpacing: '0.15em',
-                color: isActive ? a : `rgba(${aRgb},0.35)`,
-                textTransform: 'uppercase',
-                transition: 'color 0.2s ease',
-              }}>
-                {niveau.lvl}
-              </div>
-
-              {/* Marqueur lumineux sur l'étape active */}
-              {isActive && (
-                <div style={{
-                  position: 'absolute',
-                  top: -34,
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: 10,
-                  height: 10,
-                  borderRadius: '50%',
-                  background: a,
-                  boxShadow: `0 0 16px rgba(${aRgb},0.6)`,
-                  zIndex: 5,
-                }}>
-                  {/* Trait fin reliant au sommet de la marche */}
-                  <div style={{
-                    position: 'absolute',
-                    top: 10,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: 1,
-                    height: 24,
-                    background: a,
-                    opacity: 0.4,
-                  }} />
-                </div>
-              )}
-
-              {/* La marche */}
+            <div key={commit.hash}>
               <div
+                onClick={() => setCommitActifIdx(i)}
                 style={{
-                  width: '100%',
-                  height: marheHauteur,
-                  borderRadius: '10px 10px 0 0',
                   position: 'relative',
-                  transition: isActive ? 'all 0.3s ease' : 'background 0.2s ease, border 0.2s ease',
-                  ...(isActive
-                    ? {
-                        background: `linear-gradient(180deg, rgba(${aRgb},0.18), rgba(${aRgb},0.08))`,
-                        border: `1.5px solid ${a}`,
-                        boxShadow: `0 0 30px rgba(${aRgb},0.15)`,
-                      }
-                    : niveau.done
-                    ? {
-                        background: `rgba(${aRgb},0.08)`,
-                        border: `1px solid rgba(${aRgb},0.25)`,
-                      }
-                    : {
-                        background: `rgba(${aRgb},0.05)`,
-                        border: `1px solid rgba(${aRgb},0.15)`,
-                      }),
+                  paddingLeft: 34,
+                  marginBottom: i === commits.length - 1 ? 0 : 26,
+                  cursor: 'pointer',
+                  opacity,
                 }}
               >
-                {/* Badge EN COURS */}
-                {isActive && !niveau.done && (
+                <div style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 2,
+                  width: 20,
+                  height: 20,
+                  borderRadius: '50%',
+                  background: commit.statut === 'current' && isActive ? a : 'rgba(255,255,255,0.06)',
+                  border: commit.statut === 'current' && isActive ? 'none' : '1px solid rgba(255,255,255,0.2)',
+                  boxShadow: commit.statut === 'current' && isActive ? `0 0 16px rgba(${aRgb},0.6)` : 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 10,
+                  color: commit.statut === 'current' && isActive ? '#050505' : 'rgba(255,255,255,0.45)',
+                  fontWeight: 700,
+                }}>
+                  {commit.statut === 'current' && isActive ? '●' : commit.statut === 'done' ? '✓' : '•'}
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  flexWrap: 'wrap',
+                  marginBottom: 4,
+                }}>
                   <div style={{
-                    position: 'absolute',
-                    top: 8,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
                     fontFamily: 'Space Mono, monospace',
-                    fontSize: 7,
-                    letterSpacing: '0.1em',
-                    color: a,
-                    textTransform: 'uppercase',
-                    pointerEvents: 'none',
-                  }}>
-                    <span style={{
-                      width: 4,
-                      height: 4,
-                      borderRadius: '50%',
-                      background: a,
-                      animation: 'pulse 1.4s infinite',
-                    }} />
-                    EN COURS
-                  </div>
-                )}
-
-                {/* Coche pour les marches complétées (non active) */}
-                {!isActive && niveau.done && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    fontFamily: 'Fraunces, serif',
-                    fontSize: isMobile ? 20 : 28,
+                    fontSize: isMobile ? 10 : 11,
                     fontWeight: 700,
-                    color: a,
-                    opacity: 0.6,
-                    pointerEvents: 'none',
+                    color: isActive ? a : 'rgba(255,255,255,0.45)',
                   }}>
-                    ✓
+                    {commit.hash}
+                  </div>
+                  <div style={{
+                    fontFamily: 'Space Mono, monospace',
+                    fontSize: 8,
+                    padding: '2px 8px',
+                    borderRadius: 10,
+                    background: isActive ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.05)',
+                    border: isActive ? `1px solid rgba(${aRgb},0.4)` : '1px solid rgba(255,255,255,0.2)',
+                    color: isActive ? a : 'rgba(255,255,255,0.45)',
+                  }}>
+                    {commit.tag}
+                  </div>
+                  <div style={{
+                    fontFamily: 'Space Mono, monospace',
+                    fontSize: 8,
+                    padding: '2px 8px',
+                    borderRadius: 10,
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    color: 'rgba(255,255,255,0.45)',
+                  }}>
+                    {commit.periode}
+                  </div>
+                </div>
+
+                <div style={{
+                  fontFamily: 'Fraunces, serif',
+                  fontWeight: 700,
+                  fontSize: isMobile ? 14 : 15,
+                  color: isActive ? eff.texte : 'rgba(245,245,240,0.7)',
+                  marginBottom: 2,
+                  lineHeight: 1.25,
+                }}>
+                  {commit.message}
+                </div>
+
+                {commit.detail && (
+                  <div style={{
+                    fontFamily: 'Space Mono, monospace',
+                    fontSize: isMobile ? 9 : 10,
+                    color: 'rgba(255,255,255,0.32)',
+                    marginTop: 2,
+                  }}>
+                    {commit.detail}
                   </div>
                 )}
-              </div>
-
-              {/* Label diplôme */}
-              <div style={{
-                fontFamily: 'Space Mono, monospace',
-                fontSize: 9,
-                fontWeight: 700,
-                color: isActive ? a : eff.texte,
-                transition: 'color 0.2s ease',
-                textAlign: 'center',
-              }}>
-                {niveau.label}
-              </div>
-
-              {/* Année */}
-              <div style={{
-                fontFamily: 'Space Mono, monospace',
-                fontSize: 8,
-                color: isActive ? `rgba(${aRgb},0.6)` : eff.textFaint,
-                transition: 'color 0.2s ease',
-                textAlign: 'center',
-                whiteSpace: 'nowrap',
-              }}>
-                {niveau.annee}
               </div>
             </div>
           )
         })}
-
-        {/* Marche fantôme (étape suivante) */}
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: isMobile ? 8 : 10,
-            opacity: 0.35,
-            cursor: 'default',
-          }}
-        >
-          <div style={{
-            fontFamily: 'Space Mono, monospace',
-            fontSize: 8,
-            letterSpacing: '0.15em',
-            color: eff.textFaint,
-            textTransform: 'uppercase',
-          }}>
-            LVL 0{niveaux.length + 1}
-          </div>
-
-          <div
-            style={{
-              width: '100%',
-              height: (niveaux[niveaux.length - 1].hauteur + 35) * heightMultiplier,
-              borderRadius: '10px 10px 0 0',
-              border: `1px dashed rgba(${aRgb},0.2)`,
-              background: 'transparent',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: isMobile ? 16 : 24,
-              fontWeight: 700,
-              color: eff.textFaint,
-            }}
-          >
-            ?
-          </div>
-
-          <div style={{
-            fontFamily: 'Space Mono, monospace',
-            fontSize: 9,
-            fontWeight: 700,
-            color: eff.textFaint,
-            opacity: 0.5,
-          }}>
-            À venir
-          </div>
-
-          <div style={{
-            fontFamily: 'Space Mono, monospace',
-            fontSize: 8,
-            color: eff.textFaint,
-            opacity: 0.3,
-          }}>
-            —
-          </div>
-        </div>
       </div>
 
-      {/* Ligne de sol */}
-      <div style={{
-        height: 2,
-        background: eff.borderStrong,
-        marginTop: 0,
-        marginBottom: isMobile ? 24 : 28,
-      }} />
-
-      {/* Panneau de détail */}
       <div
-        key={etapeActiveIdx}
+        key={commitActifIdx}
         style={{
-          padding: isMobile ? '18px 20px' : '22px 26px',
+          marginTop: 28,
+          padding: isMobile ? '16px 18px' : '18px 22px',
           background: `rgba(${aRgb},0.02)`,
-          border: `1px solid rgba(${aRgb},0.15)`,
+          border: `1px solid rgba(${aRgb},0.2)`,
           borderLeft: `3px solid ${a}`,
-          borderRadius: 12,
+          borderRadius: 10,
           animation: 'fadeInUp 0.3s ease',
         }}
       >
-        {!etapeActive.done && (
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            fontFamily: 'Space Mono, monospace',
-            fontSize: 9,
-            color: a,
-            background: `rgba(${aRgb},0.08)`,
-            border: `1px solid rgba(${aRgb},0.25)`,
-            padding: '4px 10px',
-            borderRadius: 20,
-            letterSpacing: '0.1em',
-            marginBottom: 10,
-          }}>
-            <span style={{
-              width: 5,
-              height: 5,
-              borderRadius: '50%',
-              background: a,
-              animation: 'pulse 1.4s infinite',
-            }} />
-            EN COURS
-          </div>
-        )}
-
         <div style={{
           fontFamily: 'Space Mono, monospace',
           fontSize: 9,
           color: a,
-          marginBottom: 6,
           letterSpacing: '0.1em',
+          marginBottom: 8,
+          textTransform: 'uppercase',
         }}>
-          {etapeActive.annee}
+          commit {commitActif.hash} — {commitActif.periode}
         </div>
 
         <div style={{
           fontFamily: 'Fraunces, serif',
           fontWeight: 700,
-          fontSize: isMobile ? 18 : 18,
+          fontSize: isMobile ? 15 : 16,
           color: eff.texte,
           marginBottom: 8,
         }}>
-          {etapeActive.titre}
+          {commitActif.message}
         </div>
 
         <div style={{
           fontFamily: 'Inter, sans-serif',
           fontWeight: 300,
-          fontSize: 13,
+          fontSize: isMobile ? 12 : 13,
           color: eff.textMuted,
-          lineHeight: 1.6,
+          lineHeight: 1.7,
         }}>
-          {etapeActive.desc}
+          {commitActif.desc}
         </div>
       </div>
     </div>
@@ -1215,7 +1101,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         <div style={s.secNum}>01.5 // PARCOURS</div>
         <h2 style={s.secTitle}>Parcours <span style={s.accent}>Académique</span></h2>
 
-        <AcademicStaircase isMobile={isMobile} a={a} aRgb={aRgb} eff={eff} />
+        <AcademicGitLog isMobile={isMobile} a={a} aRgb={aRgb} eff={eff} />
       </section>
 
       {/* SKILLS */}
