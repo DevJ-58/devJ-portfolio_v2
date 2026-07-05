@@ -76,6 +76,7 @@ export default function AdminDashboard() {
   const [competencesListe, setCompetencesListe] = useState([])
   const [chargementPortfolio, setChargementPortfolio] = useState(false)
   const [projetEnEdition, setProjetEnEdition] = useState(null)
+  const [projetEnApercu, setProjetEnApercu] = useState(null)
   const [competenceEnEdition, setCompetenceEnEdition] = useState(null)
   const [portfolioSauvegarde, setPortfolioSauvegarde] = useState(false)
   const [importEnCours, setImportEnCours] = useState(false)
@@ -1750,7 +1751,9 @@ ${detailSessions || 'Aucune session encore.'}
                           background: `rgba(${aRgb},0.03)`,
                           position: 'relative',
                           transition: 'all 200ms',
+                          cursor: 'pointer',
                         }}
+                        onClick={() => setProjetEnApercu(p)}
                         onMouseEnter={e => {
                           e.currentTarget.style.borderColor = `rgba(${aRgb},0.35)`
                           e.currentTarget.style.transform = 'translateY(-3px)'
@@ -1793,8 +1796,8 @@ ${detailSessions || 'Aucune session encore.'}
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>{p.status || '—'} · {p.annee || ''}</span>
                             <div data-actions style={{ display: 'flex', gap: 10, opacity: isMobile ? 1 : 0, pointerEvents: isMobile ? 'auto' : 'none', transition: 'opacity 180ms' }}>
-                              <button onClick={() => setProjetEnEdition(p)} style={{ background: 'transparent', border: 'none', padding: 0, color: a, cursor: 'pointer', fontSize: 8, letterSpacing: '0.14em', textDecoration: 'underline', textUnderlineOffset: 3 }}>MODIFIER</button>
-                              <button onClick={() => { if (confirm('Supprimer ce projet ?')) retirerProjet(p.id) }} style={{ background: 'transparent', border: 'none', padding: 0, color: 'rgba(255,255,255,0.42)', cursor: 'pointer', fontSize: 8, letterSpacing: '0.14em', textDecoration: 'underline', textUnderlineOffset: 3 }}>SUPPR</button>
+                                      <button onClick={e => { e.stopPropagation(); setProjetEnEdition(p) }} style={{ background: 'transparent', border: 'none', padding: 0, color: a, cursor: 'pointer', fontSize: 8, letterSpacing: '0.14em', textDecoration: 'underline', textUnderlineOffset: 3 }}>MODIFIER</button>
+                              <button onClick={e => { e.stopPropagation(); if (confirm('Supprimer ce projet ?')) retirerProjet(p.id) }} style={{ background: 'transparent', border: 'none', padding: 0, color: 'rgba(255,255,255,0.42)', cursor: 'pointer', fontSize: 8, letterSpacing: '0.14em', textDecoration: 'underline', textUnderlineOffset: 3 }}>SUPPR</button>
                             </div>
                           </div>
                         </div>
@@ -1894,6 +1897,44 @@ ${detailSessions || 'Aucune session encore.'}
                         <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, marginBottom: 6, letterSpacing: '0.2em', textTransform: 'uppercase' }}>// ORDRE</div>
                         <input type="number" value={projetEnEdition.ordre || 0} onChange={e => setProjetEnEdition(prev => ({...prev, ordre: Number(e.target.value)}))} style={{ width: '100%', padding: '10px 0 8px', borderRadius: 0, border: 'none', borderBottom: `1px solid rgba(${aRgb},0.15)`, background: 'transparent', color: '#fff', outline: 'none' }} />
                       </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {projetEnApercu !== null && (
+              <div style={{ position: 'fixed', inset: 0, zIndex: 145, display: 'grid', placeItems: 'center', background: 'rgba(5,5,5,0.97)' }} onClick={() => setProjetEnApercu(null)}>
+                <div onClick={e => e.stopPropagation()} style={{ width: isMobile ? 'min(560px, 94vw)' : 'min(720px,96%)', background: 'rgba(8,8,8,0.98)', borderRadius: 16, border: `1px solid rgba(${aRgb},0.15)`, overflow: 'hidden' }}>
+                  <div style={{ position: 'relative', width: '100%', height: isMobile ? 180 : 260, background: `rgba(${aRgb},0.06)` }}>
+                    {projetEnApercu.img ? (
+                      <img src={projetEnApercu.img} alt={projetEnApercu.titre} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} onError={e => { e.currentTarget.style.display = 'none' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: `rgba(${aRgb},0.3)` }}>PAS D'IMAGE</div>
+                    )}
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%)' }} />
+                    <button onClick={() => setProjetEnApercu(null)} style={{ position: 'absolute', top: 14, right: 14, width: 30, height: 30, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(0,0,0,0.5)', color: '#fff', cursor: 'pointer', fontSize: 16 }}>×</button>
+                  </div>
+                  <div style={{ padding: isMobile ? 20 : 28 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
+                      <div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', fontFamily: 'Fraunces, serif' }}>{projetEnApercu.titre}</div>
+                        <div style={{ fontSize: 9, color: `rgba(${aRgb},0.5)`, letterSpacing: '0.15em', textTransform: 'uppercase', marginTop: 4 }}>{projetEnApercu.categorie} · {projetEnApercu.annee}</div>
+                      </div>
+                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.12em', border: `1px solid rgba(${aRgb},0.2)`, borderRadius: 6, padding: '4px 10px' }}>{projetEnApercu.status}</div>
+                    </div>
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.7, marginBottom: 16 }}>{projetEnApercu.desc}</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+                      {(projetEnApercu.tags || []).map((tag, i) => (
+                        <span key={i} style={{ fontSize: 9, color: a, border: `1px solid rgba(${aRgb},0.25)`, borderRadius: 6, padding: '4px 10px' }}>{tag}</span>
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                      {projetEnApercu.lien && (
+                        <a href={projetEnApercu.lien} target="_blank" rel="noopener" style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.14em', textDecoration: 'underline', textUnderlineOffset: 3 }}>VOIR LE PROJET ↗</a>
+                      )}
+                      <button onClick={() => { setProjetEnApercu(null); setProjetEnEdition(projetEnApercu) }} style={{ background: `rgba(${aRgb},0.1)`, border: `1px solid rgba(${aRgb},0.25)`, color: a, padding: '8px 16px', borderRadius: 6, cursor: 'pointer', fontSize: 9, letterSpacing: '0.14em' }}>MODIFIER</button>
+                      <button onClick={() => { if (confirm('Supprimer ce projet ?')) { retirerProjet(projetEnApercu.id); setProjetEnApercu(null) } }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.5)', padding: '8px 16px', borderRadius: 6, cursor: 'pointer', fontSize: 9, letterSpacing: '0.14em' }}>SUPPRIMER</button>
                     </div>
                   </div>
                 </div>

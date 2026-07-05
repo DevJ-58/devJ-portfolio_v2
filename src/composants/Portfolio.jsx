@@ -1,6 +1,7 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import utiliserTheme from '@/store/utiliserTheme'
+import usePortfolioData from '@/hooks/usePortfolioData'
 import PanneauParametres from '@/composants/ui/PanneauParametres'
 
 const commits = [
@@ -565,7 +566,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
     }
   }))
 
-  const projets = [
+  const projetsParDefaut = [
     {
       num: '01', titre: 'Eliko Voyage', tags: ['HTML/CSS', 'JavaScript', 'React'],
       desc: "Interface moderne pour agence de voyage permettant la réservation en ligne et la gestion de séjours personnalisés.",
@@ -598,12 +599,56 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
     },
   ]
 
-  const competences = [
+  const competencesParDefaut = [
     { cat: 'Frontend', items: [['HTML5',95],['CSS3',90],['JavaScript',85],['React',80],['TypeScript',75],['Bootstrap',90],['GSAP',75]] },
     { cat: 'Backend', items: [['PHP',85],['Laravel',80]] },
     { cat: 'IA & ML', items: [['Python',70],['TensorFlow',65],['NLP',60]] },
     { cat: 'Outils', items: [['Git & GitHub',90],['Figma',85],['Canva',88],['Docker',60]] },
   ]
+
+  const { projets, competences } = usePortfolioData(projetsParDefaut, competencesParDefaut)
+
+  const normaliserCompetences = (rawCompetences) => {
+    if (!Array.isArray(rawCompetences)) return []
+    return rawCompetences.map((cat = {}) => {
+      const rawItems = cat.items
+      const items = Array.isArray(rawItems)
+        ? rawItems.map(item => {
+            if (Array.isArray(item)) return item
+            if (item && typeof item === 'object') {
+              const nom = item.nom ?? item.name ?? item.label ?? item.titre ?? Object.values(item)[0]
+              const pct = item.pct ?? item.value ?? item.score ?? item.niveau ?? Object.values(item)[1] ?? 0
+              return [nom ?? '', pct ?? 0]
+            }
+            return [String(item ?? ''), 0]
+          })
+        : rawItems && typeof rawItems === 'object'
+          ? Object.values(rawItems).map(item => Array.isArray(item)
+              ? item
+              : item && typeof item === 'object'
+                ? [item.nom ?? item.name ?? item.label ?? item.titre ?? Object.values(item)[0], item.pct ?? item.value ?? item.score ?? item.niveau ?? Object.values(item)[1] ?? 0]
+                : [String(item ?? ''), 0]
+            )
+          : []
+
+      return { ...cat, items }
+    })
+  }
+
+  const normaliserProjets = (rawProjets) => {
+    if (!Array.isArray(rawProjets)) return []
+    return rawProjets.map((p = {}) => ({
+      ...p,
+      tags: Array.isArray(p.tags)
+        ? p.tags
+        : p.tags && typeof p.tags === 'object'
+          ? Object.values(p.tags)
+          : [],
+    }))
+  }
+
+  const projetsAffiches = normaliserProjets(projets)
+  const competencesAffichees = normaliserCompetences(competences)
 
   const services = [
     { titre: 'Site Vitrine', prix: '300 000 FCFA', delai: '1 à 2 semaines',
@@ -1109,23 +1154,23 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         <div style={s.secNum}>02 // COMPÉTENCES</div>
         <h2 style={s.secTitle}>Compétences <span style={s.accent}>Techniques</span></h2>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:16 }}>
-          {competences.map(cat => (
+          {competencesAffichees.map(cat => (
             <div key={cat.cat} style={{ background: eff.cardBg, border: `1px solid ${eff.borderMedium}`, borderRadius:16, padding: isMobile ? 16 : 28, WebkitBackdropFilter:'blur(12px)', backdropFilter:'blur(12px)' }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
                 <div style={{ fontFamily:'Fraunces, serif', fontWeight:700, fontSize:14, color: eff.texte }}>{cat.cat}</div>
-                <div style={{ fontFamily:'Space Mono, monospace', fontSize:9, color:`rgba(${aRgb},0.4)`, background:`rgba(${aRgb},0.06)`, border:`1px solid rgba(${aRgb},0.15)`, padding:'3px 8px', borderRadius:4 }}>{cat.items.length}</div>
+                <div style={{ fontFamily:'Space Mono, monospace', fontSize:9, color:`rgba(${aRgb},0.4)`, background:`rgba(${aRgb},0.06)`, border:`1px solid rgba(${aRgb},0.15)`, padding:'3px 8px', borderRadius:4 }}>{Array.isArray(cat.items) ? cat.items.length : 0}</div>
               </div>
               <div style={{ display:'flex', flexWrap:'wrap', gap:10 }}>
-                {cat.items.map(([nom, pct]) => {
+                {Array.isArray(cat.items) ? cat.items.map(([nom, pct]) => {
                   const indicatorColor = pct >= 85 ? a : (pct >= 70 ? `rgba(${aRgb},0.5)` : `rgba(${aRgb},0.25)`)
                   return (
-                    <div key={nom} className="pf-skill-pill" style={{ display:'flex', alignItems:'center', gap:8, background: isLight ? 'rgba(0,0,0,0.05)' : eff.cardBg, border:`1px solid ${eff.borderStrong}`, borderRadius:8, padding: isMobile ? '6px 10px' : '8px 14px' }}>
+                    <div key={String(nom)} className="pf-skill-pill" style={{ display:'flex', alignItems:'center', gap:8, background: isLight ? 'rgba(0,0,0,0.05)' : eff.cardBg, border:`1px solid ${eff.borderStrong}`, borderRadius:8, padding: isMobile ? '6px 10px' : '8px 14px' }}>
                       <div style={{ width:6, height:6, borderRadius:6, background: indicatorColor, flexShrink:0 }} />
                       <div style={{ fontFamily:'Inter, sans-serif', fontSize: isMobile ? 12 : 13, color: eff.textHigh }}>{nom}</div>
                       <div style={{ fontFamily:'Space Mono, monospace', fontSize: isMobile ? 9 : 10, color:`rgba(${aRgb},0.55)`, marginLeft:'auto' }}>{pct}%</div>
                     </div>
                   )
-                })}
+                }) : null}
               </div>
             </div>
           ))}
@@ -1165,7 +1210,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             position: 'relative',
             height: isMobile ? 320 : 280,
           }}>
-            {projets.slice(0, 3).map((p, i) => {
+            {projetsAffiches.slice(0, 3).map((p, i) => {
               const layouts = [
                 { top: 0, left: '0%', width: isMobile ? '58%' : 190, height: isMobile ? 150 : 150, rotate: -4 },
                 { top: isMobile ? 40 : 20, left: isMobile ? '35%' : 150, width: isMobile ? '58%' : 170, height: isMobile ? 140 : 140, rotate: 3 },
@@ -1202,7 +1247,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                     fontFamily: 'Space Mono, monospace', fontSize: 8,
                     letterSpacing: '0.15em', color: 'rgba(255,255,255,0.85)',
                     background: 'rgba(0,0,0,0.4)', padding: '3px 8px', borderRadius: 4,
-                  }}>{p.titre.toUpperCase()}</span>
+                  }}>{String(p.titre || p.title || p.name || '').toUpperCase()}</span>
                 </div>
               )
             })}
