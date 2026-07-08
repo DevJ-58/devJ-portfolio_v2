@@ -699,7 +699,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
 
   const s = {
     wrap: { fontFamily: 'Inter, sans-serif', background: eff.fond, color: eff.texte, overflowY: 'auto', overflowX: 'hidden', maxWidth: '100vw', height: '100%', scrollBehavior: 'smooth' },
-    nav: { position: 'sticky', top: 0, zIndex: 100, background: eff.navOverlay, WebkitBackdropFilter: 'blur(24px)', backdropFilter: 'blur(24px)', borderBottom: `1px solid ${eff.borderLight}`, padding: '16px 48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+    nav: { position: 'sticky', top: 0, zIndex: 100, background: `rgba(20,20,20,0.3), ${eff.navOverlay}`, WebkitBackdropFilter: 'blur(24px)', backdropFilter: 'blur(24px)', borderBottom: `1px solid ${eff.borderLight}`, padding: '16px 48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
     logo: { color: eff.texte, fontSize: 15, fontWeight: 700, letterSpacing: '0.06em', fontFamily: 'Fraunces, serif' },
     closeBtn: { background: eff.cardBg, border: `1px solid ${eff.borderStrong}`, color: eff.textMuted, padding: '8px 16px', cursor: 'pointer', fontSize: 9, letterSpacing: '0.2em', borderRadius: 6, fontFamily: 'Space Mono, monospace' },
     section: { padding: '100px 80px', borderBottom: `1px solid ${eff.borderLight}` },
@@ -714,7 +714,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
   const navStyle = { ...s.nav, padding: isMobile ? '12px 20px' : s.nav.padding }
   const sectionStyle = { ...s.section, padding: isMobile ? '64px 24px' : s.section.padding, overflowX: 'hidden', maxWidth: '100%' }
   const contactGridStyle = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: isMobile ? 8 : 12 }
-  const navLinksStyle = { display: isMobile ? 'none' : 'flex', gap: 16, fontSize: 9, color: eff.textFaint, letterSpacing: '0.2em', fontFamily: 'Space Mono, monospace', textTransform: 'uppercase' }
+  const navLinksStyle = { display: isMobile ? 'none' : 'flex', gap: 22, fontSize: 9, color: eff.textFaint, letterSpacing: '0.2em', fontFamily: 'Space Mono, monospace', textTransform: 'uppercase' }
   const navSpanColor = isLight ? '#64748b' : eff.textFaint
 
   return (
@@ -750,212 +750,476 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
       {/* NAV */}
       <nav style={navStyle}>
         <div style={s.logo}>&lt;<span style={{ color: a }}>/DevJ</span>&gt;</div>
-        <div style={navLinksStyle}>
-          {['about','academic','skills','projects','github','services','methodology','contact'].map(id => (
-            <span key={id} style={{ cursor:'pointer' }}
-              onClick={() => document.getElementById(`pf-${id}`)?.scrollIntoView({ behavior:'smooth' })}>
-              {id.toUpperCase()}
-            </span>
-          ))}
+        <div style={{ flex: 1, display: isMobile ? 'none' : 'flex', justifyContent: 'center' }}>
+          <div style={navLinksStyle}>
+            {['about','academic','skills','projects','github','services','methodology','contact'].map((id, index) => (
+              <span key={id}
+                onClick={() => document.getElementById(`pf-${id}`)?.scrollIntoView({ behavior:'smooth' })}
+                style={{
+                  cursor: 'pointer',
+                  paddingBottom: 2,
+                  borderBottom: index === 0 ? `1px solid ${a}` : 'none',
+                  color: index === 0 ? a : navSpanColor,
+                }}>
+                {id.toUpperCase()}
+              </span>
+            ))}
+          </div>
         </div>
+        <div style={{ width: isMobile ? 20 : 32, minWidth: isMobile ? 20 : 32 }} />
       </nav>
 
       {/* HERO */}
-      <section id="pf-hero" style={{ ...sectionStyle, overflowX: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 32 }}>
-          <div>
+      <section id="pf-hero" style={{
+        position: 'relative',
+        overflow: 'hidden',
+        background: eff.fond,
+        padding: isMobile ? '28px 24px' : '36px 40px',
+        minHeight: isMobile ? 'auto' : '680px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: isMobile ? '16px' : '24px',
+      }}>
+        {!isMobile && (
+          <>
+            <img
+              src="/asset/2026010323251463.png"
+              alt="Fréjus Kouadio"
+              style={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                bottom: 0,
+                width: '44%',
+                objectFit: 'cover',
+                objectPosition: 'top center',
+                zIndex: 0,
+                maskImage: 'linear-gradient(to left, rgba(0,0,0,1) 15%, rgba(0,0,0,0.7) 35%, rgba(0,0,0,0.3) 55%, transparent 85%)',
+                WebkitMaskImage: 'linear-gradient(to left, rgba(0,0,0,1) 15%, rgba(0,0,0,0.7) 35%, rgba(0,0,0,0.3) 55%, transparent 85%)',
+              }}
+            />
             <div style={{
-              display:'inline-flex', alignItems:'center', gap:8,
-              padding:'5px 14px',
-              border:`1px solid rgba(${aRgb},0.25)`,
-              borderRadius:20,
-              fontFamily:'Space Mono, monospace', fontSize:8,
-              color:`rgba(${aRgb},0.8)`, letterSpacing:'0.2em',
-              width:'fit-content',
-            }}>
-              <div style={{ width:5, height:5, borderRadius:'50%', background:a, animation:'pulse 1.5s infinite' }}/>
-              DÉVELOPPEUR LOGICIEL UI/UX DESIGNER
-            </div>
-
+              position: 'absolute',
+              right: 0,
+              top: 0,
+              bottom: 0,
+              width: '44%',
+              background: `radial-gradient(circle at 70% 45%, rgba(${aRgb},${isLight ? 0.08 : 0.12}) 0%, transparent 55%)`,
+              mixBlendMode: 'screen',
+              zIndex: 0,
+              pointerEvents: 'none',
+            }} />
             <div style={{
-              fontFamily:'Fraunces, serif',
-              fontSize: isMobile ? 32 : 56,
-              fontWeight:800, lineHeight:1,
-              letterSpacing:'-0.03em',
-              marginTop: 12,
-            }}>
-              Fréjus<br/>
-              <span style={{ color:a }}>Kouadio</span>
-            </div>
+              position: 'absolute',
+              bottom: 0,
+              right: 0,
+              width: '44%',
+              height: '30%',
+              background: `linear-gradient(to top, ${eff.fond} 0%, transparent 100%)`,
+              zIndex: 0,
+              pointerEvents: 'none',
+            }} />
+          </>
+        )}
 
-            <p style={{ color:eff.textMuted, fontSize:13, lineHeight:1.8, maxWidth:isMobile ? '100%' : 520, margin:0, marginTop:12 }}>
-              Passionné par la création d'expériences web exceptionnelles et d'applications robustes. De Yamoussoukro à l'international.
-            </p>
-
+        <div style={{
+          position: 'relative',
+          zIndex: 2,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          borderBottom: `1px solid ${isLight ? 'rgba(20,20,20,0.12)' : 'rgba(255,255,255,0.12)'}`,
+          paddingBottom: '14px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
-              position:'relative',
-              height:56,
-              overflow:'hidden',
-              borderLeft:`2px solid rgba(${aRgb},0.3)`,
-              paddingLeft:14,
-              marginTop: 16,
+              width: '10px',
+              height: '10px',
+              border: `1px solid ${a}`,
+              transform: 'rotate(45deg)',
+            }} />
+            <div style={{
+              fontFamily: 'Space Mono, monospace',
+              fontSize: '8px',
+              letterSpacing: '0.35em',
+              color: isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.35)',
+              textTransform: 'uppercase',
             }}>
-              {citations.map((c, i) => (
-                <div
-                  key={i}
-                  style={{
-                    position:'absolute',
-                    top:0, left:14, right:0,
-                    fontFamily:'Fraunces, serif',
-                    fontSize:13,
-                    color: eff.textMuted,
-                    lineHeight:1.6,
-                    fontStyle:'italic',
-                    transition:'opacity 0.6s ease, transform 0.6s ease',
-                    opacity: i === citationIdx ? 1 : 0,
-                    transform: i === citationIdx
-                      ? 'translateY(0)'
-                      : i < citationIdx ? 'translateY(-12px)' : 'translateY(12px)',
-                    pointerEvents:'none',
-                  }}
-                >
-                  "{c}"
-                </div>
-              ))}
-            </div>
-
-            <div style={{ display:'flex', gap:5, alignItems:'center', marginTop:10 }}>
-              {citations.map((_, i) => (
-                <div
-                  key={i}
-                  onClick={() => setCitationIdx(i)}
-                  style={{
-                    height:2,
-                    width: i === citationIdx ? 28 : 8,
-                    borderRadius:2,
-                    background: i === citationIdx
-                      ? a
-                      : eff.borderStrong,
-                    transition:'width 0.4s ease, background 0.4s ease',
-                    cursor:'pointer',
-                  }}
-                />
-              ))}
-            </div>
-
-            <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginTop:12 }}>
-              {['REACT','JAVASCRIPT','PHP','LARAVEL','FIGMA'].map(t => (
-                <span key={t} style={{
-                  padding:'4px 12px',
-                  border:`1px solid ${eff.borderStrong}`,
-                  borderRadius:4,
-                  fontFamily:'Space Mono, monospace', fontSize:8,
-                  color: eff.textFaint, letterSpacing:'0.1em',
-                }}>{t}</span>
-              ))}
-            </div>
-
-            <div style={{ display:'flex', flexDirection: isMobile ? 'column' : 'row', gap:12, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'center' : undefined, marginTop:16 }}>
-              <a href="mailto:devfred58@gmail.com" style={{
-                display:'inline-flex', alignItems:'center', justifyContent: 'center',
-                gap:8, background:`rgba(${aRgb},0.1)`,
-                border:`1px solid rgba(${aRgb},0.35)`,
-                color:a, borderRadius:8, padding:'10px 24px',
-                fontFamily:'Space Mono, monospace', fontSize:9,
-                letterSpacing:'0.2em', textDecoration:'none', fontWeight:700,
-                width: isMobile ? '100%' : 'auto'
-              }}>
-                ME CONTACTER
-              </a>
-                <a href="https://wa.me/2250767998373" target="_blank" rel="noopener" style={{
-                display:'inline-flex', alignItems:'center', justifyContent: 'center',
-                gap:8, background: isLight ? 'rgba(0,0,0,0.08)' : eff.cardBg,
-                border:`1px solid ${eff.borderStrong}`,
-                color: eff.textFaint, borderRadius:8,
-                padding:'10px 24px', fontFamily:'Space Mono, monospace', fontSize:9,
-                letterSpacing:'0.2em', textDecoration:'none',
-                width: isMobile ? '100%' : 'auto'
-              }}>
-                WHATSAPP
-              </a>
+              VOL. I · N°01
             </div>
           </div>
 
-          <div style={{ position:'relative' }}>
+          {!isMobile && (
             <div style={{
-              position:'absolute',
-              top:0, right:0, bottom:0,
-              width: isMobile ? '100%' : '100%',
-              overflow:'hidden',
-              zIndex:0,
+              fontFamily: 'Space Mono, monospace',
+              fontSize: '8px',
+              letterSpacing: '0.3em',
+              color: isLight ? 'rgba(20,20,20,0.25)' : 'rgba(242,240,236,0.25)',
+              textTransform: 'uppercase',
             }}>
-              <img
-                src="/asset/2026010323251463.png"
-                alt="Fréjus Kouadio"
-                style={{
-                  position:'absolute',
-                  top: 0,
-                  right: 0,
-                  width: '100%',
-                  height: '100%',
-                  objectFit:'cover',
-                  objectPosition:'top center',
-                  display: isMobile ? 'none' : 'block',
-                  filter: isLight
-                    ? `drop-shadow(0 0 40px rgba(${aRgb},0.12)) contrast(1.05) brightness(0.97)`
-                    : `drop-shadow(0 0 60px rgba(${aRgb},0.06))`,
-                  maskImage: isLight
-                    ? 'linear-gradient(to left, rgba(0,0,0,0.92) 50%, transparent 100%)'
-                    : 'linear-gradient(to left, rgba(0,0,0,0.85) 40%, transparent 100%)',
-                  WebkitMaskImage: isLight
-                    ? 'linear-gradient(to left, rgba(0,0,0,0.92) 50%, transparent 100%)'
-                    : 'linear-gradient(to left, rgba(0,0,0,0.85) 40%, transparent 100%)',
-                }}
-              />
-              <div style={{
-                position:'absolute', inset:0,
-                background: isLight
-                  ? `linear-gradient(to right, ${eff.fond} 0%, ${eff.fond}55 30%, transparent 80%)`
-                  : `linear-gradient(to right, ${eff.fond} 0%, ${eff.fond}33 50%, transparent 100%)`,
-                zIndex:1,
-              }}/>
-              <div style={{
-                position:'absolute', inset:0,
-                background: isLight
-                  ? `linear-gradient(to top, ${eff.fond} 0%, transparent 25%)`
-                  : `linear-gradient(to top, ${eff.fond} 0%, transparent 40%)`,
-                zIndex:1,
-              }}/>
+              CI · 2026
             </div>
+          )}
 
-            <div style={{
-              position:'relative', zIndex:2,
-              marginTop:'auto',
-              borderTop:`1px solid ${eff.borderLight}`,
-              display:'flex', gap:0,
-              minHeight: isMobile ? 'auto' : '85vh',
-              alignItems:'flex-end',
-            }}>
-              {[['6','PROJETS'],['2+','ANNÉES'],['100%','SATISFACTION']].map(([v,l], i) => (
-                <div key={l} style={{
-                  flex:1, padding: isMobile ? '12px 10px' : '16px 20px',
-                  borderRight: i < 2 ? `1px solid ${eff.borderLight}` : 'none',
-                  display:'flex', flexDirection:'column', gap:4,
-                }}>
-                  <div style={{
-                    fontFamily:'Fraunces, serif',
-                    fontSize: isMobile ? 16 : 22, fontWeight:800, color:a
-                  }}>{v}</div>
-                  <div style={{
-                    fontFamily:'Space Mono, monospace',
-                    fontSize: isMobile ? 6 : 7, color: eff.textFaint,
-                    letterSpacing:'0.2em'
-                  }}>{l}</div>
-                </div>
+          {!isMobile && (
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2px' }}>
+              {[4,8,14,10,6,12,7,9].map((height, index) => (
+                <div key={index} style={{
+                  width: '2px',
+                  height: `${height}px`,
+                  background: isLight ? 'rgba(20,20,20,0.25)' : 'rgba(242,240,236,0.3)',
+                }} />
               ))}
             </div>
+          )}
+        </div>
 
-            <div style={{ position:'absolute', bottom:0, left:0, right:0, height:1, background:`linear-gradient(90deg,transparent,rgba(${aRgb},0.2),transparent)` }} />
+        <div style={{
+          position: 'relative',
+          zIndex: 2,
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '24px',
+        }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : '120px 1fr',
+            gap: '28px',
+          }}>
+            <div style={{
+              display: isMobile ? 'none' : 'flex',
+              flexDirection: 'column',
+              gap: '22px',
+              borderRight: `1px solid ${isLight ? 'rgba(20,20,20,0.08)' : 'rgba(255,255,255,0.08)'}`,
+              paddingRight: '20px',
+            }}>
+              <div style={{
+                fontFamily: 'Space Mono, monospace',
+                fontSize: '7px',
+                letterSpacing: '0.2em',
+                color: a,
+                textTransform: 'uppercase',
+              }}>
+                SOMMAIRE
+              </div>
+              {[
+                { num: '01', label: 'Portrait', target: 'about' },
+                { num: '02', label: 'Parcours', target: 'academic' },
+                { num: '03', label: 'Projets', target: 'projects' },
+                { num: '04', label: 'Contact', target: 'contact' },
+              ].map(({ num, label, target }) => (
+                <div key={num}
+                  onClick={() => document.getElementById(`pf-${target}`)?.scrollIntoView({ behavior: 'smooth' })}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{
+                    fontFamily: 'Fraunces, serif',
+                    fontSize: '10px',
+                    color: isLight ? 'rgba(20,20,20,0.3)' : 'rgba(242,240,236,0.3)',
+                  }}>
+                    {num}
+                  </div>
+                  <div style={{
+                    fontFamily: 'Space Mono, monospace',
+                    fontSize: '8px',
+                    color: isLight ? 'rgba(20,20,20,0.45)' : 'rgba(242,240,236,0.45)',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                  }}>
+                    {label}
+                  </div>
+                </div>
+              ))}
+              <div style={{ marginTop: 'auto' }}>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  border: `1px solid rgba(${aRgb},0.4)`,
+                  borderRadius: '20px',
+                  padding: '5px 10px',
+                  fontFamily: 'Space Mono, monospace',
+                  fontSize: '6px',
+                  color: isLight ? 'rgba(20,20,20,0.65)' : 'rgba(242,240,236,0.7)',
+                  textTransform: 'uppercase',
+                }}>
+                  <div style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    background: a,
+                    animation: 'pulse 1.5s infinite',
+                  }} />
+                  DISPO
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div>
+                <div style={{
+                  fontFamily: 'Space Mono, monospace',
+                  fontSize: '9px',
+                  letterSpacing: '0.4em',
+                  color: a,
+                  marginBottom: '12px',
+                  textTransform: 'uppercase',
+                }}>
+                  LE PORTRAIT
+                </div>
+                <div style={{
+                  fontFamily: 'Fraunces, serif',
+                  fontSize: isMobile ? '36px' : '66px',
+                  fontWeight: 800,
+                  lineHeight: 0.88,
+                  color: eff.texte,
+                  letterSpacing: '-0.025em',
+                  margin: 0,
+                }}>
+                  Fréjus
+                </div>
+                <div style={{
+                  fontFamily: 'Fraunces, serif',
+                  fontSize: isMobile ? '36px' : '66px',
+                  fontWeight: 500,
+                  fontStyle: 'italic',
+                  lineHeight: 0.88,
+                  color: isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.4)',
+                  letterSpacing: '-0.025em',
+                  marginLeft: isMobile ? '20px' : '48px',
+                  marginTop: '-4px',
+                  marginBottom: 0,
+                }}>
+                  Kouadio
+                </div>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '1fr' : '1fr 1px 200px',
+                gap: '24px',
+                marginTop: '28px',
+              }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+                  <div style={{
+                    fontFamily: 'Fraunces, serif',
+                    fontSize: '15px',
+                    fontWeight: 500,
+                    fontStyle: 'italic',
+                    color: isLight ? 'rgba(20,20,20,0.6)' : 'rgba(242,240,236,0.62)',
+                    lineHeight: 1.6,
+                  }}>
+                    “Développeur logiciel & UI/UX designer — il transforme des idées complexes en interfaces fluides et mémorables.”
+                  </div>
+
+                  <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '10px',
+                    alignItems: 'center',
+                  }}>
+                    {['REACT', 'JAVASCRIPT', 'PHP', 'LARAVEL', 'FIGMA'].map((tag, idx) => (
+                      <div key={tag} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        fontFamily: 'Space Mono, monospace',
+                        fontSize: '8px',
+                        letterSpacing: '0.18em',
+                        color: isLight ? 'rgba(20,20,20,0.4)' : 'rgba(242,240,236,0.4)',
+                        textTransform: 'uppercase',
+                      }}>
+                        <span>{tag}</span>
+                        {idx < 4 && <div style={{ width: '1px', height: '12px', background: isLight ? 'rgba(20,20,20,0.15)' : 'rgba(242,240,236,0.15)' }} />}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    gap: '16px',
+                  }}>
+                    <a href="mailto:devfred58@gmail.com" style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '12px 24px',
+                      background: isLight ? '#141414' : '#f2f0ec',
+                      color: isLight ? '#f5f5f0' : '#0a0a0a',
+                      fontFamily: 'Space Mono, monospace',
+                      fontSize: '9px',
+                      fontWeight: '700',
+                      letterSpacing: '0.2em',
+                      textDecoration: 'none',
+                      borderRadius: '2px',
+                      border: 'none',
+                      textTransform: 'uppercase',
+                      width: isMobile ? '100%' : 'auto',
+                    }}>
+                      ME CONTACTER
+                    </a>
+                    <a href="https://wa.me/2250767998373" target="_blank" rel="noopener" style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '12px 24px',
+                      background: 'transparent',
+                      color: isLight ? 'rgba(20,20,20,0.5)' : 'rgba(242,240,236,0.5)',
+                      fontFamily: 'Space Mono, monospace',
+                      fontSize: '9px',
+                      fontWeight: '700',
+                      letterSpacing: '0.2em',
+                      textDecoration: 'none',
+                      borderBottom: `1px solid ${isLight ? 'rgba(20,20,20,0.25)' : 'rgba(242,240,236,0.25)'}`,
+                      textTransform: 'uppercase',
+                      width: isMobile ? '100%' : 'auto',
+                    }}>
+                      WhatsApp →
+                    </a>
+                  </div>
+                </div>
+
+                {!isMobile && (
+                  <div style={{
+                    width: '1px',
+                    background: isLight ? 'rgba(20,20,20,0.08)' : 'rgba(242,240,236,0.1)',
+                    minHeight: '120px',
+                  }} />
+                )}
+
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '16px',
+                }}>
+                  <div style={{
+                    fontFamily: 'Space Mono, monospace',
+                    fontSize: '7px',
+                    color: isLight ? 'rgba(20,20,20,0.3)' : 'rgba(242,240,236,0.3)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                  }}>
+                    EN CHIFFRES
+                  </div>
+                  {[
+                    { label: 'Projets déployés', value: '6' },
+                    { label: `Années d'expérience`, value: '2+' },
+                    { label: 'Satisfaction client', value: '100%' },
+                  ].map((item, idx) => (
+                    <div key={item.label} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      borderTop: idx === 0 ? 'none' : `1px solid ${isLight ? 'rgba(20,20,20,0.08)' : 'rgba(242,240,236,0.08)'}`,
+                      paddingTop: idx === 0 ? '0' : '12px',
+                      gap: '16px',
+                    }}>
+                      <div style={{
+                        fontFamily: 'Space Mono, monospace',
+                        fontSize: '7px',
+                        color: isLight ? 'rgba(20,20,20,0.4)' : 'rgba(242,240,236,0.4)',
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                      }}>
+                        {item.label}
+                      </div>
+                      <div style={{
+                        fontFamily: 'Fraunces, serif',
+                        fontSize: '17px',
+                        fontWeight: 800,
+                        color: a,
+                      }}>
+                        {item.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          position: 'absolute',
+          left: isMobile ? -6 : 10,
+          bottom: isMobile ? 55 : 30,
+          zIndex: 1,
+          fontFamily: 'Fraunces, serif',
+          fontWeight: 800,
+          fontSize: isMobile ? 100 : 260,
+          lineHeight: 1,
+          color: a,
+          opacity: 0.18,
+          userSelect: 'none',
+          pointerEvents: 'none',
+          letterSpacing: '-0.02em',
+          whiteSpace: 'nowrap',
+        }}>
+          &lt;/DevJ&gt;
+        </div>
+
+        <div style={{
+          position: 'relative',
+          zIndex: 2,
+          borderTop: `1px solid ${isLight ? 'rgba(20,20,20,0.1)' : 'rgba(255,255,255,0.1)'}`,
+          paddingTop: '12px',
+          marginTop: '24px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: isMobile ? '10px' : '0',
+          flexDirection: isMobile ? 'column' : 'row',
+        }}>
+          <div
+            onClick={() => document.getElementById('pf-academic')?.scrollIntoView({ behavior: 'smooth' })}
+            style={{
+              fontFamily: 'Space Mono, monospace',
+              fontSize: '7px',
+              letterSpacing: '0.15em',
+              color: isLight ? 'rgba(20,20,20,0.3)' : 'rgba(242,240,236,0.3)',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+            }}
+          >
+            SUITE → PARCOURS ACADÉMIQUE, P.02
+          </div>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+          }}>
+            <div style={{
+              width: '16px',
+              height: '16px',
+              borderRadius: '50%',
+              border: `1px solid rgba(${aRgb},0.5)`,
+              display: 'grid',
+              placeItems: 'center',
+            }}>
+              <span style={{
+                fontFamily: 'Fraunces, serif',
+                fontSize: '8px',
+                color: a,
+              }}>
+                ✓
+              </span>
+            </div>
+            <div style={{
+              fontFamily: 'Space Mono, monospace',
+              fontSize: '7px',
+              letterSpacing: '0.1em',
+              color: isLight ? 'rgba(20,20,20,0.3)' : 'rgba(242,240,236,0.3)',
+              textTransform: 'uppercase',
+            }}>
+              PROFIL VÉRIFIÉ
+            </div>
           </div>
         </div>
       </section>
