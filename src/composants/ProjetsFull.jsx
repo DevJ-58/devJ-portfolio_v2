@@ -181,7 +181,9 @@ export default function ProjetsFull() {
         <div style={{
           fontFamily: 'Fraunces, serif', fontWeight: 800,
           fontSize: 14, color: '#F5F5F0', letterSpacing: '0.06em',
+          display: 'flex', alignItems: 'center', gap: 8,
         }}>
+          <img src="/asset/DEVJ.PNG" alt="DevJ" style={{ width: 26, height: 26, objectFit: 'contain', borderRadius: 6 }} />
           &lt;<span style={{ color: a }}>/DevJ</span>&gt;
         </div>
         <div style={{

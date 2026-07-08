@@ -86,10 +86,13 @@ export default function Accueil() {
       </div>
 
       {/* Fixed logo top-left */}
-      <div className="absolute" style={{ top: 16, left: 16, fontFamily: 'Space Mono, monospace', fontSize: 11, color: eff.textFaint }}>
-        <span>&lt;</span>
-        <span style={{ color: a, margin: '0 6px' }}>/DevJ</span>
-        <span>&gt;</span>
+      <div className="absolute" style={{ top: 12, left: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <img src="/asset/DEVJ.PNG" alt="DevJ" style={{ width: 34, height: 34, objectFit: 'contain', borderRadius: 8 }} />
+        <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 11, color: eff.textFaint }}>
+          <span>&lt;</span>
+          <span style={{ color: a, margin: '0 6px' }}>/DevJ</span>
+          <span>&gt;</span>
+        </div>
       </div>
 
       {/* Counter top-right */}

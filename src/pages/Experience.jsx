@@ -777,7 +777,10 @@ export default function Experience() {
         `}</style>
 
         <div style={{ height: 56, background: isLight ? 'rgba(240,242,245,0.95)' : 'rgba(0,0,0,0.85)', borderBottom: `1px solid rgba(${aRgb},0.12)`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px' }}>
-          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, color: eff.textMedium }}>&lt;/DevJ&gt;</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <img src="/asset/DEVJ.PNG" alt="DevJ" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 6 }} />
+            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, color: eff.textMedium }}>&lt;/DevJ&gt;</div>
+          </div>
           <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 16, color: a }}>{heure}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 8, color: a, letterSpacing: '0.18em' }}>● EN LIGNE</div>
