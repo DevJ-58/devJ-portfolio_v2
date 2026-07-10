@@ -1015,7 +1015,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                     color: isLight ? 'rgba(20,20,20,0.6)' : 'rgba(242,240,236,0.62)',
                     lineHeight: 1.6,
                   }}>
-                    “Développeur logiciel & UI/UX designer — il transforme des idées complexes en interfaces fluides et mémorables.”
+                    “Développeur logiciel & UI/UX designer — je transforme des idées complexes en interfaces fluides et mémorables.”
                   </div>
 
                   <div style={{
@@ -1225,183 +1225,117 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
       </section>
 
       {/* ABOUT */}
-      <section id="pf-about" style={sectionStyle}>
-        <div style={s.secNum}>01 // À PROPOS</div>
-        <h2 style={s.secTitle}>À Propos de <span style={s.accent}>Moi</span></h2>
+      <section id="pf-about" style={{
+        position: 'relative',
+        overflow: 'hidden',
+        background: eff.fond,
+        padding: isMobile ? '56px 24px 44px' : '80px 64px 56px',
+      }}>
+
         <div style={{
-          display:'grid',
-          gridTemplateColumns: isMobile ? '1fr' : '260px 1fr',
-          gap: isMobile ? 24 : 48,
-          alignItems:'start',
+          fontFamily: 'Space Mono, monospace',
+          fontSize: 9,
+          letterSpacing: '0.4em',
+          color: a,
+          marginBottom: isMobile ? 24 : 36,
+          textTransform: 'uppercase',
+        }}>
+          01 // À PROPOS
+        </div>
+
+        <div style={{
+          fontFamily: 'Fraunces, serif',
+          fontWeight: 800,
+          fontSize: isMobile ? 32 : 78,
+          lineHeight: isMobile ? 1.05 : 0.98,
+          color: eff.texte,
+          letterSpacing: '-0.03em',
+          maxWidth: isMobile ? '100%' : 820,
+        }}>
+          Concevoir des interfaces qui se ressentent{' '}
+          <span style={{ color: a, fontStyle: 'italic', fontWeight: 500 }}>avant</span>
+          {' '}de se comprendre.
+        </div>
+
+        <div style={{
+          display: 'flex',
+          gap: isMobile ? 32 : 60,
+          marginTop: isMobile ? 32 : 56,
+          alignItems: 'flex-start',
+          flexWrap: 'wrap',
         }}>
 
-          <div style={isMobile ? {
-            display:'flex',
-            flexDirection:'column',
-            alignItems:'center',
-            gap:16,
-            width:'100%',
-            borderRadius:16,
-            overflow:'hidden',
-          } : {
-            position:'relative',
-            borderRadius:16,
-            overflow:'hidden',
+          <div style={{
+            maxWidth: 340,
+            fontFamily: 'Inter, sans-serif',
+            fontSize: 14,
+            color: eff.textMuted,
+            lineHeight: 1.8,
+            fontWeight: 300,
           }}>
-            <img src="/asset/2026010323253284.png" alt="DevJ"
-              style={{
-                width:'100%',
-                height: isMobile ? 'auto' : 340,
-                maxHeight: isMobile ? 280 : undefined,
-                objectFit:'cover', objectPosition:'top center',
-                display:'block', borderRadius:16,
-                filter:`drop-shadow(0 0 30px rgba(${aRgb},0.08))`,
-              }}
-            />
-            <div style={{
-              position: isMobile ? 'static' : 'absolute',
-              bottom: isMobile ? undefined : 12,
-              left: isMobile ? undefined : 12,
-              right: isMobile ? undefined : 12,
-              background: eff.glassOverlay,
-              border:`1px solid rgba(${aRgb},0.2)`,
-              borderRadius:10, padding:'10px 12px',
-              backdropFilter: isMobile ? 'none' : 'blur(10px)',
-              WebkitBackdropFilter: isMobile ? 'none' : 'blur(10px)',
-              textAlign: isMobile ? 'center' : undefined,
-              marginTop: isMobile ? 8 : undefined,
-            }}>
-              <div style={{
-                fontFamily:'Fraunces, serif',
-                fontSize:13, fontWeight:700,
-                color: eff.texte, marginBottom:2,
-              }}>
-                Fréjus Kouadio
+            Fréjus Kouadio — développeur logiciel et UI/UX designer basé à Yamoussoukro. En 2ème année de Licence Génie Logiciel, spécialisation progressive vers l'intelligence artificielle.
+          </div>
+
+          <div style={{ display: 'flex', gap: isMobile ? 24 : 44, flexWrap: 'wrap' }}>
+            {[
+              ['Yamoussoukro, CI', 'Localisation'],
+              ['2ème / 3', 'Cursus'],
+              ['Ouvert', 'Disponibilité'],
+            ].map(([v, l]) => (
+              <div key={l}>
+                <div style={{
+                  fontFamily: 'Fraunces, serif',
+                  fontWeight: 700,
+                  fontSize: 16,
+                  color: eff.texte,
+                  marginBottom: 6,
+                }}>{v}</div>
+                <div style={{
+                  fontFamily: 'Space Mono, monospace',
+                  fontSize: 7,
+                  letterSpacing: '0.15em',
+                  color: eff.textFaint,
+                  textTransform: 'uppercase',
+                }}>{l}</div>
               </div>
-              <div style={{
-                fontFamily:'Space Mono, monospace',
-                fontSize:8, color:`rgba(${aRgb},0.7)`,
-                letterSpacing:'0.15em',
-              }}>
-                DEV LOGICIEL · UI/UX DESIGNER
-              </div>
-            </div>
-            {[['top','left'],['top','right'],['bottom','left'],['bottom','right']].map(([v,h], i) => (
-              <div key={i} style={{
-                position:'absolute', [v]:-1, [h]:-1,
-                width:16, height:16,
-                [`border${v.charAt(0).toUpperCase()+v.slice(1)}`]:`2px solid ${a}`,
-                [`border${h.charAt(0).toUpperCase()+h.slice(1)}`]:`2px solid ${a}`,
-              }}/>
             ))}
           </div>
+        </div>
 
-          <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
-            <div style={{ color: eff.textMuted, lineHeight:1.9, fontSize:13 }}>
-              Développeur logiciel UI/UX DESIGNER passionné, spécialisé en <strong style={{ color: eff.textHigh, fontWeight:500 }}>UX , UI</strong> moderne <strong style={{ color: eff.textHigh, fontWeight:500 }}>fluide</strong>. Conception d'applications et d'interfaces performantes, accessibles et esthétiques, avec un souci du détail et de la qualité du code.
-            </div>
-
-            <div style={{
-              padding:'16px 20px',
-              borderLeft:`2px solid rgba(${aRgb},0.4)`,
-              background:`rgba(${aRgb},0.04)`,
-              borderRadius:'0 8px 8px 0',
-              fontSize:13,
-              color: eff.textMuted,
-              lineHeight:1.8,
-              fontStyle:'italic',
-            }}>
-              Actuellement en 2ème année de Licence Génie Logiciel à l'UIYA, basé à Yamoussoukro, Côte d'Ivoire, avec une spécialisation progressive vers l'intelligence artificielle. Disponible pour des projets locaux et internationaux.
-            </div>
-
-            <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(2,1fr)', gap:12 }}>
-              {[['Email','devfred58@gmail.com'],['Téléphone','+225 0767998373'],['Localisation','Yamoussoukro, CI'],['Disponibilité','Ouverts aux projets']].map(([k,v]) => (
-                <div key={k} style={{
-                  background: eff.cardBg,
-                  border: `1px solid ${eff.borderMedium}`,
-                  borderRadius:10,
-                  padding:'12px 14px',
-                  position:'relative',
-                  overflow:'hidden',
-                }}>
-                  <div style={{
-                    position:'absolute', top:0, left:0, right:0, height:1,
-                    background:`linear-gradient(90deg,transparent,rgba(${aRgb},0.15),transparent)`,
-                  }}/>
-                  <div style={{ position:'relative' }}>
-                    <div style={{
-                      fontSize:7,
-                      color:`rgba(${aRgb},0.45)`,
-                      letterSpacing:'0.22em',
-                      fontFamily:'Space Mono, monospace',
-                      marginBottom:6,
-                    }}>{k.toUpperCase()}</div>
-                    <div style={{ fontSize:12, color: eff.textHigh, fontFamily:'Inter, sans-serif' }}>{v}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{
-              display:'inline-flex', alignItems:'center', gap:8,
-              padding:'8px 16px',
-              background:`rgba(${aRgb},0.06)`,
-              border:`1px solid rgba(${aRgb},0.18)`,
-              borderRadius:20,
-            }}>
-              <div style={{ width:6, height:6, borderRadius:'50%', background:a, animation:'pulse 1.4s infinite' }}/>
-              <span style={{
-                fontFamily:'Space Mono, monospace',
-                fontSize:8, color:`rgba(${aRgb},0.8)`,
-                letterSpacing:'0.15em',
-              }}>
-                DISPONIBLE POUR DE NOUVEAUX PROJETS
-              </span>
-            </div>
-            <a
-              href="/asset/cv_frejus.pdf"
-              download="cv_frejus.pdf"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 10,
-                marginTop: 16,
-                padding: isMobile ? '12px 20px' : '12px 28px',
-                background: `rgba(${aRgb},0.08)`,
-                border: `1px solid rgba(${aRgb},0.3)`,
-                borderRadius: 10,
-                fontFamily: 'Space Mono, monospace',
-                fontSize: isMobile ? 9 : 10,
-                letterSpacing: '0.18em',
-                color: a,
-                textDecoration: 'none',
-                fontWeight: 700,
-                width: isMobile ? '100%' : 'fit-content',
-                justifyContent: isMobile ? 'center' : 'flex-start',
-                transition: 'background 0.2s, border-color 0.2s, transform 0.2s',
-                boxShadow: `0 0 20px rgba(${aRgb},0.1)`,
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background = `rgba(${aRgb},0.15)`
-                e.currentTarget.style.borderColor = a
-                e.currentTarget.style.transform = 'translateY(-2px)'
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background = `rgba(${aRgb},0.08)`
-                e.currentTarget.style.borderColor = `rgba(${aRgb},0.3)`
-                e.currentTarget.style.transform = 'translateY(0)'
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-                strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              TÉLÉCHARGER MON CV
-            </a>
-          </div>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 24,
+          marginTop: isMobile ? 32 : 56,
+          paddingTop: 24,
+          borderTop: `1px solid ${isLight ? 'rgba(20,20,20,0.1)' : 'rgba(242,240,236,0.1)'}`,
+          flexWrap: 'wrap',
+        }}>
+          <a href="/asset/cv_frejus.pdf" download="cv_frejus.pdf" style={{
+            padding: '14px 30px',
+            background: isLight ? '#141414' : '#f2f0ec',
+            color: isLight ? '#f5f5f0' : '#0a0a0a',
+            borderRadius: 2,
+            fontFamily: 'Space Mono, monospace',
+            fontSize: 9,
+            letterSpacing: '0.18em',
+            fontWeight: 700,
+            textDecoration: 'none',
+            textTransform: 'uppercase',
+          }}>
+            Télécharger le CV
+          </a>
+          <a href="mailto:devfred58@gmail.com" style={{
+            fontFamily: 'Space Mono, monospace',
+            fontSize: 8,
+            letterSpacing: '0.12em',
+            color: eff.textFaint,
+            borderBottom: `1px solid ${isLight ? 'rgba(20,20,20,0.2)' : 'rgba(242,240,236,0.2)'}`,
+            paddingBottom: 3,
+            textDecoration: 'none',
+          }}>
+            devfred58@gmail.com
+          </a>
         </div>
       </section>
 
