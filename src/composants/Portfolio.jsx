@@ -4,455 +4,24 @@ import utiliserTheme from '@/store/utiliserTheme'
 import usePortfolioData from '@/hooks/usePortfolioData'
 import PanneauParametres from '@/composants/ui/PanneauParametres'
 
-const commits = [
-  {
-    hash: '1e5d0f2',
-    tag: 'tag: bepc',
-    periode: '2020–2021',
-    message: "init: Brevet d'Études du Premier Cycle",
-    detail: null,
-    desc: "Première étape du parcours scolaire, validée avec de bons résultats généraux.",
-    statut: 'done',
-  },
-  {
-    hash: '7c2b8a4',
-    tag: 'tag: bac-serie-d',
-    periode: '2023–2024',
-    message: 'feat: Baccalauréat, série D',
-    detail: 'Ouverture vers les études supérieures en ingénierie',
-    desc: "Obtention du baccalauréat scientifique, ouvrant la voie vers les études supérieures en ingénierie.",
-    statut: 'done',
-  },
-  {
-    hash: 'a3f9c1e',
-    tag: 'HEAD → licence-2',
-    periode: '2024–en cours',
-    message: 'feat: Génie Logiciel — 2ème année sur 3',
-    detail: "Spécialisation progressive vers l'IA",
-    desc: "Cursus de licence en génie logiciel (3 ans) à l'UIYA. Actuellement en 2ème année, avec une spécialisation progressive vers l'intelligence artificielle.",
-    statut: 'current',
-  },
-]
-
-function AcademicGitLog({ isMobile, a, aRgb, eff }) {
-  const [commitActifIdx, setCommitActifIdx] = useState(commits.length - 1)
-  const commitActif = commits[commitActifIdx]
-
-  return (
-    <div style={{
-      background: eff.cardBg,
-      border: `1px solid ${eff.borderStrong}`,
-      borderRadius: 20,
-      padding: isMobile ? '24px 20px' : '36px 40px',
-      fontFamily: 'Space Mono, monospace',
-      position: 'relative',
-      overflow: 'hidden',
-      WebkitBackdropFilter: 'blur(12px)',
-      backdropFilter: 'blur(12px)',
-    }}>
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 40,
-        right: 40,
-        height: 1,
-        background: `linear-gradient(90deg, transparent, rgba(${aRgb},0.3), transparent)`,
-        pointerEvents: 'none',
-      }} />
-
-      <div style={{
-        fontFamily: 'Space Mono, monospace',
-        fontSize: isMobile ? 9 : 10,
-        color: `rgba(255,255,255,0.3)`,
-        marginBottom: isMobile ? 20 : 24,
-        letterSpacing: '0.12em',
-        textTransform: 'uppercase',
-      }}>
-        git log --graph --oneline --decorate
-      </div>
-
-      <div style={{ position: 'relative' }}>
-        {commits.length > 1 && (
-          <div style={{
-            position: 'absolute',
-            left: 9,
-            top: 8,
-            bottom: 8,
-            width: 1,
-            background: `rgba(${aRgb},0.25)`,
-            pointerEvents: 'none',
-          }} />
-        )}
-
-        {commits.map((commit, i) => {
-          const isActive = i === commitActifIdx
-          const distance = Math.abs(i - commitActifIdx)
-          const opacity = isActive ? 1 : distance === 1 ? 0.8 : distance === 2 ? 0.6 : 0.45
-
-          return (
-            <div key={commit.hash}>
-              <div
-                onClick={() => setCommitActifIdx(i)}
-                style={{
-                  position: 'relative',
-                  paddingLeft: 34,
-                  marginBottom: i === commits.length - 1 ? 0 : 26,
-                  cursor: 'pointer',
-                  opacity,
-                }}
-              >
-                <div style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 2,
-                  width: 20,
-                  height: 20,
-                  borderRadius: '50%',
-                  background: commit.statut === 'current' && isActive ? a : 'rgba(255,255,255,0.06)',
-                  border: commit.statut === 'current' && isActive ? 'none' : '1px solid rgba(255,255,255,0.2)',
-                  boxShadow: commit.statut === 'current' && isActive ? `0 0 16px rgba(${aRgb},0.6)` : 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 10,
-                  color: commit.statut === 'current' && isActive ? '#050505' : 'rgba(255,255,255,0.45)',
-                  fontWeight: 700,
-                }}>
-                  {commit.statut === 'current' && isActive ? '●' : commit.statut === 'done' ? '✓' : '•'}
-                </div>
-
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  flexWrap: 'wrap',
-                  marginBottom: 4,
-                }}>
-                  <div style={{
-                    fontFamily: 'Space Mono, monospace',
-                    fontSize: isMobile ? 10 : 11,
-                    fontWeight: 700,
-                    color: isActive ? a : 'rgba(255,255,255,0.45)',
-                  }}>
-                    {commit.hash}
-                  </div>
-                  <div style={{
-                    fontFamily: 'Space Mono, monospace',
-                    fontSize: 8,
-                    padding: '2px 8px',
-                    borderRadius: 10,
-                    background: isActive ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.05)',
-                    border: isActive ? `1px solid rgba(${aRgb},0.4)` : '1px solid rgba(255,255,255,0.2)',
-                    color: isActive ? a : 'rgba(255,255,255,0.45)',
-                  }}>
-                    {commit.tag}
-                  </div>
-                  <div style={{
-                    fontFamily: 'Space Mono, monospace',
-                    fontSize: 8,
-                    padding: '2px 8px',
-                    borderRadius: 10,
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    color: 'rgba(255,255,255,0.45)',
-                  }}>
-                    {commit.periode}
-                  </div>
-                </div>
-
-                <div style={{
-                  fontFamily: 'Fraunces, serif',
-                  fontWeight: 700,
-                  fontSize: isMobile ? 14 : 15,
-                  color: isActive ? eff.texte : 'rgba(245,245,240,0.7)',
-                  marginBottom: 2,
-                  lineHeight: 1.25,
-                }}>
-                  {commit.message}
-                </div>
-
-                {commit.detail && (
-                  <div style={{
-                    fontFamily: 'Space Mono, monospace',
-                    fontSize: isMobile ? 9 : 10,
-                    color: 'rgba(255,255,255,0.32)',
-                    marginTop: 2,
-                  }}>
-                    {commit.detail}
-                  </div>
-                )}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      <div
-        key={commitActifIdx}
-        style={{
-          marginTop: 28,
-          padding: isMobile ? '16px 18px' : '18px 22px',
-          background: `rgba(${aRgb},0.02)`,
-          border: `1px solid rgba(${aRgb},0.2)`,
-          borderLeft: `3px solid ${a}`,
-          borderRadius: 10,
-          animation: 'fadeInUp 0.3s ease',
-        }}
-      >
-        <div style={{
-          fontFamily: 'Space Mono, monospace',
-          fontSize: 9,
-          color: a,
-          letterSpacing: '0.1em',
-          marginBottom: 8,
-          textTransform: 'uppercase',
-        }}>
-          commit {commitActif.hash} — {commitActif.periode}
-        </div>
-
-        <div style={{
-          fontFamily: 'Fraunces, serif',
-          fontWeight: 700,
-          fontSize: isMobile ? 15 : 16,
-          color: eff.texte,
-          marginBottom: 8,
-        }}>
-          {commitActif.message}
-        </div>
-
-        <div style={{
-          fontFamily: 'Inter, sans-serif',
-          fontWeight: 300,
-          fontSize: isMobile ? 12 : 13,
-          color: eff.textMuted,
-          lineHeight: 1.7,
-        }}>
-          {commitActif.desc}
-        </div>
-      </div>
-    </div>
-  )
-}
-
+// Petit composant de secours pour éviter une erreur si `AxisBouton` manque.
 function AxisBouton({ isMobile, a, aRgb, navigate, eff }) {
-  const [survol, setSurvol] = useState(false)
-
   return (
-    <div style={{
-      position: 'fixed',
-      bottom: isMobile ? 16 : 24,
-      right: isMobile ? 12 : 24,
-      zIndex: 40,
-    }}>
-      <style>{`
-        @keyframes axisRing {
-          0%   { transform: scale(1);   opacity: 0.6; }
-          100% { transform: scale(1.5); opacity: 0; }
-        }
-        @keyframes axisPulse {
-          0%,100% { opacity: 1; }
-          50%      { opacity: 0.4; }
-        }
-        @keyframes axisScan {
-          from { top: 0%; }
-          to   { top: 100%; }
-        }
-        @keyframes tooltipIn {
-          from { opacity: 0; transform: translateY(6px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
-
-      {/* Tooltip au survol */}
-      {survol && (
-        <div style={{
-          position: 'absolute',
-          bottom: isMobile ? 52 : 62,
-          left: 0,
-          width: isMobile ? 200 : 220,
-          background: eff.glassOverlay,
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          border: `1px solid rgba(${aRgb},0.25)`,
-          borderRadius: 10,
-          padding: '10px 12px',
-          animation: 'tooltipIn 0.2s ease forwards',
-          pointerEvents: 'none',
-        }}>
-          {/* Ligne lumineuse top */}
-          <div style={{
-            position: 'absolute', top: 0, left: 12, right: 12, height: 1,
-            background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.4),transparent)`,
-          }} />
-
-          {/* Flèche bas */}
-          <div style={{
-            position: 'absolute',
-            bottom: -5, left: 18,
-            width: 8, height: 5,
-            clipPath: 'polygon(0 0, 100% 0, 50% 100%)',
-            background: `rgba(${aRgb},0.3)`,
-          }} />
-
-          <div style={{
-            fontFamily: 'Space Mono, monospace',
-            fontSize: 8,
-            color: `rgba(${aRgb},0.5)`,
-            letterSpacing: '0.2em',
-            marginBottom: 5,
-          }}>AXIS // IA</div>
-
-          <div style={{
-            fontFamily: 'Inter, sans-serif',
-            fontSize: isMobile ? 10 : 11,
-            color: eff.textMedium,
-            lineHeight: 1.55,
-          }}>
-            Optimisez votre expérience en conversant avec AXIS, l'IA de Fréjus.
-          </div>
-        </div>
-      )}
-
-      {/* Bouton principal */}
-      <div
-        onClick={() => navigate('/')}
-        onMouseEnter={() => setSurvol(true)}
-        onMouseLeave={() => setSurvol(false)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: isMobile ? 0 : 10,
-          cursor: 'pointer',
-        }}
-      >
-        {/* Cercle HUD */}
-        <div style={{
-          position: 'relative',
-          width: isMobile ? 44 : 52,
-          height: isMobile ? 44 : 52,
-          flexShrink: 0,
-        }}>
-          {/* Anneaux pulsants */}
-          <div style={{
-            position: 'absolute', inset: -4,
-            borderRadius: '50%',
-            border: `1px solid rgba(${aRgb},0.4)`,
-            animation: 'axisRing 2s ease-out infinite',
-            pointerEvents: 'none',
-          }} />
-          <div style={{
-            position: 'absolute', inset: -4,
-            borderRadius: '50%',
-            border: `1px solid rgba(${aRgb},0.2)`,
-            animation: 'axisRing 2s ease-out infinite',
-            animationDelay: '0.7s',
-            pointerEvents: 'none',
-          }} />
-
-          {/* Cercle principal */}
-          <div style={{
-            width: '100%', height: '100%',
-            borderRadius: '50%',
-            background: survol
-              ? `rgba(${aRgb},0.12)`
-              : eff.glassOverlay,
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            border: `1px solid rgba(${aRgb},${survol ? '0.6' : '0.35'})`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
-            overflow: 'hidden',
-            boxShadow: survol
-              ? `0 0 28px rgba(${aRgb},0.35)`
-              : `0 0 16px rgba(${aRgb},0.15)`,
-            transition: 'all 0.25s',
-          }}>
-            {/* Scan interne */}
-            <div style={{
-              position: 'absolute',
-              left: 0, right: 0, height: 1,
-              background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.6),transparent)`,
-              animation: 'axisScan 2s linear infinite',
-              zIndex: 2, pointerEvents: 'none',
-            }} />
-
-            {/* Hexagone SVG */}
-            <svg
-              width={isMobile ? 20 : 24}
-              height={isMobile ? 20 : 24}
-              viewBox="0 0 24 24"
-              fill="none"
-              style={{ position: 'relative', zIndex: 3 }}
-            >
-              <polygon
-                points="12,2 20,7 20,17 12,22 4,17 4,7"
-                stroke={a}
-                strokeWidth="1.2"
-                fill={`rgba(${aRgb},0.1)`}
-              />
-              <circle cx="12" cy="12" r="3" fill={a}
-                style={{ animation: 'axisPulse 1.8s infinite' }}
-              />
-            </svg>
-          </div>
-
-          {/* Point statut */}
-          <div style={{
-            position: 'absolute', bottom: 1, right: 1,
-            width: isMobile ? 7 : 8, height: isMobile ? 7 : 8,
-            borderRadius: '50%',
-            background: a,
-            border: `1.5px solid ${eff.fond}`,
-            boxShadow: `0 0 6px ${a}`,
-            animation: 'axisPulse 1.4s infinite',
-            zIndex: 4,
-          }} />
-        </div>
-
-        {/* Label — masqué sur mobile */}
-        {!isMobile && (
-          <div style={{
-            background: eff.navOverlay,
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            border: `1px solid rgba(${aRgb},${survol ? '0.35' : '0.18'})`,
-            borderRadius: 10,
-            padding: '8px 14px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 4,
-            transition: 'border-color 0.25s',
-          }}>
-            <div style={{
-              fontFamily: 'Space Mono, monospace',
-              fontSize: 7,
-              color: `rgba(${aRgb},0.45)`,
-              letterSpacing: '0.22em',
-            }}>AXIS // IA</div>
-            <div style={{
-              fontFamily: 'Space Mono, monospace',
-              fontSize: 9,
-              color: a,
-              letterSpacing: '0.15em',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-            }}>
-              <span style={{
-                width: 5, height: 5,
-                borderRadius: '50%',
-                background: a,
-                display: 'inline-block',
-                animation: 'axisPulse 1.4s infinite',
-              }} />
-              PARLER À AXIS
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+    <button
+      onClick={() => (navigate ? navigate('/contact') : window.location.assign('/contact'))}
+      style={{
+        padding: isMobile ? '10px 14px' : '12px 18px',
+        background: `rgba(${aRgb},0.08)`,
+        border: `1px solid rgba(${aRgb},0.18)`,
+        color: a,
+        fontFamily: 'Space Mono, monospace',
+        fontSize: 12,
+        borderRadius: 8,
+        cursor: 'pointer',
+      }}
+    >
+      Contacter →
+    </button>
   )
 }
 
@@ -467,6 +36,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
   const [citationIdx, setCitationIdx] = useState(0)
   const [etapeActive, setEtapeActive] = useState(0)
   const [serviceActif, setServiceActif] = useState(0)
+  const [projetSurvole, setProjetSurvole] = useState(null)
   const wrapRef = useRef(null)
   const { theme, mode, getThemeEffectif } = utiliserTheme()
   const eff = getThemeEffectif ? getThemeEffectif() : theme
@@ -531,6 +101,12 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
     "Construire l'avenir du web, une ligne de code à la fois.",
     "Chaque ligne de code est une brique vers un logiciel qui dure."
     ] // List of citations for display
+
+  const parcoursData = [
+    { chap: 'I', periode: '2020—2021', titre: "BEPC", detail: "Brevet d'Études du Premier Cycle. Bons résultats généraux.", active: false },
+    { chap: 'II', periode: '2023—2024', titre: 'Bac série D', detail: "Baccalauréat scientifique — ouverture vers l'ingénierie.", active: false },
+    { chap: 'III', periode: '2024—en cours', titre: 'Génie Logiciel', detail: "Licence à l'UIYA, 2ème année. Cap sur l'IA.", active: true },
+  ]
 
   // Exposer la fonction naviguerVers au parent
   useImperativeHandle(ref, () => ({
@@ -1243,6 +819,27 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           01 // À PROPOS
         </div>
 
+        {isMobile && (
+          <div style={{
+            width: '100%',
+            height: 170,
+            borderRadius: 3,
+            overflow: 'hidden',
+            marginBottom: 20,
+          }}>
+            <img
+              src="/asset/2026010323253284.png"
+              alt="Fréjus Kouadio"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'top center',
+              }}
+            />
+          </div>
+        )}
+
         <div style={{
           fontFamily: 'Fraunces, serif',
           fontWeight: 800,
@@ -1340,11 +937,106 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
       </section>
 
       {/* PARCOURS ACADÉMIQUE */}
-      <section id="pf-academic" style={sectionStyle}>
-        <div style={s.secNum}>01.5 // PARCOURS</div>
-        <h2 style={s.secTitle}>Parcours <span style={s.accent}>Académique</span></h2>
+      <section id="pf-academic" style={{
+        position: 'relative',
+        overflow: 'hidden',
+        background: eff.fond,
+        padding: isMobile ? '56px 24px 44px' : '80px 64px 90px',
+      }}>
 
-        <AcademicGitLog isMobile={isMobile} a={a} aRgb={aRgb} eff={eff} />
+        <svg
+          viewBox="0 0 1200 500"
+          preserveAspectRatio="none"
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            width: '100%',
+            height: isMobile ? '60%' : '80%',
+            zIndex: 0,
+            pointerEvents: 'none',
+            opacity: isLight ? 0.3 : 0.5,
+          }}
+        >
+          {Array.from({ length: 14 }).map((_, i) => {
+            const offset = i * 6
+            const amplitude = 40 + i * 3
+            return (
+              <path
+                key={i}
+                d={`M -50 ${380 - offset} C 200 ${280 - offset - amplitude}, 400 ${480 - offset + amplitude}, 650 ${330 - offset} S 1000 ${180 - offset - amplitude}, 1250 ${350 - offset}`}
+                fill="none"
+                stroke={a}
+                strokeWidth="1.3"
+                opacity={1 - i * 0.06}
+              />
+            )
+          })}
+        </svg>
+
+        <div style={{ position: 'relative', zIndex: 1 }}>
+
+        <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.4em', color: a, marginBottom: 16, textTransform: 'uppercase' }}>
+          01.5 // PARCOURS
+        </div>
+        <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: isMobile ? 32 : 44, color: eff.texte, marginBottom: isMobile ? 40 : 80, letterSpacing: '-0.02em' }}>
+          Trois <span style={{ color: a, fontStyle: 'italic', fontWeight: 500 }}>chapitres</span>
+        </div>
+
+        {!isMobile && (
+          <div style={{ position: 'relative', height: 280 }}>
+            <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1, background: isLight ? 'rgba(20,20,20,0.15)' : 'rgba(242,240,236,0.15)' }} />
+            {parcoursData.map((e, i) => {
+              const x = ['6%', '38%', '70%'][i]
+              const dirUp = i % 2 === 0
+              return (
+                <div key={e.chap}>
+                  <div style={{ position: 'absolute', left: x, top: '50%', width: e.active ? 11 : 8, height: e.active ? 11 : 8, borderRadius: '50%', transform: 'translate(-50%,-50%)', background: e.active ? a : eff.fond, border: e.active ? 'none' : `1px solid ${isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.35)'}`, boxShadow: e.active ? `0 0 14px rgba(${aRgb},0.7)` : 'none', zIndex: 2 }} />
+                  <div style={{ position: 'absolute', left: x, [dirUp ? 'bottom' : 'top']: 'calc(50% + 22px)', width: 190 }}>
+                    <span style={{ position: 'absolute', [dirUp ? 'bottom' : 'top']: -10, left: 0, fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: 100, color: e.active ? a : eff.texte, opacity: 0.06, lineHeight: 1, userSelect: 'none', pointerEvents: 'none' }}>
+                      {e.chap}
+                    </span>
+                    <div style={{ position: 'relative' }}>
+                      <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.15em', color: e.active ? a : (isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.35)'), marginBottom: 6, textTransform: 'uppercase' }}>
+                        CH. {e.chap} · {e.periode}
+                      </div>
+                      <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, fontSize: 19, color: eff.texte, marginBottom: 6 }}>
+                        {e.titre}
+                      </div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300, fontSize: 11, color: eff.textMuted, lineHeight: 1.6 }}>
+                        {e.detail}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {isMobile && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            {parcoursData.map((e, i) => (
+              <div key={e.chap} style={{ display: 'flex', gap: 16, padding: '20px 0', borderBottom: i < parcoursData.length - 1 ? `1px solid ${isLight ? 'rgba(20,20,20,0.08)' : 'rgba(242,240,236,0.08)'}` : 'none' }}>
+                <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: 32, color: e.active ? a : (isLight ? 'rgba(20,20,20,0.2)' : 'rgba(242,240,236,0.2)'), lineHeight: 1, flexShrink: 0, width: 40 }}>
+                  {e.chap}
+                </div>
+                <div>
+                  <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.15em', color: e.active ? a : (isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.35)'), marginBottom: 6, textTransform: 'uppercase' }}>
+                    {e.periode}
+                  </div>
+                  <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, fontSize: 17, color: eff.texte, marginBottom: 6 }}>
+                    {e.titre}
+                  </div>
+                  <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300, fontSize: 12, color: eff.textMuted, lineHeight: 1.65 }}>
+                    {e.detail}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        </div>
       </section>
 
       {/* SKILLS */}
