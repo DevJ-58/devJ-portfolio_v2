@@ -6,22 +6,210 @@ import PanneauParametres from '@/composants/ui/PanneauParametres'
 
 // Petit composant de secours pour éviter une erreur si `AxisBouton` manque.
 function AxisBouton({ isMobile, a, aRgb, navigate, eff }) {
+  const [survol, setSurvol] = useState(false)
+
   return (
-    <button
-      onClick={() => (navigate ? navigate('/contact') : window.location.assign('/contact'))}
-      style={{
-        padding: isMobile ? '10px 14px' : '12px 18px',
-        background: `rgba(${aRgb},0.08)`,
-        border: `1px solid rgba(${aRgb},0.18)`,
-        color: a,
-        fontFamily: 'Space Mono, monospace',
-        fontSize: 12,
-        borderRadius: 8,
-        cursor: 'pointer',
-      }}
-    >
-      Contacter →
-    </button>
+    <div style={{
+      position: 'fixed',
+      bottom: isMobile ? 16 : 24,
+      right: isMobile ? 12 : 24,
+      zIndex: 40,
+    }}>
+      <style>{`
+        @keyframes axisRing {
+          0%   { transform: scale(1);   opacity: 0.6; }
+          100% { transform: scale(1.5); opacity: 0; }
+        }
+        @keyframes axisPulse {
+          0%,100% { opacity: 1; }
+          50%      { opacity: 0.4; }
+        }
+        @keyframes axisScan {
+          from { top: 0%; }
+          to   { top: 100%; }
+        }
+        @keyframes tooltipIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
+      {survol && (
+        <div style={{
+          position: 'absolute',
+          bottom: isMobile ? 52 : 62,
+          left: 0,
+          width: isMobile ? 200 : 220,
+          background: eff.glassOverlay,
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: `1px solid rgba(${aRgb},0.25)`,
+          borderRadius: 10,
+          padding: '10px 12px',
+          animation: 'tooltipIn 0.2s ease forwards',
+          pointerEvents: 'none',
+        }}>
+          <div style={{
+            position: 'absolute', top: 0, left: 12, right: 12, height: 1,
+            background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.4),transparent)`,
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: -5, left: 18,
+            width: 8, height: 5,
+            clipPath: 'polygon(0 0, 100% 0, 50% 100%)',
+            background: `rgba(${aRgb},0.3)`,
+          }} />
+          <div style={{
+            fontFamily: 'Space Mono, monospace',
+            fontSize: 8,
+            color: `rgba(${aRgb},0.5)`,
+            letterSpacing: '0.2em',
+            marginBottom: 5,
+          }}>AXIS // IA</div>
+          <div style={{
+            fontFamily: 'Inter, sans-serif',
+            fontSize: isMobile ? 10 : 11,
+            color: eff.textMedium,
+            lineHeight: 1.55,
+          }}>
+            Optimisez votre expérience en conversant avec AXIS, l'IA de Fréjus.
+          </div>
+        </div>
+      )}
+
+      <div
+        onClick={() => navigate('/')}
+        onMouseEnter={() => setSurvol(true)}
+        onMouseLeave={() => setSurvol(false)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: isMobile ? 0 : 10,
+          cursor: 'pointer',
+        }}
+      >
+        <div style={{
+          position: 'relative',
+          width: isMobile ? 44 : 52,
+          height: isMobile ? 44 : 52,
+          flexShrink: 0,
+        }}>
+          <div style={{
+            position: 'absolute', inset: -4,
+            borderRadius: '50%',
+            border: `1px solid rgba(${aRgb},0.4)`,
+            animation: 'axisRing 2s ease-out infinite',
+            pointerEvents: 'none',
+          }} />
+          <div style={{
+            position: 'absolute', inset: -4,
+            borderRadius: '50%',
+            border: `1px solid rgba(${aRgb},0.2)`,
+            animation: 'axisRing 2s ease-out infinite',
+            animationDelay: '0.7s',
+            pointerEvents: 'none',
+          }} />
+
+          <div style={{
+            width: '100%', height: '100%',
+            borderRadius: '50%',
+            background: survol
+              ? `rgba(${aRgb},0.12)`
+              : eff.glassOverlay,
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: `1px solid rgba(${aRgb},${survol ? '0.6' : '0.35'})`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            overflow: 'hidden',
+            boxShadow: survol
+              ? `0 0 28px rgba(${aRgb},0.35)`
+              : `0 0 16px rgba(${aRgb},0.15)`,
+            transition: 'all 0.25s',
+          }}>
+            <div style={{
+              position: 'absolute',
+              left: 0, right: 0, height: 1,
+              background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.6),transparent)`,
+              animation: 'axisScan 2s linear infinite',
+              zIndex: 2, pointerEvents: 'none',
+            }} />
+
+            <svg
+              width={isMobile ? 20 : 24}
+              height={isMobile ? 20 : 24}
+              viewBox="0 0 24 24"
+              fill="none"
+              style={{ position: 'relative', zIndex: 3 }}
+            >
+              <polygon
+                points="12,2 20,7 20,17 12,22 4,17 4,7"
+                stroke={a}
+                strokeWidth="1.2"
+                fill={`rgba(${aRgb},0.1)`}
+              />
+              <circle cx="12" cy="12" r="3" fill={a}
+                style={{ animation: 'axisPulse 1.8s infinite' }}
+              />
+            </svg>
+          </div>
+
+          <div style={{
+            position: 'absolute', bottom: 1, right: 1,
+            width: isMobile ? 7 : 8, height: isMobile ? 7 : 8,
+            borderRadius: '50%',
+            background: a,
+            border: `1.5px solid ${eff.fond}`,
+            boxShadow: `0 0 6px ${a}`,
+            animation: 'axisPulse 1.4s infinite',
+            zIndex: 4,
+          }} />
+        </div>
+
+        {!isMobile && (
+          <div style={{
+            background: eff.navOverlay,
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: `1px solid rgba(${aRgb},${survol ? '0.35' : '0.18'})`,
+            borderRadius: 10,
+            padding: '8px 14px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+            transition: 'border-color 0.25s',
+          }}>
+            <div style={{
+              fontFamily: 'Space Mono, monospace',
+              fontSize: 7,
+              color: `rgba(${aRgb},0.45)`,
+              letterSpacing: '0.22em',
+            }}>AXIS // IA</div>
+            <div style={{
+              fontFamily: 'Space Mono, monospace',
+              fontSize: 9,
+              color: a,
+              letterSpacing: '0.15em',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+            }}>
+              <span style={{
+                width: 5, height: 5,
+                borderRadius: '50%',
+                background: a,
+                display: 'inline-block',
+                animation: 'axisPulse 1.4s infinite',
+              }} />
+              PARLER À AXIS
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -92,10 +280,10 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
   }
 
   function getContribColor(count, accent, accentRgb) {
-    if (count === 0) return isLight ? 'rgba(0,0,0,0.04)' : eff.cardBg
-    if (count <= 2)  return `rgba(${accentRgb},0.2)`
-    if (count <= 5)  return `rgba(${accentRgb},0.45)`
-    if (count <= 10) return `rgba(${accentRgb},0.7)`
+    if (count === 0) return isLight ? 'rgba(20,20,20,0.06)' : 'rgba(242,240,236,0.05)'
+    if (count <= 2)  return `rgba(${accentRgb},0.35)`
+    if (count <= 5)  return `rgba(${accentRgb},0.55)`
+    if (count <= 10) return `rgba(${accentRgb},0.8)`
     return accent
   }
 
@@ -1079,118 +1267,182 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             Signal <span style={{ color: a, fontStyle: 'italic', fontWeight: 500 }}>technique</span>
           </div>
 
-          <div style={{
-            display: 'flex',
-            gap: isMobile ? 40 : 90,
-            justifyContent: isMobile ? 'flex-start' : 'center',
-            alignItems: 'flex-end',
-            flexWrap: 'wrap',
-            overflowX: isMobile ? 'auto' : 'visible',
-            paddingBottom: isMobile ? 8 : 0,
-          }}>
-            {competencesAffichees.map((group, gi) => {
-              const items = Array.isArray(group.items) ? group.items : []
-              const isFilled = gi === 0
-              const isActiveHover = categorieSurvolee === gi
-              const isHighlighted = isFilled || isActiveHover
-              const lineGap = isMobile ? 14 : 20
-              const heightScale = isMobile ? 1.0 : 1.4
-              const isDimmed = categorieSurvolee !== null && categorieSurvolee !== gi
-
-              return (
-                <div
-                  key={group.cat}
-                  onMouseEnter={() => setCategorieSurvolee(gi)}
-                  onMouseLeave={() => setCategorieSurvolee(null)}
-                  onClick={() => setCategorieSurvolee(categorieSurvolee === gi ? null : gi)}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    flexShrink: 0,
-                    cursor: 'pointer',
-                    transform: categorieSurvolee === gi ? 'scale(1.08)' : 'scale(1)',
-                    transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
-                    transformOrigin: 'bottom center',
-                    opacity: isDimmed ? 0.5 : 1,
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: lineGap, height: isMobile ? 130 : 170 }}>
-                    {items.map(([name, pct]) => (
-                      <div
-                        key={name}
-                        style={{
-                          width: 2,
-                          height: pct * heightScale * (isMobile ? 0.75 : 1),
-                          background: isHighlighted ? a : (isLight ? 'rgba(20,20,20,0.5)' : 'rgba(242,240,236,0.55)'),
-                          boxShadow: isActiveHover ? `0 0 8px rgba(${aRgb},0.5)` : 'none',
-                        }}
-                      />
-                    ))}
-                  </div>
-
-                  <div style={{
-                    width: isMobile ? 74 : 92,
-                    height: isMobile ? 74 : 92,
-                    borderRadius: '50%',
-                    background: isHighlighted ? a : eff.cardBg,
-                    border: isHighlighted ? 'none' : `1.4px solid ${isLight ? 'rgba(20,20,20,0.4)' : 'rgba(242,240,236,0.4)'}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginTop: -2,
-                    marginBottom: -2,
-                    zIndex: 2,
-                  }}>
-                    <span style={{
-                      fontFamily: 'Fraunces, serif', fontWeight: 800,
-                      fontSize: isMobile ? 12 : 15,
-                      color: isHighlighted ? (isLight ? '#f5f5f0' : '#0a0a0a') : eff.texte,
-                      textAlign: 'center', padding: '0 6px',
+          {isMobile ? (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {competencesAffichees.map((group, gi) => {
+                const items = Array.isArray(group.items) ? group.items : []
+                const isActiveHover = categorieSurvolee === gi
+                const isHighlighted = isActiveHover
+                return (
+                  <div
+                    key={group.cat}
+                    onClick={() => setCategorieSurvolee(categorieSurvolee === gi ? null : gi)}
+                    style={{
+                      display: 'flex',
+                      gap: 16,
+                      alignItems: 'flex-start',
+                      padding: '18px 0',
+                      borderBottom: gi < competencesAffichees.length - 1
+                        ? `1px solid ${isLight ? 'rgba(20,20,20,0.08)' : 'rgba(242,240,236,0.1)'}`
+                        : 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{
+                      width: 62,
+                      height: 62,
+                      borderRadius: '50%',
+                      flexShrink: 0,
+                      background: isHighlighted ? a : eff.cardBg,
+                      border: isHighlighted ? 'none' : `1.4px solid ${isLight ? 'rgba(20,20,20,0.4)' : 'rgba(242,240,236,0.4)'}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'background 0.3s, border-color 0.3s',
                     }}>
-                      {group.cat}
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: lineGap, height: 40 }}>
-                    {items.map(([name], ii) => (
-                      <div
-                        key={name}
-                        style={{
-                          width: 2,
-                          height: 20 + ii * 4,
-                          background: isHighlighted ? `rgba(${aRgb},0.4)` : (isLight ? 'rgba(20,20,20,0.2)' : 'rgba(242,240,236,0.25)'),
-                          boxShadow: isActiveHover ? `0 0 8px rgba(${aRgb},0.5)` : 'none',
-                        }}
-                      />
-                    ))}
-                  </div>
-
-                  <div style={{ display: 'flex', gap: lineGap, marginTop: 16 }}>
-                    {items.map(([name, pct]) => (
-                      <div key={name} style={{ textAlign: 'center', width: isMobile ? 56 : 64 }}>
-                        <div style={{
-                          fontFamily: 'Fraunces, serif', fontWeight: 800,
-                          fontSize: isMobile ? 13 : 15,
-                          color: isHighlighted ? a : eff.texte,
-                          lineHeight: 1.15,
-                          whiteSpace: 'normal',
-                        }}>
-                          {name}
+                      <span style={{
+                        fontFamily: 'Fraunces, serif', fontWeight: 800,
+                        fontSize: 10, color: isHighlighted ? (isLight ? '#f5f5f0' : '#0a0a0a') : eff.texte,
+                        textAlign: 'center', padding: '0 4px',
+                      }}>
+                        {group.cat}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 14px', flex: 1 }}>
+                      {items.map(([name, pct]) => (
+                        <div key={name}>
+                          <div style={{
+                            fontFamily: 'Fraunces, serif', fontWeight: 800,
+                            fontSize: 13, color: isHighlighted ? a : eff.texte,
+                          }}>
+                            {name}
+                          </div>
+                          <div style={{
+                            fontFamily: 'Space Mono, monospace', fontSize: 9,
+                            color: eff.textFaint, marginTop: 2,
+                          }}>
+                            {pct}%
+                          </div>
                         </div>
-                        <div style={{
-                          fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 10 : 11,
-                          color: eff.textFaint, marginTop: 6, letterSpacing: '0.05em',
-                        }}>
-                          {pct}%
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div style={{
+              display: 'flex',
+              gap: isMobile ? 40 : 90,
+              justifyContent: isMobile ? 'flex-start' : 'center',
+              alignItems: 'flex-end',
+              flexWrap: 'wrap',
+              overflowX: isMobile ? 'auto' : 'visible',
+              paddingBottom: isMobile ? 8 : 0,
+            }}>
+              {competencesAffichees.map((group, gi) => {
+                const items = Array.isArray(group.items) ? group.items : []
+                const isActiveHover = categorieSurvolee === gi
+                const isHighlighted = isActiveHover
+                const lineGap = isMobile ? 14 : 20
+                const heightScale = isMobile ? 1.0 : 1.4
+                const isDimmed = categorieSurvolee !== null && categorieSurvolee !== gi
+
+                return (
+                  <div
+                    key={group.cat}
+                    onMouseEnter={() => setCategorieSurvolee(gi)}
+                    onMouseLeave={() => setCategorieSurvolee(null)}
+                    onClick={() => setCategorieSurvolee(categorieSurvolee === gi ? null : gi)}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      flexShrink: 0,
+                      cursor: 'pointer',
+                      transform: categorieSurvolee === gi ? 'scale(1.08)' : 'scale(1)',
+                      transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
+                      transformOrigin: 'bottom center',
+                      opacity: isDimmed ? 0.5 : 1,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: lineGap, height: isMobile ? 130 : 170 }}>
+                      {items.map(([name, pct]) => (
+                        <div
+                          key={name}
+                          style={{
+                            width: 2,
+                            height: pct * heightScale * (isMobile ? 0.75 : 1),
+                            background: isHighlighted ? a : (isLight ? 'rgba(20,20,20,0.5)' : 'rgba(242,240,236,0.55)'),
+                            boxShadow: isActiveHover ? `0 0 8px rgba(${aRgb},0.5)` : 'none',
+                          }}
+                        />
+                      ))}
+                    </div>
+
+                    <div style={{
+                      width: isMobile ? 74 : 92,
+                      height: isMobile ? 74 : 92,
+                      borderRadius: '50%',
+                      background: isHighlighted ? a : eff.cardBg,
+                      border: isHighlighted ? 'none' : `1.4px solid ${isLight ? 'rgba(20,20,20,0.4)' : 'rgba(242,240,236,0.4)'}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginTop: -2,
+                      marginBottom: -2,
+                      zIndex: 2,
+                    }}>
+                      <span style={{
+                        fontFamily: 'Fraunces, serif', fontWeight: 800,
+                        fontSize: isMobile ? 12 : 15,
+                        color: isHighlighted ? (isLight ? '#f5f5f0' : '#0a0a0a') : eff.texte,
+                        textAlign: 'center', padding: '0 6px',
+                      }}>
+                        {group.cat}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: lineGap, height: 40 }}>
+                      {items.map(([name], ii) => (
+                        <div
+                          key={name}
+                          style={{
+                            width: 2,
+                            height: 20 + ii * 4,
+                            background: isHighlighted ? `rgba(${aRgb},0.4)` : (isLight ? 'rgba(20,20,20,0.2)' : 'rgba(242,240,236,0.25)'),
+                            boxShadow: isActiveHover ? `0 0 8px rgba(${aRgb},0.5)` : 'none',
+                          }}
+                        />
+                      ))}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: lineGap, marginTop: 16 }}>
+                      {items.map(([name, pct]) => (
+                        <div key={name} style={{ textAlign: 'center', width: isMobile ? 56 : 64 }}>
+                          <div style={{
+                            fontFamily: 'Fraunces, serif', fontWeight: 800,
+                            fontSize: isMobile ? 13 : 15,
+                            color: isHighlighted ? a : eff.texte,
+                            lineHeight: 1.15,
+                            whiteSpace: 'normal',
+                          }}>
+                            {name}
+                          </div>
+                          <div style={{
+                            fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 10 : 11,
+                            color: eff.textFaint, marginTop: 6, letterSpacing: '0.05em',
+                          }}>
+                            {pct}%
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       </section>
 
@@ -1416,359 +1668,218 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         </div>
       </section>
 
-      {/* GITHUB ACTIVITY */}
-      <section id="pf-github" style={sectionStyle}>
-        <div style={s.secNum}>03.5 // ACTIVITÉ</div>
-        <h2 style={s.secTitle}>
-          Activité <span style={s.accent}>GitHub</span>
-        </h2>
-
-        {/* Sous-titre + lien */}
+      <section id="pf-github" style={{
+        position: 'relative',
+        overflow: 'hidden',
+        background: eff.fond,
+        padding: isMobile ? '56px 24px 70px' : '100px 64px 120px',
+      }}>
         <div style={{
-          display: 'flex', justifyContent: 'space-between',
-          alignItems: 'center', marginBottom: 32,
-          flexWrap: 'wrap', gap: 12,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
+          marginBottom: isMobile ? 40 : 70, flexWrap: 'wrap', gap: 16,
         }}>
-          <div style={{
-            fontFamily: 'Space Mono, monospace', fontSize: 9,
-            color: `rgba(${aRgb},0.45)`, letterSpacing: '0.2em',
-          }}>
-            {githubData
-              ? `${githubData.total?.lastYear ?? '—'} CONTRIBUTIONS · DERNIÈRE ANNÉE`
-              : 'CHARGEMENT...'}
+          <div>
+            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.4em', color: a, marginBottom: 18, textTransform: 'uppercase' }}>
+              03.5 // ACTIVITÉ
+            </div>
+            <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: isMobile ? 34 : 62, color: eff.texte, letterSpacing: '-0.025em', lineHeight: 0.98 }}>
+              Activité <span style={{ color: a, fontStyle: 'italic', fontWeight: 500 }}>GitHub</span>
+            </div>
           </div>
+
           <a
             href="https://github.com/DevJ-58"
             target="_blank" rel="noopener"
             style={{
-              fontFamily: 'Space Mono, monospace', fontSize: 9,
-              color: a, letterSpacing: '0.15em',
+              fontFamily: 'Space Mono, monospace', fontSize: 10, letterSpacing: '0.15em',
+              color: a, borderBottom: `1px solid rgba(${aRgb},0.3)`, paddingBottom: 4,
               textDecoration: 'none',
-              border: `1px solid rgba(${aRgb},0.25)`,
-              borderRadius: 6, padding: '5px 14px',
-              background: `rgba(${aRgb},0.06)`,
-              transition: 'background 0.2s',
             }}
-            onMouseEnter={e => e.currentTarget.style.background = `rgba(${aRgb},0.12)`}
-            onMouseLeave={e => e.currentTarget.style.background = `rgba(${aRgb},0.06)`}
           >
             @DevJ-58 →
           </a>
         </div>
 
-        {/* Carte principale glass */}
-        <div style={{
-          background: eff.cardBg,
-          border: `1px solid ${eff.borderStrong}`,
-          borderRadius: 20,
-          padding: isMobile ? '24px 16px' : '36px 40px',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          position: 'relative',
-          overflow: 'visible',
-        }}>
-
-          {/* Ligne lumineuse top */}
+        {githubLoading && (
           <div style={{
-            position: 'absolute', top: 0, left: 40, right: 40, height: 1,
-            background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.3),transparent)`,
-          }} />
+            padding: '40px 0',
+            fontFamily: 'Space Mono, monospace', fontSize: 10,
+            color: `rgba(${aRgb},0.4)`, letterSpacing: '0.2em',
+            animation: 'pulse 1.5s infinite',
+          }}>
+            // CONNEXION AU RÉSEAU GITHUB...
+          </div>
+        )}
 
-          {githubLoading && (
-            <div style={{
-              textAlign: 'center', padding: '40px 0',
-              fontFamily: 'Space Mono, monospace', fontSize: 9,
-              color: `rgba(${aRgb},0.4)`, letterSpacing: '0.2em',
-              animation: 'pulse 1.5s infinite',
-            }}>
-              // CONNEXION AU RÉSEAU GITHUB...
-            </div>
-          )}
+        {githubError && (
+          <div style={{
+            padding: '40px 0',
+            fontFamily: 'Space Mono, monospace', fontSize: 10,
+            color: `rgba(${aRgb},0.5)`, letterSpacing: '0.15em',
+          }}>
+            // ERREUR DE CONNEXION — DONNÉES INDISPONIBLES
+          </div>
+        )}
 
-          {githubError && (
-            <div style={{
-              textAlign: 'center', padding: '40px 0',
-              fontFamily: 'Space Mono, monospace', fontSize: 9,
-              color: 'rgba(255,100,100,0.5)', letterSpacing: '0.15em',
-            }}>
-              // ERREUR DE CONNEXION — DONNÉES INDISPONIBLES
-            </div>
-          )}
+        {githubData && (() => {
+          const contributions = githubData.contributions ?? []
+          const weeks = []
+          let currentWeek = []
+          contributions.forEach((day, i) => {
+            const date = new Date(day.date)
+            const dow = date.getDay()
+            if (i === 0) {
+              for (let p = 0; p < dow; p++) currentWeek.push(null)
+            }
+            currentWeek.push(day)
+            if (dow === 6 || i === contributions.length - 1) {
+              while (currentWeek.length < 7) currentWeek.push(null)
+              weeks.push([...currentWeek])
+              currentWeek = []
+            }
+          })
 
-          {githubData && (() => {
-            // Regrouper les contributions par semaine
-            const contributions = githubData.contributions ?? []
-            
-            // Trouver le premier lundi
-            const weeks = []
-            let currentWeek = []
-            
-            contributions.forEach((day, i) => {
-              const date = new Date(day.date)
-              const dow = date.getDay() // 0=dim
-              if (i === 0) {
-                // Padding de début si on ne commence pas un dimanche
-                for (let p = 0; p < dow; p++) {
-                  currentWeek.push(null)
-                }
-              }
-              currentWeek.push(day)
-              if (dow === 6 || i === contributions.length - 1) {
-                // Padding de fin
-                while (currentWeek.length < 7) currentWeek.push(null)
-                weeks.push([...currentWeek])
-                currentWeek = []
-              }
-            })
+          const CELL = isMobile ? 12 : 16
+          const GAP = isMobile ? 4 : 5
+          const DAY_LABELS = ['', 'LUN', '', 'MER', '', 'VEN', '']
 
-            const CELL = isMobile ? 10 : 13
-            const GAP = 3
-            const DAY_LABELS = ['', 'L', '', 'M', '', 'V', '']
+          const monthLabels = []
+          weeks.forEach((week, wi) => {
+            const first = week.find(d => d !== null)
+            if (!first) return
+            const d = new Date(first.date)
+            if (d.getDate() <= 7) {
+              monthLabels.push({
+                wi,
+                label: d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '').toUpperCase(),
+              })
+            }
+          })
 
-            // Mois pour les labels
-            const monthLabels = []
-            weeks.forEach((week, wi) => {
-              const first = week.find(d => d !== null)
-              if (!first) return
-              const d = new Date(first.date)
-              if (d.getDate() <= 7) {
-                monthLabels.push({
-                  wi,
-                  label: d.toLocaleDateString('fr-FR', { month: 'short' })
-                    .replace('.', '').toUpperCase()
-                })
-              }
-            })
+          return (
+            <div style={{ position: 'relative', marginBottom: isMobile ? 56 : 90 }}>
+              <div style={{
+                fontFamily: 'Space Mono, monospace', fontSize: 10, color: eff.textFaint,
+                letterSpacing: '0.15em', marginBottom: 28,
+              }}>
+                {`${githubData.total?.lastYear ?? '—'} CONTRIBUTIONS · DERNIÈRE ANNÉE`}
+              </div>
 
-            return (
-              <div style={{ position: 'relative' }}>
-
-                {/* UN SEUL div scrollable qui contient labels + grille ensemble */}
-                <div style={{
-                  overflowX: 'auto',
-                  WebkitOverflowScrolling: 'touch',
-                  scrollbarWidth: 'none',
-                  msOverflowStyle: 'none',
-                  paddingBottom: 4,
-                }}>
-                  <style>{`
-                    .github-unified::-webkit-scrollbar { display: none; }
-                  `}</style>
-
-                  {/* Conteneur interne à largeur fixe — labels + grille alignés */}
-                  <div
-                    className="github-unified"
-                    style={{
-                      display: 'inline-flex',
-                      flexDirection: 'column',
-                      minWidth: 'max-content',
-                    }}
-                  >
-                    {/* Labels mois — même largeur que la grille */}
-                    <div style={{
-                      display: 'flex',
-                      marginLeft: !isMobile ? 28 : 0,
-                      marginBottom: 6,
-                      height: 16,
-                      position: 'relative',
-                    }}>
-                      {monthLabels.map(({ wi, label }) => (
-                        <div key={`${wi}-${label}`} style={{
-                          position: 'absolute',
-                          left: wi * (CELL + GAP),
-                          fontFamily: 'Space Mono, monospace',
-                          fontSize: 8,
-                          color: `rgba(${aRgb},0.4)`,
-                          letterSpacing: '0.1em',
-                          whiteSpace: 'nowrap',
-                        }}>{label}</div>
-                      ))}
-                    </div>
-
-                    {/* Labels jours + grille côte à côte */}
-                    <div style={{ display: 'flex', gap: 0 }}>
-                      {/* Labels jours — desktop uniquement */}
-                      {!isMobile && (
-                        <div style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: GAP,
-                          marginRight: 6,
-                        }}>
-                          {DAY_LABELS.map((lbl, i) => (
-                            <div key={i} style={{
-                              height: CELL,
-                              fontFamily: 'Space Mono, monospace',
-                              fontSize: 7,
-                              color: `rgba(${aRgb},0.3)`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'flex-end',
-                              width: 14,
-                            }}>{lbl}</div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Grille des semaines */}
-                      <div style={{
-                        display: 'flex',
-                        gap: GAP,
-                      }}>
-                        {weeks.map((week, wi) => (
-                          <div key={wi} style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: GAP,
-                          }}>
-                            {week.map((day, di) => {
-                              if (!day) {
-                                return (
-                                  <div key={di} style={{
-                                    width: CELL, height: CELL,
-                                    borderRadius: 3,
-                                    background: 'transparent',
-                                  }} />
-                                )
-                              }
-                              const color = getContribColor(day.count, a, aRgb)
-                              const isActive = day.count > 0
-                              return (
-                                <div
-                                  key={di}
-                                  style={{
-                                    width: CELL, height: CELL,
-                                    borderRadius: 3,
-                                    background: color,
-                                    border: isActive
-                                      ? `1px solid rgba(${aRgb},0.15)`
-                                      : `1px solid ${eff.borderLight}`,
-                                    cursor: isActive ? 'pointer' : 'default',
-                                    transition: 'transform 0.15s, box-shadow 0.15s',
-                                    boxShadow: day.count > 8
-                                      ? `0 0 6px rgba(${aRgb},0.5)`
-                                      : 'none',
-                                    position: 'relative',
-                                  }}
-                                  onMouseEnter={e => {
-                                    if (!isActive) return
-                                    e.currentTarget.style.transform = 'scale(1.4)'
-                                    e.currentTarget.style.boxShadow = `0 0 10px rgba(${aRgb},0.7)`
-                                    e.currentTarget.style.zIndex = '50'
-                                    const rect = e.currentTarget.getBoundingClientRect()
-                                    setTooltipInfo({
-                                      x: rect.left + rect.width / 2,
-                                      y: rect.top - 8,
-                                      date: day.date,
-                                      count: day.count,
-                                    })
-                                  }}
-                                  onMouseLeave={e => {
-                                    e.currentTarget.style.transform = 'scale(1)'
-                                    e.currentTarget.style.boxShadow = day.count > 8
-                                      ? `0 0 6px rgba(${aRgb},0.5)` : 'none'
-                                    e.currentTarget.style.zIndex = 'auto'
-                                    setTooltipInfo(null)
-                                  }}
-                                />
-                              )
-                            })}
-                          </div>
+              <div style={{
+                overflowX: 'auto', WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none', msOverflowStyle: 'none', paddingBottom: 4,
+              }}>
+                <style>{`.github-grand-scroll::-webkit-scrollbar { display: none; }`}</style>
+                <div className="github-grand-scroll" style={{ display: 'inline-flex', flexDirection: 'column', minWidth: 'max-content' }}>
+                  <div style={{ display: 'flex', marginLeft: !isMobile ? 34 : 0, marginBottom: 10, height: 18, position: 'relative' }}>
+                    {monthLabels.map(({ wi, label }) => (
+                      <div key={`${wi}-${label}`} style={{
+                        position: 'absolute', left: wi * (CELL + GAP),
+                        fontFamily: 'Space Mono, monospace', fontSize: 8,
+                        color: eff.textFaint, letterSpacing: '0.1em', whiteSpace: 'nowrap',
+                      }}>{label}</div>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: 0 }}>
+                    {!isMobile && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: GAP, marginRight: 10 }}>
+                        {DAY_LABELS.map((lbl, i) => (
+                          <div key={i} style={{
+                            height: CELL, fontFamily: 'Space Mono, monospace', fontSize: 7,
+                            color: eff.textFaint, display: 'flex', alignItems: 'center',
+                            justifyContent: 'flex-end', width: 24, letterSpacing: '0.05em',
+                          }}>{lbl}</div>
                         ))}
                       </div>
+                    )}
+                    <div style={{ display: 'flex', gap: GAP }}>
+                      {weeks.map((week, wi) => (
+                        <div key={wi} style={{ display: 'flex', flexDirection: 'column', gap: GAP }}>
+                          {week.map((day, di) => {
+                            if (!day) return <div key={di} style={{ width: CELL, height: CELL, borderRadius: 2, background: 'transparent' }} />
+                            const color = getContribColor(day.count, a, aRgb)
+                            const isActive = day.count > 0
+                            return (
+                              <div
+                                key={di}
+                                style={{
+                                  width: CELL, height: CELL, borderRadius: 2,
+                                  background: color,
+                                  border: isActive ? `1px solid rgba(${aRgb},0.4)` : `1px solid ${isLight ? 'rgba(20,20,20,0.08)' : 'rgba(242,240,236,0.06)'}`,
+                                  boxShadow: day.count > 8 ? `0 0 8px rgba(${aRgb},0.5)` : 'none',
+                                  cursor: isActive ? 'pointer' : 'default',
+                                  transition: 'transform 0.15s, box-shadow 0.15s',
+                                  position: 'relative',
+                                }}
+                                onMouseEnter={e => {
+                                  if (!isActive) return
+                                  e.currentTarget.style.transform = 'scale(1.4)'
+                                  e.currentTarget.style.boxShadow = `0 0 14px rgba(${aRgb},0.8)`
+                                  e.currentTarget.style.zIndex = '50'
+                                  const rect = e.currentTarget.getBoundingClientRect()
+                                  setTooltipInfo({ x: rect.left + rect.width / 2, y: rect.top - 8, date: day.date, count: day.count })
+                                }}
+                                onMouseLeave={e => {
+                                  e.currentTarget.style.transform = 'scale(1)'
+                                  e.currentTarget.style.boxShadow = day.count > 8 ? `0 0 8px rgba(${aRgb},0.5)` : 'none'
+                                  e.currentTarget.style.zIndex = 'auto'
+                                  setTooltipInfo(null)
+                                }}
+                              />
+                            )
+                          })}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
-
-                {/* Légende — en dehors du scroll */}
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  marginTop: 16, justifyContent: 'flex-end',
-                }}>
-                  <span style={{
-                    fontFamily: 'Space Mono, monospace', fontSize: 7,
-                    color: `rgba(${aRgb},0.3)`, letterSpacing: '0.1em',
-                  }}>MOINS</span>
-                  {[0, 2, 5, 9, 15].map(v => (
-                    <div key={v} style={{
-                      width: CELL, height: CELL, borderRadius: 3,
-                      background: getContribColor(v, a, aRgb),
-                      border: `1px solid rgba(${aRgb},0.1)`,
-                    }} />
-                  ))}
-                  <span style={{
-                    fontFamily: 'Space Mono, monospace', fontSize: 7,
-                    color: `rgba(${aRgb},0.3)`, letterSpacing: '0.1em',
-                  }}>PLUS</span>
-                </div>
-
               </div>
-            )
-          })()}
 
-          {/* Stats rapides sous la grille */}
-          {githubData && (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4,1fr)',
-              gap: 12, marginTop: 28,
-              paddingTop: 24,
-              borderTop: `1px solid rgba(${aRgb},0.08)`,
-              overflow: 'hidden',
-              maxWidth: '100%'
-            }}>
-              {[
-                ['TOTAL', githubData.total?.lastYear ?? '—', 'contributions'],
-                ['STREAK', (() => {
-                  const contribs = githubData.contributions ?? []
-                  let max = 0, cur = 0
-                  contribs.forEach(d => {
-                    if (d.count > 0) { cur++; if (cur > max) max = cur }
-                    else cur = 0
-                  })
-                  return max
-                })(), 'jours consécutifs'],
-                ['ACTIF', (() => {
-                  const contribs = githubData.contributions ?? []
-                  return contribs.filter(d => d.count > 0).length
-                })(), 'jours actifs'],
-                ['BEST DAY', (() => {
-                  const contribs = githubData.contributions ?? []
-                  return Math.max(...contribs.map(d => d.count), 0)
-                })(), 'contributions max/jour'],
-              ].map(([label, value, sub]) => (
-                <div key={label} style={{
-                  padding: '14px 16px',
-                  background: `rgba(${aRgb},0.03)`,
-                  border: `1px solid rgba(${aRgb},0.1)`,
-                  borderRadius: 12,
-                  position: 'relative', overflow: 'hidden', minWidth: 0, wordBreak: 'break-word',
-                }}>
-                  <div style={{
-                    position: 'absolute', top: 0, left: 0, right: 0, height: 1,
-                    background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.2),transparent)`,
-                  }} />
-                  <div style={{
-                    fontFamily: 'Space Mono, monospace', fontSize: 7,
-                    color: `rgba(${aRgb},0.4)`, letterSpacing: '0.2em',
-                    marginBottom: 8,
-                  }}>{label}</div>
-                        <div style={{
-                          fontFamily: 'Fraunces, serif', fontWeight: 800,
-                          fontSize: isMobile ? 18 : 24, color: a, marginBottom: 4, wordBreak: 'break-word',
-                        }}>{value}</div>
-                  <div style={{
-                    fontFamily: 'Inter, sans-serif', fontSize: 10,
-                    color: eff.textFaint,
-                  }}>{sub}</div>
-                </div>
-              ))}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 18, justifyContent: 'flex-end' }}>
+                <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 8, color: eff.textFaint, letterSpacing: '0.1em' }}>MOINS</span>
+                {[0, 2, 5, 9, 15].map(v => (
+                  <div key={v} style={{ width: CELL, height: CELL, borderRadius: 2, background: getContribColor(v, a, aRgb), border: `1px solid rgba(${aRgb},0.2)` }} />
+                ))}
+                <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 8, color: eff.textFaint, letterSpacing: '0.1em' }}>PLUS</span>
+              </div>
             </div>
-          )}
-        </div>
+          )
+        })()}
+
+        {githubData && (() => {
+          const contribs = githubData.contributions ?? []
+          let maxStreak = 0, cur = 0
+          contribs.forEach(d => { if (d.count > 0) { cur++; if (cur > maxStreak) maxStreak = cur } else cur = 0 })
+          const stats = [
+            [githubData.total?.lastYear ?? '—', 'Contributions'],
+            [maxStreak, 'Jours consécutifs'],
+            [contribs.filter(d => d.count > 0).length, 'Jours actifs'],
+            [Math.max(...contribs.map(d => d.count), 0), 'Best day'],
+          ]
+          return (
+            <div>
+              <div style={{ height: 1, background: isLight ? 'rgba(20,20,20,0.1)' : 'rgba(242,240,236,0.1)', marginBottom: isMobile ? 40 : 60 }} />
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)',
+                gap: isMobile ? '36px 24px' : 40,
+              }}>
+                {stats.map(([v, l]) => (
+                  <div key={l}>
+                    <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: isMobile ? 40 : 64, color: a, lineHeight: 0.95, letterSpacing: '-0.02em' }}>
+                      {v}
+                    </div>
+                    <div style={{ fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9, letterSpacing: '0.12em', color: eff.textFaint, marginTop: 12, textTransform: 'uppercase' }}>
+                      {l}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
       </section>
 
-      {/* SERVICES */}
       <section id="pf-services" style={sectionStyle}>
         <div style={s.secNum}>04 // SERVICES</div>
         <h2 style={s.secTitle}>Mes <span style={s.accent}>Services</span></h2>
