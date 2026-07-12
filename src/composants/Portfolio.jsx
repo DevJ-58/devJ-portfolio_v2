@@ -37,6 +37,9 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
   const [etapeActive, setEtapeActive] = useState(0)
   const [serviceActif, setServiceActif] = useState(0)
   const [projetSurvole, setProjetSurvole] = useState(null)
+  const [projetSurvoleIdx, setProjetSurvoleIdx] = useState(null)
+  const [categorieActive, setCategorieActive] = useState(0)
+  const [categorieSurvolee, setCategorieSurvolee] = useState(null)
   const wrapRef = useRef(null)
   const { theme, mode, getThemeEffectif } = utiliserTheme()
   const eff = getThemeEffectif ? getThemeEffectif() : theme
@@ -1039,165 +1042,378 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         </div>
       </section>
 
-      {/* SKILLS */}
-      <section id="pf-skills" style={sectionStyle}>
-        <div style={s.secNum}>02 // COMPÉTENCES</div>
-        <h2 style={s.secTitle}>Compétences <span style={s.accent}>Techniques</span></h2>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:16 }}>
-          {competencesAffichees.map(cat => (
-            <div key={cat.cat} style={{ background: eff.cardBg, border: `1px solid ${eff.borderMedium}`, borderRadius:16, padding: isMobile ? 16 : 28, WebkitBackdropFilter:'blur(12px)', backdropFilter:'blur(12px)' }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
-                <div style={{ fontFamily:'Fraunces, serif', fontWeight:700, fontSize:14, color: eff.texte }}>{cat.cat}</div>
-                <div style={{ fontFamily:'Space Mono, monospace', fontSize:9, color:`rgba(${aRgb},0.4)`, background:`rgba(${aRgb},0.06)`, border:`1px solid rgba(${aRgb},0.15)`, padding:'3px 8px', borderRadius:4 }}>{Array.isArray(cat.items) ? cat.items.length : 0}</div>
-              </div>
-              <div style={{ display:'flex', flexWrap:'wrap', gap:10 }}>
-                {Array.isArray(cat.items) ? cat.items.map(([nom, pct]) => {
-                  const indicatorColor = pct >= 85 ? a : (pct >= 70 ? `rgba(${aRgb},0.5)` : `rgba(${aRgb},0.25)`)
-                  return (
-                    <div key={String(nom)} className="pf-skill-pill" style={{ display:'flex', alignItems:'center', gap:8, background: isLight ? 'rgba(0,0,0,0.05)' : eff.cardBg, border:`1px solid ${eff.borderStrong}`, borderRadius:8, padding: isMobile ? '6px 10px' : '8px 14px' }}>
-                      <div style={{ width:6, height:6, borderRadius:6, background: indicatorColor, flexShrink:0 }} />
-                      <div style={{ fontFamily:'Inter, sans-serif', fontSize: isMobile ? 12 : 13, color: eff.textHigh }}>{nom}</div>
-                      <div style={{ fontFamily:'Space Mono, monospace', fontSize: isMobile ? 9 : 10, color:`rgba(${aRgb},0.55)`, marginLeft:'auto' }}>{pct}%</div>
-                    </div>
-                  )
-                }) : null}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <section id="pf-skills" style={{
+        position: 'relative',
+        overflow: 'hidden',
+        background: eff.fond,
+        padding: isMobile ? '56px 24px 60px' : '80px 64px 100px',
+      }}>
+        {!isMobile && (
+          <svg
+            viewBox="0 0 400 400"
+            style={{
+              position: 'absolute',
+              right: 20,
+              top: 20,
+              width: 340,
+              height: 340,
+              opacity: isLight ? 0.35 : 0.5,
+              zIndex: 0,
+              pointerEvents: 'none',
+            }}
+          >
+            <polygon points="60,150 200,70 200,110 100,168 100,210 60,187" fill={isLight ? 'rgba(20,20,20,0.2)' : 'rgba(242,240,236,0.35)'} />
+            <polygon points="200,70 260,105 260,145 200,110" fill={isLight ? 'rgba(20,20,20,0.5)' : 'rgba(0,0,0,0.6)'} />
+            <polygon points="60,187 100,210 260,300 260,340 100,250 60,227" fill={a} />
+            <polygon points="200,110 260,145 260,220 220,242 220,200 200,190" fill={isLight ? 'rgba(20,20,20,0.2)' : 'rgba(242,240,236,0.35)'} />
+            <polygon points="260,145 320,180 320,255 260,220" fill={isLight ? 'rgba(20,20,20,0.5)' : 'rgba(0,0,0,0.6)'} />
+            <polygon points="220,242 260,265 260,300 220,278" fill={isLight ? 'rgba(20,20,20,0.1)' : 'rgba(242,240,236,0.2)'} />
+          </svg>
+        )}
 
-      {/* PROJECTS */}
-      <section id="pf-projects" style={sectionStyle}>
-        <div style={{
-          background: eff.cardBg,
-          border: `1px solid ${eff.borderStrong}`,
-          borderRadius: 24,
-          padding: isMobile ? '28px 20px' : '48px 56px',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          position: 'relative',
-          overflow: 'hidden',
-        }}>
-          <div style={{
-            position: 'absolute', top: 0, left: 40, right: 40, height: 1,
-            background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.3),transparent)`,
-          }} />
-
-          <div style={s.secNum}>03 // PROJETS</div>
-          <h2 style={s.secTitle}>Mes Projets <span style={s.accent}>Réalisés</span></h2>
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.4em', color: a, marginBottom: 16, textTransform: 'uppercase' }}>
+            02 // COMPÉTENCES
+          </div>
+          <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: isMobile ? 28 : 48, color: eff.texte, marginBottom: isMobile ? 40 : 70, letterSpacing: '-0.02em' }}>
+            Signal <span style={{ color: a, fontStyle: 'italic', fontWeight: 500 }}>technique</span>
+          </div>
 
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'minmax(340px, 420px) 1fr',
-            gap: isMobile ? 32 : 48,
-            alignItems: 'center',
-            maxWidth: isMobile ? '100%' : 820,
+            display: 'flex',
+            gap: isMobile ? 40 : 90,
+            justifyContent: isMobile ? 'flex-start' : 'center',
+            alignItems: 'flex-end',
+            flexWrap: 'wrap',
+            overflowX: isMobile ? 'auto' : 'visible',
+            paddingBottom: isMobile ? 8 : 0,
           }}>
+            {competencesAffichees.map((group, gi) => {
+              const items = Array.isArray(group.items) ? group.items : []
+              const isFilled = gi === 0
+              const isActiveHover = categorieSurvolee === gi
+              const isHighlighted = isFilled || isActiveHover
+              const lineGap = isMobile ? 14 : 20
+              const heightScale = isMobile ? 1.0 : 1.4
+              const isDimmed = categorieSurvolee !== null && categorieSurvolee !== gi
 
-          {/* MOSAÏQUE DE VIGNETTES */}
-          <div style={{
-            position: 'relative',
-            height: isMobile ? 320 : 280,
-          }}>
-            {projetsAffiches.slice(0, 3).map((p, i) => {
-              const layouts = [
-                { top: 0, left: '0%', width: isMobile ? '58%' : 190, height: isMobile ? 150 : 150, rotate: -4 },
-                { top: isMobile ? 40 : 20, left: isMobile ? '35%' : 150, width: isMobile ? '58%' : 170, height: isMobile ? 140 : 140, rotate: 3 },
-                { top: isMobile ? 160 : 130, left: isMobile ? '0%' : 20, width: isMobile ? '55%' : 180, height: isMobile ? 130 : 135, rotate: 2 },
-              ]
-              const layout = layouts[i]
               return (
-                <div key={p.num} style={{
-                  position: 'absolute',
-                  top: layout.top,
-                  left: layout.left,
-                  width: layout.width,
-                  height: layout.height,
-                  borderRadius: 14,
-                  overflow: 'hidden',
-                  border: `1px solid ${eff.borderMedium}`,
-                  transform: `rotate(${layout.rotate}deg)`,
-                  boxShadow: '0 20px 40px rgba(0,0,0,0.35)',
-                  transition: 'transform 0.3s ease',
-                  cursor: 'pointer',
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = `rotate(0deg) scale(1.04)`; e.currentTarget.style.zIndex = 5 }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = `rotate(${layout.rotate}deg) scale(1)`; e.currentTarget.style.zIndex = 'auto' }}
+                <div
+                  key={group.cat}
+                  onMouseEnter={() => setCategorieSurvolee(gi)}
+                  onMouseLeave={() => setCategorieSurvolee(null)}
+                  onClick={() => setCategorieSurvolee(categorieSurvolee === gi ? null : gi)}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    flexShrink: 0,
+                    cursor: 'pointer',
+                    transform: categorieSurvolee === gi ? 'scale(1.08)' : 'scale(1)',
+                    transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
+                    transformOrigin: 'bottom center',
+                    opacity: isDimmed ? 0.5 : 1,
+                  }}
                 >
-                  <img src={p.img} alt={p.titre} style={{
-                    width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block',
-                  }} onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement.style.background = `rgba(${aRgb},0.1)` }} />
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: lineGap, height: isMobile ? 130 : 170 }}>
+                    {items.map(([name, pct]) => (
+                      <div
+                        key={name}
+                        style={{
+                          width: 2,
+                          height: pct * heightScale * (isMobile ? 0.75 : 1),
+                          background: isHighlighted ? a : (isLight ? 'rgba(20,20,20,0.5)' : 'rgba(242,240,236,0.55)'),
+                          boxShadow: isActiveHover ? `0 0 8px rgba(${aRgb},0.5)` : 'none',
+                        }}
+                      />
+                    ))}
+                  </div>
+
                   <div style={{
-                    position: 'absolute', inset: 0,
-                    background: `linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%)`,
-                  }} />
-                  <span style={{
-                    position: 'absolute', bottom: 10, left: 10,
-                    fontFamily: 'Space Mono, monospace', fontSize: 8,
-                    letterSpacing: '0.15em', color: 'rgba(255,255,255,0.85)',
-                    background: 'rgba(0,0,0,0.4)', padding: '3px 8px', borderRadius: 4,
-                  }}>{String(p.titre || p.title || p.name || '').toUpperCase()}</span>
+                    width: isMobile ? 74 : 92,
+                    height: isMobile ? 74 : 92,
+                    borderRadius: '50%',
+                    background: isHighlighted ? a : eff.cardBg,
+                    border: isHighlighted ? 'none' : `1.4px solid ${isLight ? 'rgba(20,20,20,0.4)' : 'rgba(242,240,236,0.4)'}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginTop: -2,
+                    marginBottom: -2,
+                    zIndex: 2,
+                  }}>
+                    <span style={{
+                      fontFamily: 'Fraunces, serif', fontWeight: 800,
+                      fontSize: isMobile ? 12 : 15,
+                      color: isHighlighted ? (isLight ? '#f5f5f0' : '#0a0a0a') : eff.texte,
+                      textAlign: 'center', padding: '0 6px',
+                    }}>
+                      {group.cat}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: lineGap, height: 40 }}>
+                    {items.map(([name], ii) => (
+                      <div
+                        key={name}
+                        style={{
+                          width: 2,
+                          height: 20 + ii * 4,
+                          background: isHighlighted ? `rgba(${aRgb},0.4)` : (isLight ? 'rgba(20,20,20,0.2)' : 'rgba(242,240,236,0.25)'),
+                          boxShadow: isActiveHover ? `0 0 8px rgba(${aRgb},0.5)` : 'none',
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: lineGap, marginTop: 16 }}>
+                    {items.map(([name, pct]) => (
+                      <div key={name} style={{ textAlign: 'center', width: isMobile ? 56 : 64 }}>
+                        <div style={{
+                          fontFamily: 'Fraunces, serif', fontWeight: 800,
+                          fontSize: isMobile ? 13 : 15,
+                          color: isHighlighted ? a : eff.texte,
+                          lineHeight: 1.15,
+                          whiteSpace: 'normal',
+                        }}>
+                          {name}
+                        </div>
+                        <div style={{
+                          fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 10 : 11,
+                          color: eff.textFaint, marginTop: 6, letterSpacing: '0.05em',
+                        }}>
+                          {pct}%
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )
             })}
+          </div>
+        </div>
+      </section>
 
-            {/* Bloc "+N autres" intégré dans la mosaïque */}
-            <div style={{
-              position: 'absolute',
-              top: isMobile ? 160 : 150,
-              left: isMobile ? '58%' : 190,
-              width: isMobile ? '40%' : 150,
-              height: isMobile ? 130 : 110,
-              borderRadius: 14,
-              background: `rgba(${aRgb},0.08)`,
-              border: `1px solid rgba(${aRgb},0.3)`,
-              transform: 'rotate(-2deg)',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
-            }}>
-              <span style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: isMobile ? 18 : 22, color: a }}>
-                +{projets.length - 3}
-              </span>
-              <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.15em', color: `rgba(${aRgb},0.6)` }}>
-                AUTRES
-              </span>
-            </div>
+      {/* PROJECTS - CONSTELLATION */}
+      <section id="pf-projects" style={{
+        position: 'relative',
+        overflow: 'hidden',
+        background: eff.fond,
+        padding: isMobile ? '56px 24px 44px' : '80px 64px 56px',
+      }}>
+
+        {/* Forme abstraite de fond — cercles filaires épars */}
+        {!isMobile && (
+          <svg viewBox="0 0 1100 480" style={{
+            position: 'absolute', inset: 0, width: '100%', height: '100%',
+            opacity: isLight ? 0.2 : 0.35, zIndex: 0, pointerEvents: 'none',
+          }}>
+            <circle cx="850" cy="80" r="70" fill="none" stroke={a} strokeWidth="1.2" />
+            <circle cx="950" cy="180" r="95" fill="none" stroke={a} strokeWidth="1.2" />
+            <circle cx="1050" cy="90" r="55" fill="none" stroke={a} strokeWidth="1.2" />
+            <circle cx="780" cy="220" r="60" fill="none" stroke={a} strokeWidth="1.2" />
+            <circle cx="920" cy="330" r="110" fill="none" stroke={a} strokeWidth="1.2" />
+            <circle cx="1080" cy="380" r="70" fill="none" stroke={a} strokeWidth="1.2" />
+            <circle cx="1000" cy="450" r="45" fill="none" stroke={a} strokeWidth="1.2" />
+          </svg>
+        )}
+
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.4em', color: a, marginBottom: 16, textTransform: 'uppercase' }}>
+            03 // PROJETS
+          </div>
+          <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: isMobile ? 28 : 44, color: eff.texte, letterSpacing: '-0.02em', marginBottom: isMobile ? 32 : 50 }}>
+            Constellation <span style={{ color: a, fontStyle: 'italic', fontWeight: 500 }}>de travaux</span>
           </div>
 
-          {/* STAT + CTA */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-              <span style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: isMobile ? 40 : 52, color: a, lineHeight: 1 }}>
-                {String(projets.length).padStart(2, '0')}
-              </span>
-              <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.2em', color: eff.textFaint, lineHeight: 1.4 }}>
-                PROJETS<br/>DÉPLOYÉS
-              </span>
-            </div>
+          {/* DESKTOP : cercles-images superposés en constellation */}
+          {!isMobile && (() => {
+            const positions = [
+              { cx: 150, cy: 150, r: 120, tx: 60, ty: 100, tw: 180 },
+              { cx: 330, cy: 90, r: 80, tx: 280, ty: 55, tw: 100 },
+              { cx: 420, cy: 220, r: 95, tx: 335, ty: 180, tw: 170 },
+              { cx: 570, cy: 110, r: 65, tx: 520, ty: 80, tw: 100 },
+              { cx: 590, cy: 260, r: 55, tx: 550, ty: 235, tw: 85 },
+              { cx: 250, cy: 270, r: 50, tx: 215, ty: 245, tw: 75 },
+            ]
+            const items = projetsAffiches.slice(0, 6)
+            return (
+              <div style={{ position: 'relative', height: 340 }}>
+                {items.map((p, i) => {
+                  const pos = positions[i]
+                  const isActive = projetSurvoleIdx === i
+                  const size = pos.r * 2
+                  return (
+                    <div
+                      key={p.num || i}
+                      onMouseEnter={() => setProjetSurvoleIdx(i)}
+                      onMouseLeave={() => setProjetSurvoleIdx(null)}
+                      onClick={() => p.lien && window.open(p.lien, '_blank', 'noopener')}
+                      style={{
+                        position: 'absolute',
+                        left: pos.cx - pos.r,
+                        top: pos.cy - pos.r,
+                        width: size,
+                        height: size,
+                        borderRadius: '50%',
+                        overflow: 'hidden',
+                        cursor: 'pointer',
+                        border: `${isActive ? 2 : 1}px solid ${isActive ? a : (isLight ? 'rgba(20,20,20,0.4)' : 'rgba(242,240,236,0.4)')}`,
+                        boxShadow: isActive ? `0 0 30px rgba(${aRgb},0.35)` : 'none',
+                        transition: 'border-color 0.2s, box-shadow 0.2s, transform 0.25s',
+                        transform: isActive ? 'scale(1.04)' : 'scale(1)',
+                        background: eff.cardBg,
+                      }}
+                    >
+                      <img
+                        src={p.img}
+                        alt={p.titre}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          filter: isActive ? 'brightness(0.85)' : 'brightness(0.55)',
+                          transition: 'filter 0.2s',
+                        }}
+                        onError={e => { e.currentTarget.style.display = 'none' }}
+                      />
+                      <div style={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%)',
+                        pointerEvents: 'none',
+                      }} />
+                      <div style={{
+                        position: 'absolute',
+                        bottom: size * 0.14,
+                        left: 8,
+                        right: 8,
+                        textAlign: 'center',
+                        pointerEvents: 'none',
+                      }}>
+                        <div style={{
+                          fontFamily: 'Space Mono, monospace',
+                          fontSize: isActive ? 8 : 7,
+                          color: isActive ? a : 'rgba(255,255,255,0.6)',
+                          marginBottom: 4,
+                          textShadow: '0 1px 4px rgba(0,0,0,0.6)',
+                        }}>
+                          {p.num || String(i + 1).padStart(2, '0')}{isActive ? ' · EN VEDETTE' : ''}
+                        </div>
+                        <div style={{
+                          fontFamily: 'Fraunces, serif',
+                          fontWeight: isActive ? 800 : 700,
+                          fontSize: Math.max(10, Math.min(isActive ? 18 : 13, size * 0.11)),
+                          color: '#fff',
+                          lineHeight: 1.2,
+                          textShadow: '0 1px 6px rgba(0,0,0,0.7)',
+                          transition: 'font-size 0.2s',
+                        }}>
+                          {p.titre}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })()}
 
-            <p style={{ fontSize: 13, color: eff.textMuted, lineHeight: 1.7, margin: 0, fontFamily: 'Inter, sans-serif', fontWeight: 300 }}>
-              Du frontend à l'IA, en passant par la culture ivoirienne — une exploration complète de mon travail, présentée dans une expérience 3D immersive.
-            </p>
+          {/* MOBILE : liste verticale simplifiée */}
+          {isMobile && (() => {
+            const positionsMobile = [
+              { x: 5, y: 10, size: 110, fs: 11 },
+              { x: 100, y: 0, size: 80, fs: 9 },
+              { x: 150, y: 75, size: 100, fs: 11 },
+              { x: 10, y: 130, size: 90, fs: 10 },
+              { x: 90, y: 180, size: 75, fs: 9 },
+              { x: 160, y: 195, size: 65, fs: 8 },
+            ]
+            const items = projetsAffiches.slice(0, 6)
+            return (
+              <div style={{ position: 'relative', height: 280, marginBottom: 8 }}>
+                {items.map((p, i) => {
+                  const pos = positionsMobile[i]
+                  const isActive = projetSurvoleIdx === i
+                  return (
+                    <a
+                      key={p.num || i}
+                      href={p.lien || '/projets'}
+                      target={p.lien ? '_blank' : undefined}
+                      rel={p.lien ? 'noopener' : undefined}
+                      onTouchStart={() => setProjetSurvoleIdx(i)}
+                      style={{
+                        position: 'absolute',
+                        left: pos.x,
+                        top: pos.y,
+                        width: pos.size,
+                        height: pos.size,
+                        borderRadius: '50%',
+                        overflow: 'hidden',
+                        display: 'block',
+                        border: `${isActive ? 2 : 1}px solid ${isActive ? a : (isLight ? 'rgba(20,20,20,0.3)' : 'rgba(242,240,236,0.3)')}`,
+                        background: eff.cardBg,
+                      }}
+                    >
+                      <img
+                        src={p.img}
+                        alt={p.titre}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.65)' }}
+                        onError={e => { e.currentTarget.style.display = 'none' }}
+                      />
+                      <div style={{
+                        position: 'absolute', inset: 0,
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 55%)',
+                        pointerEvents: 'none',
+                      }} />
+                      <div style={{
+                        position: 'absolute', top: 8, left: 8,
+                        fontFamily: 'Space Mono, monospace', fontSize: 6,
+                        color: 'rgba(255,255,255,0.6)',
+                      }}>
+                        {p.num || String(i + 1).padStart(2, '0')}
+                      </div>
+                      <div style={{
+                        position: 'absolute', bottom: pos.size * 0.08, left: 4, right: 4,
+                        textAlign: 'center',
+                        fontFamily: 'Fraunces, serif', fontWeight: 700,
+                        fontSize: pos.fs,
+                        color: '#fff',
+                        lineHeight: 1.15,
+                        textShadow: '0 1px 4px rgba(0,0,0,0.6)',
+                      }}>
+                        {p.titre}
+                      </div>
+                    </a>
+                  )
+                })}
+              </div>
+            )
+          })()}
 
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            marginTop: isMobile ? 24 : 20, flexWrap: 'wrap', gap: 14,
+          }}>
+            <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 8, letterSpacing: '0.1em', color: eff.textFaint }}>
+              {projets.length} PROJETS DÉPLOYÉS{!isMobile ? ' · SURVOLEZ POUR EXPLORER' : ''}
+            </span>
             <a href="/projets" style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: isMobile ? 'center' : undefined, gap: 8,
-              background: a, color: '#050505',
-              padding: isMobile ? '14px 20px' : '14px 26px',
-              borderRadius: 10,
-              fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 10 : 10,
-              letterSpacing: '0.18em', fontWeight: 700,
-              textDecoration: 'none', width: isMobile ? '100%' : 'fit-content',
-              boxShadow: `0 0 30px rgba(${aRgb},0.3)`,
-              transition: 'opacity 0.2s, transform 0.2s',
-            }}
-              onMouseEnter={e => { e.currentTarget.style.opacity = '0.88'; e.currentTarget.style.transform = 'translateX(4px)' }}
-              onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateX(0)' }}
-            >
-              EXPLORER TOUS LES PROJETS →
+              padding: '12px 26px',
+              background: isLight ? '#141414' : '#f2f0ec',
+              color: isLight ? '#f5f5f0' : '#0a0a0a',
+              borderRadius: 2,
+              fontFamily: 'Space Mono, monospace',
+              fontSize: 9,
+              letterSpacing: '0.15em',
+              fontWeight: 700,
+              textDecoration: 'none',
+              textTransform: 'uppercase',
+            }}>
+              Tout voir →
             </a>
           </div>
         </div>
-      </div>
       </section>
 
       {/* GITHUB ACTIVITY */}
