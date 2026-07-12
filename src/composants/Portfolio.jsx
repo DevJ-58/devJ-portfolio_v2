@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import utiliserTheme from '@/store/utiliserTheme'
 import usePortfolioData from '@/hooks/usePortfolioData'
 import PanneauParametres from '@/composants/ui/PanneauParametres'
+import RevealOnScroll from '@/composants/RevealOnScroll'
 
 // Petit composant de secours pour éviter une erreur si `AxisBouton` manque.
 function AxisBouton({ isMobile, a, aRgb, navigate, eff }) {
@@ -495,6 +496,43 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           from { opacity: 0; transform: translateY(20px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+        @keyframes waveFlow {
+          to { stroke-dashoffset: -200; }
+        }
+        @keyframes waveDrift {
+          0%, 100% { transform: translateY(0) scaleY(1); }
+          50% { transform: translateY(var(--wave-lift, 8px)) scaleY(1.015); }
+        }
+        @keyframes waveShimmer {
+          0%, 100% { opacity: var(--wave-op, 0.5); }
+          50% { opacity: calc(var(--wave-op, 0.5) * 1.6); }
+        }
+        @keyframes constellationTwinkle {
+          0%, 100% { opacity: var(--star-op, 0.6); }
+          50% { opacity: calc(var(--star-op, 0.6) * 0.25); }
+        }
+        @keyframes orbitFloat {
+          0%, 100% { transform: translate(0, 0); }
+          50% { transform: translate(var(--orbit-x, 6px), var(--orbit-y, -8px)); }
+        }
+        @keyframes signalFlow {
+          to { stroke-dashoffset: -400; }
+        }
+        @keyframes facetShimmer {
+          0%, 100% { opacity: var(--facet-op, 1); }
+          50% { opacity: calc(var(--facet-op, 1) * 0.45); }
+        }
+        @keyframes crystalDrift {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-6px) rotate(0.6deg); }
+        }
+        @keyframes beamSweep {
+          0%   { transform: translate(-120%, -120%) rotate(35deg); opacity: 0; }
+          15%  { opacity: 0.9; }
+          50%  { opacity: 0.9; }
+          85%  { opacity: 0; }
+          100% { transform: translate(120%, 120%) rotate(35deg); opacity: 0; }
+        }
 
         #pf-wrap .pf-card { transition: transform 300ms ease, border-color 300ms ease, box-shadow 300ms ease; }
         #pf-wrap .pf-card:hover { transform: translateY(-4px); border-color: rgba(${aRgb},0.3); box-shadow: 0 8px 30px ${eff.shadow}; }
@@ -729,45 +767,47 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <div>
-                <div style={{
-                  fontFamily: 'Space Mono, monospace',
-                  fontSize: '9px',
-                  letterSpacing: '0.4em',
-                  color: a,
-                  marginBottom: '12px',
-                  textTransform: 'uppercase',
-                }}>
-                  LE PORTRAIT
+              <RevealOnScroll direction="up" delay={0} as="div">
+                <div>
+                  <div style={{
+                    fontFamily: 'Space Mono, monospace',
+                    fontSize: '9px',
+                    letterSpacing: '0.4em',
+                    color: a,
+                    marginBottom: '12px',
+                    textTransform: 'uppercase',
+                  }}>
+                    LE PORTRAIT
+                  </div>
+                  <div style={{
+                    fontFamily: 'Fraunces, serif',
+                    fontSize: isMobile ? '36px' : '66px',
+                    fontWeight: 800,
+                    lineHeight: 0.88,
+                    color: eff.texte,
+                    letterSpacing: '-0.025em',
+                    margin: 0,
+                  }}>
+                    Fréjus
+                  </div>
+                  <div style={{
+                    fontFamily: 'Fraunces, serif',
+                    fontSize: isMobile ? '36px' : '66px',
+                    fontWeight: 500,
+                    fontStyle: 'italic',
+                    lineHeight: 0.88,
+                    color: isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.4)',
+                    letterSpacing: '-0.025em',
+                    marginLeft: isMobile ? '20px' : '48px',
+                    marginTop: '-4px',
+                    marginBottom: 0,
+                  }}>
+                    Kouadio
+                  </div>
                 </div>
-                <div style={{
-                  fontFamily: 'Fraunces, serif',
-                  fontSize: isMobile ? '36px' : '66px',
-                  fontWeight: 800,
-                  lineHeight: 0.88,
-                  color: eff.texte,
-                  letterSpacing: '-0.025em',
-                  margin: 0,
-                }}>
-                  Fréjus
-                </div>
-                <div style={{
-                  fontFamily: 'Fraunces, serif',
-                  fontSize: isMobile ? '36px' : '66px',
-                  fontWeight: 500,
-                  fontStyle: 'italic',
-                  lineHeight: 0.88,
-                  color: isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.4)',
-                  letterSpacing: '-0.025em',
-                  marginLeft: isMobile ? '20px' : '48px',
-                  marginTop: '-4px',
-                  marginBottom: 0,
-                }}>
-                  Kouadio
-                </div>
-              </div>
+              </RevealOnScroll>
 
-              <div style={{
+              <RevealOnScroll direction="up" delay={150} as="div" style={{
                 display: 'grid',
                 gridTemplateColumns: isMobile ? '1fr' : '1fr 1px 200px',
                 gap: '24px',
@@ -861,7 +901,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                   }} />
                 )}
 
-                <div style={{
+                <RevealOnScroll direction="left" delay={300} as="div" style={{
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '16px',
@@ -907,8 +947,8 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                       </div>
                     </div>
                   ))}
-                </div>
-              </div>
+                </RevealOnScroll>
+              </RevealOnScroll>
             </div>
           </div>
         </div>
@@ -999,7 +1039,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         padding: isMobile ? '56px 24px 44px' : '80px 64px 56px',
       }}>
 
-        <div style={{
+        <RevealOnScroll direction="up" delay={0} as="div" style={{
           fontFamily: 'Space Mono, monospace',
           fontSize: 9,
           letterSpacing: '0.4em',
@@ -1008,7 +1048,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           textTransform: 'uppercase',
         }}>
           01 // À PROPOS
-        </div>
+        </RevealOnScroll>
 
         {isMobile && (
           <div style={{
@@ -1031,7 +1071,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           </div>
         )}
 
-        <div style={{
+        <RevealOnScroll direction="up" delay={0} as="div" style={{
           fontFamily: 'Fraunces, serif',
           fontWeight: 800,
           fontSize: isMobile ? 32 : 78,
@@ -1043,7 +1083,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           Concevoir des interfaces qui se ressentent{' '}
           <span style={{ color: a, fontStyle: 'italic', fontWeight: 500 }}>avant</span>
           {' '}de se comprendre.
-        </div>
+        </RevealOnScroll>
 
         <div style={{
           display: 'flex',
@@ -1053,7 +1093,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           flexWrap: 'wrap',
         }}>
 
-          <div style={{
+          <RevealOnScroll direction="up" delay={150} as="div" style={{
             maxWidth: 340,
             fontFamily: 'Inter, sans-serif',
             fontSize: 14,
@@ -1062,9 +1102,9 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             fontWeight: 300,
           }}>
             Fréjus Kouadio — développeur logiciel et UI/UX designer basé à Yamoussoukro. En 2ème année de Licence Génie Logiciel, spécialisation progressive vers l'intelligence artificielle.
-          </div>
+          </RevealOnScroll>
 
-          <div style={{ display: 'flex', gap: isMobile ? 24 : 44, flexWrap: 'wrap' }}>
+          <RevealOnScroll direction="right" delay={250} as="div" style={{ display: 'flex', gap: isMobile ? 24 : 44, flexWrap: 'wrap' }}>
             {[
               ['Yamoussoukro, CI', 'Localisation'],
               ['2ème / 3', 'Cursus'],
@@ -1087,7 +1127,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                 }}>{l}</div>
               </div>
             ))}
-          </div>
+          </RevealOnScroll>
         </div>
 
         <div style={{
@@ -1152,14 +1192,34 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           {Array.from({ length: 14 }).map((_, i) => {
             const offset = i * 6
             const amplitude = 40 + i * 3
+            const baseOpacity = 1 - i * 0.06
+            const flowDuration = 10 + (i % 5) * 1.4
+            const driftDuration = 6 + (i % 4) * 1.1
+            const shimmerDuration = 4 + (i % 3) * 1.3
+            const flowDelay = -(i * 0.9)
+            const driftDelay = -(i * 0.5)
+            const shimmerDelay = -(i * 0.4)
+            const lift = 5 + (i % 3) * 4
+            const strokeW = 1 + (14 - i) * 0.05
+
             return (
               <path
                 key={i}
                 d={`M -50 ${380 - offset} C 200 ${280 - offset - amplitude}, 400 ${480 - offset + amplitude}, 650 ${330 - offset} S 1000 ${180 - offset - amplitude}, 1250 ${350 - offset}`}
                 fill="none"
                 stroke={a}
-                strokeWidth="1.3"
-                opacity={1 - i * 0.06}
+                strokeWidth={strokeW}
+                strokeLinecap="round"
+                strokeDasharray="16 12"
+                opacity={baseOpacity}
+                style={{
+                  '--wave-lift': `${lift}px`,
+                  '--wave-op': baseOpacity,
+                  animation: `waveFlow ${flowDuration}s linear infinite, waveDrift ${driftDuration}s ease-in-out infinite, waveShimmer ${shimmerDuration}s ease-in-out infinite`,
+                  animationDelay: `${flowDelay}s, ${driftDelay}s, ${shimmerDelay}s`,
+                  transformBox: 'fill-box',
+                  transformOrigin: 'center',
+                }}
               />
             )
           })}
@@ -1167,12 +1227,12 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
 
         <div style={{ position: 'relative', zIndex: 1 }}>
 
-        <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.4em', color: a, marginBottom: 16, textTransform: 'uppercase' }}>
+        <RevealOnScroll direction="up" delay={0} as="div" style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.4em', color: a, marginBottom: 16, textTransform: 'uppercase' }}>
           01.5 // PARCOURS
-        </div>
-        <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: isMobile ? 32 : 44, color: eff.texte, marginBottom: isMobile ? 40 : 80, letterSpacing: '-0.02em' }}>
+        </RevealOnScroll>
+        <RevealOnScroll direction="up" delay={0} as="div" style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: isMobile ? 32 : 44, color: eff.texte, marginBottom: isMobile ? 40 : 80, letterSpacing: '-0.02em' }}>
           Trois <span style={{ color: a, fontStyle: 'italic', fontWeight: 500 }}>chapitres</span>
-        </div>
+        </RevealOnScroll>
 
         {!isMobile && (
           <div style={{ position: 'relative', height: 280 }}>
@@ -1183,7 +1243,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               return (
                 <div key={e.chap}>
                   <div style={{ position: 'absolute', left: x, top: '50%', width: e.active ? 11 : 8, height: e.active ? 11 : 8, borderRadius: '50%', transform: 'translate(-50%,-50%)', background: e.active ? a : eff.fond, border: e.active ? 'none' : `1px solid ${isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.35)'}`, boxShadow: e.active ? `0 0 14px rgba(${aRgb},0.7)` : 'none', zIndex: 2 }} />
-                  <div style={{ position: 'absolute', left: x, [dirUp ? 'bottom' : 'top']: 'calc(50% + 22px)', width: 190 }}>
+                  <RevealOnScroll as="div" direction={i % 2 === 0 ? 'up' : 'down'} delay={i * 150} style={{ position: 'absolute', left: x, [dirUp ? 'bottom' : 'top']: 'calc(50% + 22px)', width: 190 }}>
                     <span style={{ position: 'absolute', [dirUp ? 'bottom' : 'top']: -10, left: 0, fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: 100, color: e.active ? a : eff.texte, opacity: 0.06, lineHeight: 1, userSelect: 'none', pointerEvents: 'none' }}>
                       {e.chap}
                     </span>
@@ -1198,7 +1258,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                         {e.detail}
                       </div>
                     </div>
-                  </div>
+                  </RevealOnScroll>
                 </div>
               )
             })}
@@ -1208,7 +1268,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         {isMobile && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {parcoursData.map((e, i) => (
-              <div key={e.chap} style={{ display: 'flex', gap: 16, padding: '20px 0', borderBottom: i < parcoursData.length - 1 ? `1px solid ${isLight ? 'rgba(20,20,20,0.08)' : 'rgba(242,240,236,0.08)'}` : 'none' }}>
+              <RevealOnScroll key={e.chap} as="div" direction={i % 2 === 0 ? 'left' : 'right'} delay={i * 150} style={{ display: 'flex', gap: 16, padding: '20px 0', borderBottom: i < parcoursData.length - 1 ? `1px solid ${isLight ? 'rgba(20,20,20,0.08)' : 'rgba(242,240,236,0.08)'}` : 'none' }}>
                 <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: 32, color: e.active ? a : (isLight ? 'rgba(20,20,20,0.2)' : 'rgba(242,240,236,0.2)'), lineHeight: 1, flexShrink: 0, width: 40 }}>
                   {e.chap}
                 </div>
@@ -1223,7 +1283,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                     {e.detail}
                   </div>
                 </div>
-              </div>
+              </RevealOnScroll>
             ))}
           </div>
         )}
@@ -1248,24 +1308,54 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               opacity: isLight ? 0.35 : 0.5,
               zIndex: 0,
               pointerEvents: 'none',
+              overflow: 'visible',
             }}
           >
-            <polygon points="60,150 200,70 200,110 100,168 100,210 60,187" fill={isLight ? 'rgba(20,20,20,0.2)' : 'rgba(242,240,236,0.35)'} />
-            <polygon points="200,70 260,105 260,145 200,110" fill={isLight ? 'rgba(20,20,20,0.5)' : 'rgba(0,0,0,0.6)'} />
-            <polygon points="60,187 100,210 260,300 260,340 100,250 60,227" fill={a} />
-            <polygon points="200,110 260,145 260,220 220,242 220,200 200,190" fill={isLight ? 'rgba(20,20,20,0.2)' : 'rgba(242,240,236,0.35)'} />
-            <polygon points="260,145 320,180 320,255 260,220" fill={isLight ? 'rgba(20,20,20,0.5)' : 'rgba(0,0,0,0.6)'} />
-            <polygon points="220,242 260,265 260,300 220,278" fill={isLight ? 'rgba(20,20,20,0.1)' : 'rgba(242,240,236,0.2)'} />
+            <defs>
+              <clipPath id="skillsGel-crystalClip">
+                <polygon points="60,150 200,70 200,110 100,168 100,210 60,187" />
+                <polygon points="200,70 260,105 260,145 200,110" />
+                <polygon points="60,187 100,210 260,300 260,340 100,250 60,227" />
+                <polygon points="200,110 260,145 260,220 220,242 220,200 200,190" />
+                <polygon points="260,145 320,180 320,255 260,220" />
+                <polygon points="220,242 260,265 260,300 220,278" />
+              </clipPath>
+              <linearGradient id="skillsGel-beamGradient" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor={a} stopOpacity="0" />
+                <stop offset="50%" stopColor={a} stopOpacity="0.9" />
+                <stop offset="100%" stopColor={a} stopOpacity="0" />
+              </linearGradient>
+            </defs>
+
+            <g style={{ animation: 'crystalDrift 7s ease-in-out infinite', transformOrigin: 'center' }}>
+              <polygon points="60,150 200,70 200,110 100,168 100,210 60,187" fill={isLight ? 'rgba(20,20,20,0.2)' : 'rgba(242,240,236,0.35)'} style={{ '--facet-op': 1, animation: 'facetShimmer 3.2s ease-in-out infinite', animationDelay: '0s' }} />
+              <polygon points="200,70 260,105 260,145 200,110" fill={isLight ? 'rgba(20,20,20,0.5)' : 'rgba(0,0,0,0.6)'} style={{ '--facet-op': 1, animation: 'facetShimmer 3.2s ease-in-out infinite', animationDelay: '0.35s' }} />
+              <polygon points="60,187 100,210 260,300 260,340 100,250 60,227" fill={a} style={{ '--facet-op': 1, animation: 'facetShimmer 3.2s ease-in-out infinite', animationDelay: '0.7s' }} />
+              <polygon points="200,110 260,145 260,220 220,242 220,200 200,190" fill={isLight ? 'rgba(20,20,20,0.2)' : 'rgba(242,240,236,0.35)'} style={{ '--facet-op': 1, animation: 'facetShimmer 3.2s ease-in-out infinite', animationDelay: '1.05s' }} />
+              <polygon points="260,145 320,180 320,255 260,220" fill={isLight ? 'rgba(20,20,20,0.5)' : 'rgba(0,0,0,0.6)'} style={{ '--facet-op': 1, animation: 'facetShimmer 3.2s ease-in-out infinite', animationDelay: '1.4s' }} />
+              <polygon points="220,242 260,265 260,300 220,278" fill={isLight ? 'rgba(20,20,20,0.1)' : 'rgba(242,240,236,0.2)'} style={{ '--facet-op': 1, animation: 'facetShimmer 3.2s ease-in-out infinite', animationDelay: '1.75s' }} />
+            </g>
+
+            <g clipPath="url(#skillsGel-crystalClip)">
+              <rect
+                x="-100"
+                y="-100"
+                width="120"
+                height="600"
+                fill="url(#skillsGel-beamGradient)"
+                style={{ animation: 'beamSweep 6s ease-in-out infinite' }}
+              />
+            </g>
           </svg>
         )}
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.4em', color: a, marginBottom: 16, textTransform: 'uppercase' }}>
+          <RevealOnScroll direction="up" delay={0} as="div" style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.4em', color: a, marginBottom: 16, textTransform: 'uppercase' }}>
             02 // COMPÉTENCES
-          </div>
-          <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: isMobile ? 28 : 48, color: eff.texte, marginBottom: isMobile ? 40 : 70, letterSpacing: '-0.02em' }}>
+          </RevealOnScroll>
+          <RevealOnScroll direction="up" delay={0} as="div" style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: isMobile ? 28 : 48, color: eff.texte, marginBottom: isMobile ? 40 : 70, letterSpacing: '-0.02em' }}>
             Signal <span style={{ color: a, fontStyle: 'italic', fontWeight: 500 }}>technique</span>
-          </div>
+          </RevealOnScroll>
 
           {isMobile ? (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -1274,8 +1364,11 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                 const isActiveHover = categorieSurvolee === gi
                 const isHighlighted = isActiveHover
                 return (
-                  <div
+                  <RevealOnScroll
                     key={group.cat}
+                    as="div"
+                    direction="up"
+                    delay={gi * 120}
                     onClick={() => setCategorieSurvolee(categorieSurvolee === gi ? null : gi)}
                     style={{
                       display: 'flex',
@@ -1326,7 +1419,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </RevealOnScroll>
                 )
               })}
             </div>
@@ -1349,24 +1442,34 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                 const isDimmed = categorieSurvolee !== null && categorieSurvolee !== gi
 
                 return (
-                  <div
+                  <RevealOnScroll
                     key={group.cat}
-                    onMouseEnter={() => setCategorieSurvolee(gi)}
-                    onMouseLeave={() => setCategorieSurvolee(null)}
-                    onClick={() => setCategorieSurvolee(categorieSurvolee === gi ? null : gi)}
+                    as="div"
+                    direction="up"
+                    delay={gi * 120}
                     style={{
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       flexShrink: 0,
-                      cursor: 'pointer',
-                      transform: categorieSurvolee === gi ? 'scale(1.08)' : 'scale(1)',
-                      transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
                       transformOrigin: 'bottom center',
-                      opacity: isDimmed ? 0.5 : 1,
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: lineGap, height: isMobile ? 130 : 170 }}>
+                    <div
+                      onMouseEnter={() => setCategorieSurvolee(gi)}
+                      onMouseLeave={() => setCategorieSurvolee(null)}
+                      onClick={() => setCategorieSurvolee(categorieSurvolee === gi ? null : gi)}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        cursor: 'pointer',
+                        transform: categorieSurvolee === gi ? 'scale(1.08)' : 'scale(1)',
+                        transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
+                        opacity: isDimmed ? 0.5 : 1,
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'flex-end', gap: lineGap, height: isMobile ? 130 : 170 }}>
                       {items.map(([name, pct]) => (
                         <div
                           key={name}
@@ -1417,28 +1520,29 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                       ))}
                     </div>
 
-                    <div style={{ display: 'flex', gap: lineGap, marginTop: 16 }}>
-                      {items.map(([name, pct]) => (
-                        <div key={name} style={{ textAlign: 'center', width: isMobile ? 56 : 64 }}>
-                          <div style={{
-                            fontFamily: 'Fraunces, serif', fontWeight: 800,
-                            fontSize: isMobile ? 13 : 15,
-                            color: isHighlighted ? a : eff.texte,
-                            lineHeight: 1.15,
-                            whiteSpace: 'normal',
-                          }}>
-                            {name}
+                      <div style={{ display: 'flex', gap: lineGap, marginTop: 16 }}>
+                        {items.map(([name, pct]) => (
+                          <div key={name} style={{ textAlign: 'center', width: isMobile ? 56 : 64 }}>
+                            <div style={{
+                              fontFamily: 'Fraunces, serif', fontWeight: 800,
+                              fontSize: isMobile ? 13 : 15,
+                              color: isHighlighted ? a : eff.texte,
+                              lineHeight: 1.15,
+                              whiteSpace: 'normal',
+                            }}>
+                              {name}
+                            </div>
+                            <div style={{
+                              fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 10 : 11,
+                              color: eff.textFaint, marginTop: 6, letterSpacing: '0.05em',
+                            }}>
+                              {pct}%
+                            </div>
                           </div>
-                          <div style={{
-                            fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 10 : 11,
-                            color: eff.textFaint, marginTop: 6, letterSpacing: '0.05em',
-                          }}>
-                            {pct}%
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  </RevealOnScroll>
                 )
               })}
             </div>
@@ -1460,23 +1564,74 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             position: 'absolute', inset: 0, width: '100%', height: '100%',
             opacity: isLight ? 0.2 : 0.35, zIndex: 0, pointerEvents: 'none',
           }}>
-            <circle cx="850" cy="80" r="70" fill="none" stroke={a} strokeWidth="1.2" />
-            <circle cx="950" cy="180" r="95" fill="none" stroke={a} strokeWidth="1.2" />
-            <circle cx="1050" cy="90" r="55" fill="none" stroke={a} strokeWidth="1.2" />
-            <circle cx="780" cy="220" r="60" fill="none" stroke={a} strokeWidth="1.2" />
-            <circle cx="920" cy="330" r="110" fill="none" stroke={a} strokeWidth="1.2" />
-            <circle cx="1080" cy="380" r="70" fill="none" stroke={a} strokeWidth="1.2" />
-            <circle cx="1000" cy="450" r="45" fill="none" stroke={a} strokeWidth="1.2" />
+            {[
+              { cx: 850, cy: 80,  r: 70  },
+              { cx: 950, cy: 180, r: 95  },
+              { cx: 1050, cy: 90, r: 55  },
+              { cx: 780, cy: 220, r: 60  },
+              { cx: 920, cy: 330, r: 110 },
+              { cx: 1080, cy: 380, r: 70 },
+              { cx: 1000, cy: 450, r: 45 },
+            ].map((c, i) => {
+              const twinkleDuration = 3 + (i % 4) * 1.1
+              const twinkleDelay = -(i * 0.6)
+              const orbitDuration = 8 + (i % 3) * 2.3
+              const orbitDelay = -(i * 1.1)
+              const flowDuration = 14 + (i % 5) * 2
+              const flowDelay = -(i * 1.4)
+              const orbitX = i % 2 === 0 ? 5 + i : -(5 + i)
+              const orbitY = i % 3 === 0 ? -8 - i : 8 + i
+              const baseOpacity = 0.9 - (i % 3) * 0.15
+              const circumference = 2 * Math.PI * c.r
+
+              return (
+                <g
+                  key={i}
+                  style={{
+                    '--orbit-x': `${orbitX}px`,
+                    '--orbit-y': `${orbitY}px`,
+                    animation: `orbitFloat ${orbitDuration}s ease-in-out infinite`,
+                    animationDelay: `${orbitDelay}s`,
+                    transformOrigin: `${c.cx}px ${c.cy}px`,
+                  }}
+                >
+                  <circle
+                    cx={c.cx} cy={c.cy} r={c.r}
+                    fill="none"
+                    stroke={a}
+                    strokeWidth="1.2"
+                    style={{
+                      '--star-op': baseOpacity,
+                      animation: `constellationTwinkle ${twinkleDuration}s ease-in-out infinite`,
+                      animationDelay: `${twinkleDelay}s`,
+                    }}
+                  />
+                  <circle
+                    cx={c.cx} cy={c.cy} r={c.r}
+                    fill="none"
+                    stroke={a}
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeDasharray={`10 ${circumference - 10}`}
+                    opacity="0.85"
+                    style={{
+                      animation: `signalFlow ${flowDuration}s linear infinite`,
+                      animationDelay: `${flowDelay}s`,
+                    }}
+                  />
+                </g>
+              )
+            })}
           </svg>
         )}
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.4em', color: a, marginBottom: 16, textTransform: 'uppercase' }}>
+          <RevealOnScroll direction="up" delay={0} as="div" style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.4em', color: a, marginBottom: 16, textTransform: 'uppercase' }}>
             03 // PROJETS
-          </div>
-          <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: isMobile ? 28 : 44, color: eff.texte, letterSpacing: '-0.02em', marginBottom: isMobile ? 32 : 50 }}>
+          </RevealOnScroll>
+          <RevealOnScroll direction="up" delay={0} as="div" style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: isMobile ? 28 : 44, color: eff.texte, letterSpacing: '-0.02em', marginBottom: isMobile ? 32 : 50 }}>
             Constellation <span style={{ color: a, fontStyle: 'italic', fontWeight: 500 }}>de travaux</span>
-          </div>
+          </RevealOnScroll>
 
           {/* DESKTOP : cercles-images superposés en constellation */}
           {!isMobile && (() => {
@@ -1496,11 +1651,11 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                   const isActive = projetSurvoleIdx === i
                   const size = pos.r * 2
                   return (
-                    <div
+                    <RevealOnScroll
                       key={p.num || i}
-                      onMouseEnter={() => setProjetSurvoleIdx(i)}
-                      onMouseLeave={() => setProjetSurvoleIdx(null)}
-                      onClick={() => p.lien && window.open(p.lien, '_blank', 'noopener')}
+                      as="div"
+                      direction="none"
+                      delay={i * 100}
                       style={{
                         position: 'absolute',
                         left: pos.cx - pos.r,
@@ -1509,62 +1664,73 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                         height: size,
                         borderRadius: '50%',
                         overflow: 'hidden',
-                        cursor: 'pointer',
-                        border: `${isActive ? 2 : 1}px solid ${isActive ? a : (isLight ? 'rgba(20,20,20,0.4)' : 'rgba(242,240,236,0.4)')}`,
-                        boxShadow: isActive ? `0 0 30px rgba(${aRgb},0.35)` : 'none',
-                        transition: 'border-color 0.2s, box-shadow 0.2s, transform 0.25s',
-                        transform: isActive ? 'scale(1.04)' : 'scale(1)',
-                        background: eff.cardBg,
                       }}
                     >
-                      <img
-                        src={p.img}
-                        alt={p.titre}
+                      <div
+                        onMouseEnter={() => setProjetSurvoleIdx(i)}
+                        onMouseLeave={() => setProjetSurvoleIdx(null)}
+                        onClick={() => p.lien && window.open(p.lien, '_blank', 'noopener')}
                         style={{
                           width: '100%',
                           height: '100%',
-                          objectFit: 'cover',
-                          filter: isActive ? 'brightness(0.85)' : 'brightness(0.55)',
-                          transition: 'filter 0.2s',
+                          position: 'relative',
+                          cursor: 'pointer',
+                          border: `${isActive ? 2 : 1}px solid ${isActive ? a : (isLight ? 'rgba(20,20,20,0.4)' : 'rgba(242,240,236,0.4)')}`,
+                          boxShadow: isActive ? `0 0 30px rgba(${aRgb},0.35)` : 'none',
+                          transition: 'border-color 0.2s, box-shadow 0.2s, transform 0.25s',
+                          transform: isActive ? 'scale(1.04)' : 'scale(1)',
+                          background: eff.cardBg,
                         }}
-                        onError={e => { e.currentTarget.style.display = 'none' }}
-                      />
-                      <div style={{
-                        position: 'absolute',
-                        inset: 0,
-                        background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%)',
-                        pointerEvents: 'none',
-                      }} />
-                      <div style={{
-                        position: 'absolute',
-                        bottom: size * 0.14,
-                        left: 8,
-                        right: 8,
-                        textAlign: 'center',
-                        pointerEvents: 'none',
-                      }}>
+                      >
+                        <img
+                          src={p.img}
+                          alt={p.titre}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            filter: isActive ? 'brightness(0.85)' : 'brightness(0.55)',
+                            transition: 'filter 0.2s',
+                          }}
+                          onError={e => { e.currentTarget.style.display = 'none' }}
+                        />
                         <div style={{
-                          fontFamily: 'Space Mono, monospace',
-                          fontSize: isActive ? 8 : 7,
-                          color: isActive ? a : 'rgba(255,255,255,0.6)',
-                          marginBottom: 4,
-                          textShadow: '0 1px 4px rgba(0,0,0,0.6)',
-                        }}>
-                          {p.num || String(i + 1).padStart(2, '0')}{isActive ? ' · EN VEDETTE' : ''}
-                        </div>
+                          position: 'absolute',
+                          inset: 0,
+                          background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%)',
+                          pointerEvents: 'none',
+                        }} />
                         <div style={{
-                          fontFamily: 'Fraunces, serif',
-                          fontWeight: isActive ? 800 : 700,
-                          fontSize: Math.max(10, Math.min(isActive ? 18 : 13, size * 0.11)),
-                          color: '#fff',
-                          lineHeight: 1.2,
-                          textShadow: '0 1px 6px rgba(0,0,0,0.7)',
-                          transition: 'font-size 0.2s',
+                          position: 'absolute',
+                          bottom: size * 0.14,
+                          left: 8,
+                          right: 8,
+                          textAlign: 'center',
+                          pointerEvents: 'none',
                         }}>
-                          {p.titre}
+                          <div style={{
+                            fontFamily: 'Space Mono, monospace',
+                            fontSize: isActive ? 8 : 7,
+                            color: isActive ? a : 'rgba(255,255,255,0.6)',
+                            marginBottom: 4,
+                            textShadow: '0 1px 4px rgba(0,0,0,0.6)',
+                          }}>
+                            {p.num || String(i + 1).padStart(2, '0')}{isActive ? ' · EN VEDETTE' : ''}
+                          </div>
+                          <div style={{
+                            fontFamily: 'Fraunces, serif',
+                            fontWeight: isActive ? 800 : 700,
+                            fontSize: Math.max(10, Math.min(isActive ? 18 : 13, size * 0.11)),
+                            color: '#fff',
+                            lineHeight: 1.2,
+                            textShadow: '0 1px 6px rgba(0,0,0,0.7)',
+                            transition: 'font-size 0.2s',
+                          }}>
+                            {p.titre}
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </RevealOnScroll>
                   )
                 })}
               </div>
@@ -1588,8 +1754,11 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                   const pos = positionsMobile[i]
                   const isActive = projetSurvoleIdx === i
                   return (
-                    <a
+                    <RevealOnScroll
                       key={p.num || i}
+                      as="a"
+                      direction="none"
+                      delay={i * 100}
                       href={p.lien || '/projets'}
                       target={p.lien ? '_blank' : undefined}
                       rel={p.lien ? 'noopener' : undefined}
@@ -1636,7 +1805,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                       }}>
                         {p.titre}
                       </div>
-                    </a>
+                    </RevealOnScroll>
                   )
                 })}
               </div>
@@ -1674,7 +1843,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         background: eff.fond,
         padding: isMobile ? '56px 24px 70px' : '100px 64px 120px',
       }}>
-        <div style={{
+        <RevealOnScroll direction="up" delay={0} as="div" style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
           marginBottom: isMobile ? 40 : 70, flexWrap: 'wrap', gap: 16,
         }}>
@@ -1698,7 +1867,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           >
             @DevJ-58 →
           </a>
-        </div>
+        </RevealOnScroll>
 
         {githubLoading && (
           <div style={{
@@ -1757,7 +1926,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           })
 
           return (
-            <div style={{ position: 'relative', marginBottom: isMobile ? 56 : 90 }}>
+            <RevealOnScroll direction="up" delay={200} as="div" style={{ position: 'relative', marginBottom: isMobile ? 56 : 90 }}>
               <div style={{
                 fontFamily: 'Space Mono, monospace', fontSize: 10, color: eff.textFaint,
                 letterSpacing: '0.15em', marginBottom: 28,
@@ -1842,7 +2011,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                 ))}
                 <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 8, color: eff.textFaint, letterSpacing: '0.1em' }}>PLUS</span>
               </div>
-            </div>
+            </RevealOnScroll>
           )
         })()}
 
@@ -1859,7 +2028,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           return (
             <div>
               <div style={{ height: 1, background: isLight ? 'rgba(20,20,20,0.1)' : 'rgba(242,240,236,0.1)', marginBottom: isMobile ? 40 : 60 }} />
-              <div style={{
+              <RevealOnScroll direction="up" delay={350} as="div" style={{
                 display: 'grid',
                 gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)',
                 gap: isMobile ? '36px 24px' : 40,
@@ -1874,7 +2043,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                     </div>
                   </div>
                 ))}
-              </div>
+              </RevealOnScroll>
             </div>
           )
         })()}
@@ -1882,7 +2051,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
 
       <section id="pf-services" style={sectionStyle}>
         <div style={s.secNum}>04 // SERVICES</div>
-        <h2 style={s.secTitle}>Mes <span style={s.accent}>Services</span></h2>
+        <RevealOnScroll as="h2" direction="up" delay={0} style={s.secTitle}>Mes <span style={s.accent}>Services</span></RevealOnScroll>
         <div style={{
           display: 'flex',
           flexDirection: isMobile ? 'column' : 'row',
@@ -1901,7 +2070,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             const col2 = sv.features.slice(half)
 
             return (
-              <div key={serviceActif} style={{
+              <RevealOnScroll key={serviceActif} as="div" direction="left" delay={150} style={{
                 position: 'relative',
                 overflow: 'hidden',
                 borderRadius: 16,
@@ -2002,7 +2171,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                     textDecoration: 'none', width: isMobile ? '100%' : 'fit-content', textAlign: 'center',
                   }}>COMMANDER</a>
                 </div>
-              </div>
+              </RevealOnScroll>
             )
           })()}
 
@@ -2021,8 +2190,11 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               const hasCurrency = prixParts[prixParts.length - 1] === 'FCFA'
               const displayPrix = hasCurrency ? `dès ${sv.prix}` : sv.prix
               return (
-                <div
+                <RevealOnScroll
                   key={sv.titre}
+                  as="div"
+                  direction="right"
+                  delay={250}
                   role="button"
                   tabIndex={0}
                   aria-label={`Voir l'offre ${sv.titre}`}
@@ -2070,7 +2242,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                       {displayPrix}
                     </div>
                   </div>
-                </div>
+                </RevealOnScroll>
               )
             })}
           </div>
@@ -2109,9 +2281,9 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
 
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div style={s.secNum}>05 // MÉTHODE</div>
-          <h2 style={s.secTitle}>Ma <span style={s.accent}>Méthode</span> de Travail</h2>
+          <RevealOnScroll as="h2" direction="up" delay={0} style={s.secTitle}>Ma <span style={s.accent}>Méthode</span> de Travail</RevealOnScroll>
 
-          <div style={{
+          <RevealOnScroll direction="up" delay={200} as="div" style={{
             background: eff.cardBg,
             border: `1px solid ${eff.borderStrong}`,
             borderRadius: 16,
@@ -2248,12 +2420,12 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               )
             })}
           </div>
-        </div>
+        </RevealOnScroll>
       </div>
       </section>
       <section id="pf-contact" style={sectionStyle}>
         <div style={s.secNum}>06 // CONTACT</div>
-        <h2 style={s.secTitle}>Travaillons <span style={s.accent}>Ensemble</span></h2>
+        <RevealOnScroll as="h2" direction="up" delay={0} style={s.secTitle}>Travaillons <span style={s.accent}>Ensemble</span></RevealOnScroll>
 
         {accesDirecte && (
           <AxisBouton
@@ -2266,7 +2438,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         )}
 
         {/* Phrase d'accroche */}
-        <div style={{
+        <RevealOnScroll direction="up" delay={150} as="div" style={{
           maxWidth: 600, marginBottom: 48,
           padding: '24px 32px',
           background: `rgba(${aRgb},0.04)`,
@@ -2277,10 +2449,10 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, color: eff.textMedium, lineHeight: 1.8, margin: 0 }}>
             Vous avez un projet web, une idée à concrétiser ou vous cherchez un développeur  passionné par l'IA ? Je suis disponible pour des missions freelance, des collaborations et des opportunités à temps plein.
           </p>
-        </div>
+        </RevealOnScroll>
 
         {/* Disponibilité */}
-        <div style={{
+        <RevealOnScroll direction="up" delay={150} as="div" style={{
           display: 'flex', alignItems: 'center', gap: 10,
           marginBottom: 40,
           padding: '12px 20px',
@@ -2293,10 +2465,10 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 10, color: a, letterSpacing: '0.2em' }}>
             DISPONIBLE POUR DE NOUVEAUX PROJETS
           </span>
-        </div>
+        </RevealOnScroll>
 
         {/* Liens de contact */}
-        <div style={contactGridStyle}>
+        <RevealOnScroll direction="up" delay={250} as="div" style={contactGridStyle}>
           {[
             { label: 'Email', val: 'devfred58@gmail.com', href: 'mailto:devfred58@gmail.com', desc: 'Réponse sous 24h' },
             { label: 'Téléphone', val: '+225 0767998373', href: 'tel:+2250767998373', desc: 'Lun–Sam, 8h–18h' },
@@ -2316,10 +2488,10 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               <div style={{ fontSize: isMobile ? 11 : 13, color: a, fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>{val}</div>
             </a>
           ))}
-        </div>
+        </RevealOnScroll>
 
         {/* CTA principal */}
-        <div style={{ marginTop: 48, textAlign: 'center' }}>
+        <RevealOnScroll direction="up" delay={350} as="div" style={{ marginTop: 48, textAlign: 'center' }}>
           <a href="mailto:devfred58@gmail.com"
             style={{
               display: 'inline-flex', alignItems: 'center', justifyContent: isMobile ? 'center' : undefined, gap: 12,
@@ -2340,7 +2512,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           <p style={{ marginTop: 16, fontFamily: 'Space Mono, monospace', fontSize: 9, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.15em' }}>
             Ou envoyez un message sur WhatsApp pour une réponse rapide
           </p>
-        </div>
+        </RevealOnScroll>
       </section>
 
       {/* FOOTER */}

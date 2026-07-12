@@ -17,6 +17,7 @@ export default function PreloaderEditorial({ onTermine }) {
   const [motIdx, setMotIdx] = useState(0)
   const [sectionsActives, setSectionsActives] = useState(Array(4).fill(false))
   const [barres, setBarres] = useState(Array(24).fill(3))
+  const [isMobile, setIsMobile] = useState(false)
   const fillRef = useRef(null)
   const loaderRef = useRef(null)
   const irisRef = useRef(null)
@@ -29,6 +30,13 @@ export default function PreloaderEditorial({ onTermine }) {
   ]
   const caracteres = ['<', '/', 'D', 'e', 'v', 'J', '>']
   const sections = ['PORTRAIT', 'PARCOURS', 'PROJETS', 'CONTACT']
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768)
+    onResize()
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   useEffect(() => {
     const timers = []
@@ -111,7 +119,7 @@ export default function PreloaderEditorial({ onTermine }) {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        padding: '32px 40px',
+        padding: isMobile ? '20px 18px 24px' : '32px 40px',
         boxSizing: 'border-box',
         fontFamily: 'Space Mono, monospace',
         transition: 'transform 0.9s cubic-bezier(.7,0,.3,1), opacity 0.7s ease 0.1s',
@@ -151,21 +159,21 @@ export default function PreloaderEditorial({ onTermine }) {
           }} />
         </div>
 
-        <div style={{ position: 'absolute', inset: 32, pointerEvents: 'none', zIndex: 1 }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, width: 14, height: 14, borderTop: `1px solid rgba(${aRgb},0.5)`, borderLeft: `1px solid rgba(${aRgb},0.5)` }} />
-          <div style={{ position: 'absolute', top: 0, right: 0, width: 14, height: 14, borderTop: `1px solid rgba(${aRgb},0.5)`, borderRight: `1px solid rgba(${aRgb},0.5)` }} />
-          <div style={{ position: 'absolute', bottom: 0, left: 0, width: 14, height: 14, borderBottom: `1px solid rgba(${aRgb},0.5)`, borderLeft: `1px solid rgba(${aRgb},0.5)` }} />
-          <div style={{ position: 'absolute', bottom: 0, right: 0, width: 14, height: 14, borderBottom: `1px solid rgba(${aRgb},0.5)`, borderRight: `1px solid rgba(${aRgb},0.5)` }} />
+        <div style={{ position: 'absolute', inset: isMobile ? 20 : 32, pointerEvents: 'none', zIndex: 1 }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, width: isMobile ? 10 : 14, height: isMobile ? 10 : 14, borderTop: `1px solid rgba(${aRgb},0.5)`, borderLeft: `1px solid rgba(${aRgb},0.5)` }} />
+          <div style={{ position: 'absolute', top: 0, right: 0, width: isMobile ? 10 : 14, height: isMobile ? 10 : 14, borderTop: `1px solid rgba(${aRgb},0.5)`, borderRight: `1px solid rgba(${aRgb},0.5)` }} />
+          <div style={{ position: 'absolute', bottom: 0, left: 0, width: isMobile ? 10 : 14, height: isMobile ? 10 : 14, borderBottom: `1px solid rgba(${aRgb},0.5)`, borderLeft: `1px solid rgba(${aRgb},0.5)` }} />
+          <div style={{ position: 'absolute', bottom: 0, right: 0, width: isMobile ? 10 : 14, height: isMobile ? 10 : 14, borderBottom: `1px solid rgba(${aRgb},0.5)`, borderRight: `1px solid rgba(${aRgb},0.5)` }} />
         </div>
 
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 8 : 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 10, height: 10, border: `1px solid ${a}`, transform: 'rotate(45deg)' }} />
-            <span style={{ fontSize: 11, letterSpacing: '0.35em', color: isLight ? 'rgba(20,20,20,0.4)' : 'rgba(242,240,236,0.4)' }}>
+            <span style={{ fontSize: isMobile ? 8 : 11, letterSpacing: '0.35em', color: isLight ? 'rgba(20,20,20,0.4)' : 'rgba(242,240,236,0.4)' }}>
               VOL. I · N°01
             </span>
           </div>
-          <span style={{ fontSize: 11, letterSpacing: '0.2em', color: isLight ? 'rgba(20,20,20,0.3)' : 'rgba(242,240,236,0.3)' }}>
+          <span style={{ fontSize: isMobile ? 8 : 11, letterSpacing: '0.2em', color: isLight ? 'rgba(20,20,20,0.3)' : 'rgba(242,240,236,0.3)' }}>
             ÉD. {String(pct).padStart(3, '0')}
           </span>
         </div>
@@ -176,7 +184,7 @@ export default function PreloaderEditorial({ onTermine }) {
             display: 'inline-block',
             fontFamily: 'Fraunces, serif',
             fontWeight: 800,
-            fontSize: 'clamp(72px, 13vw, 128px)',
+            fontSize: isMobile ? 'clamp(44px, 16vw, 84px)' : 'clamp(72px, 13vw, 128px)',
             letterSpacing: '-0.02em',
             lineHeight: 1,
           }}>
@@ -213,17 +221,17 @@ export default function PreloaderEditorial({ onTermine }) {
           </div>
 
           <div style={{
-            marginTop: 14,
-            fontSize: 11,
-            letterSpacing: '0.5em',
+            marginTop: isMobile ? 10 : 14,
+            fontSize: isMobile ? 9 : 11,
+            letterSpacing: isMobile ? '0.3em' : '0.5em',
             color: `rgba(${aRgb},0.65)`,
           }}>
             DÉVELOPPEUR LOGICIEL · UI/UX
           </div>
 
           <div style={{
-            marginTop: 28,
-            fontSize: 15,
+            marginTop: isMobile ? 18 : 28,
+            fontSize: isMobile ? 13 : 15,
             letterSpacing: '0.25em',
             color: `rgba(${aRgb},0.7)`,
           }}>
@@ -231,11 +239,12 @@ export default function PreloaderEditorial({ onTermine }) {
           </div>
 
           <div style={{
-            marginTop: 24,
+            marginTop: isMobile ? 16 : 24,
             display: 'flex',
-            gap: 14,
+            gap: isMobile ? 10 : 14,
             justifyContent: 'center',
-            fontSize: 9,
+            flexWrap: isMobile ? 'wrap' : 'nowrap',
+            fontSize: isMobile ? 8 : 9,
             letterSpacing: '0.15em',
           }}>
             {sections.map((s, i) => (
@@ -257,19 +266,19 @@ export default function PreloaderEditorial({ onTermine }) {
         </div>
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14 }}>
-            <span style={{ fontSize: 10, letterSpacing: '0.15em', color: isLight ? 'rgba(20,20,20,0.3)' : 'rgba(242,240,236,0.3)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'flex-end', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 8 : 0, marginBottom: isMobile ? 10 : 14 }}>
+            <span style={{ fontSize: isMobile ? 9 : 10, letterSpacing: '0.15em', color: isLight ? 'rgba(20,20,20,0.3)' : 'rgba(242,240,236,0.3)' }}>
               CI · 2026
             </span>
-            <span style={{ fontSize: 10, letterSpacing: '0.2em', color: isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.35)' }}>
+            <span style={{ fontSize: isMobile ? 9 : 10, letterSpacing: '0.2em', color: isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.35)' }}>
               {mots[motIdx]}
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, justifyContent: 'center', height: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: isMobile ? 2 : 3, justifyContent: 'center', height: isMobile ? 18 : 24 }}>
             {barres.map((h, i) => (
               <div key={i} style={{
-                width: 3,
-                height: h * 1.5,
+                width: isMobile ? 2 : 3,
+                height: h * (isMobile ? 1.2 : 1.5),
                 background: `rgba(${aRgb},${0.25 + (h / 16) * 0.5})`,
                 transition: 'height 0.15s ease',
               }} />
