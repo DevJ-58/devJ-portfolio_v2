@@ -431,37 +431,42 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
     {
       n: '01',
       titre: 'Analyse & Audit',
-      desc: 'Compréhension des besoins, définition des objectifs et cartographie complète du projet.',
+      desc: "Avant d'écrire la moindre ligne de code, je prends le temps de comprendre en profondeur votre activité, vos objectifs et vos utilisateurs. Cette phase pose les fondations de tout le projet : elle évite les allers-retours coûteux plus tard et garantit que chaque décision technique sert un objectif métier clair.",
       duree: '~1 semaine',
       tags: ['Benchmark', 'Personas', 'Roadmap'],
+      livrables: ['Audit concurrentiel détaillé', 'Cahier des charges fonctionnel', "Architecture de l'information"],
     },
     {
       n: '02',
       titre: 'Conception & UI',
-      desc: 'Design des maquettes, prototypage interactif et création de l\'identité visuelle.',
+      desc: "La phase créative où l'idée prend forme visuellement. Je conçois des maquettes qui traduisent votre identité de marque en une expérience cohérente et intuitive, testées et validées avec vous avant tout développement — pour que la version finale ne soit jamais une surprise.",
       duree: '~2 semaines',
       tags: ['Wireframes', 'Design system', 'Prototype'],
+      livrables: ['Wireframes basse-fidélité', 'Maquettes haute-fidélité', 'Design system réutilisable'],
     },
     {
       n: '03',
       titre: 'Développement',
-      desc: 'Codage propre et optimisé avec architecture scalable et maintenable.',
+      desc: "L'implémentation technique, où la rigueur fait toute la différence. J'écris un code propre, documenté et scalable, en suivant les meilleures pratiques du secteur — pensé pour évoluer avec votre projet, pas pour être réécrit dans six mois.",
       duree: '~4 semaines',
       tags: ['Frontend', 'Backend', 'CI/CD'],
+      livrables: ['Intégration frontend responsive', 'API et logique backend', 'Suite de tests unitaires'],
     },
     {
       n: '04',
       titre: 'Tests & Validation',
-      desc: 'Tests multi-navigateurs, validation performance, accessibilité et SEO.',
+      desc: "Chaque fonctionnalité est passée au crible sur différents navigateurs, appareils et scénarios d'usage réels. Cette étape garantit un produit fiable, accessible et performant dès le premier jour de mise en ligne, pas après les premiers retours utilisateurs.",
       duree: '~1 semaine',
       tags: ['QA', 'Tests E2E', 'Accessibilité'],
+      livrables: ['Tests cross-browser complets', "Audit d'accessibilité (WCAG)", 'Optimisation des performances et SEO'],
     },
     {
       n: '05',
       titre: 'Déploiement',
-      desc: 'Mise en ligne sécurisée, formation et documentation complète.',
+      desc: "La mise en ligne n'est pas la fin, c'est le début d'une relation continue. Je m'assure d'un déploiement sans accroc, forme les équipes concernées à l'outil livré, et reste disponible pour le suivi post-lancement.",
       duree: 'continu',
       tags: ['Déploiement', 'Monitoring', 'Support'],
+      livrables: ['Mise en production sécurisée', "Formation à l'utilisation", 'Documentation technique complète'],
     },
   ]
 
@@ -2049,202 +2054,194 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         })()}
       </section>
 
-      <section id="pf-services" style={sectionStyle}>
-        <div style={s.secNum}>04 // SERVICES</div>
-        <RevealOnScroll as="h2" direction="up" delay={0} style={s.secTitle}>Mes <span style={s.accent}>Services</span></RevealOnScroll>
-        <div style={{
-          display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
-          gap: 16,
-          alignItems: 'stretch',
-        }}>
-          {(() => {
-            const sv = services[serviceActif]
+      <section id="pf-services" style={{
+        position: 'relative',
+        overflow: 'hidden',
+        background: eff.fond,
+        padding: isMobile ? '56px 24px 70px' : '100px 64px 130px',
+      }}>
+        {/* Réseau radial abstrait de fond — étendu et bien plus visible */}
+        {!isMobile && (
+          <svg viewBox="0 0 900 900" style={{
+            position: 'absolute', right: -180, top: '50%', transform: 'translateY(-50%)',
+            width: 780, height: 780,
+            opacity: isLight ? 0.35 : 0.55, zIndex: 0, pointerEvents: 'none',
+          }}>
+            <g stroke={isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.4)'} fill="none" strokeWidth="1.6">
+              <path d="M 900 860 A 720 720 0 0 0 180 140" />
+              <path d="M 900 700 A 560 560 0 0 0 340 140" />
+              <path d="M 900 540 A 400 400 0 0 0 500 140" />
+              <path d="M 900 380 A 240 240 0 0 0 660 140" />
+            </g>
+            <g stroke={a} strokeWidth="2.2">
+              <line x1="470" y1="470" x2="600" y2="210" />
+              <circle cx="600" cy="210" r="7" fill={a} />
+            </g>
+            <g stroke={isLight ? 'rgba(20,20,20,0.4)' : 'rgba(242,240,236,0.45)'} strokeWidth="1.8">
+              <line x1="470" y1="470" x2="740" y2="310" />
+              <circle cx="740" cy="310" r="8" fill={isLight ? 'rgba(20,20,20,0.45)' : 'rgba(242,240,236,0.55)'} />
+              <line x1="470" y1="470" x2="800" y2="470" />
+              <circle cx="800" cy="470" r="5" fill={isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.45)'} />
+              <line x1="470" y1="470" x2="720" y2="640" />
+              <circle cx="720" cy="640" r="10" fill={isLight ? 'rgba(20,20,20,0.3)' : 'rgba(242,240,236,0.35)'} />
+              <line x1="470" y1="470" x2="560" y2="720" />
+              <circle cx="560" cy="720" r="6" fill={isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.4)'} />
+            </g>
+          </svg>
+        )}
+
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.4em', color: a, marginBottom: 16, textTransform: 'uppercase' }}>
+            04 // SERVICES
+          </div>
+          <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: isMobile ? 30 : 48, color: eff.texte, marginBottom: isMobile ? 50 : 90, letterSpacing: '-0.02em' }}>
+            Offres <span style={{ color: a, fontStyle: 'italic', fontWeight: 500 }}>& tarifs</span>
+          </div>
+
+          {services.map((sv, i) => {
             const isPopular = !!sv.badge
             const prixParts = sv.prix.split(' ')
             const hasCurrency = prixParts[prixParts.length - 1] === 'FCFA'
             const priceMain = hasCurrency ? prixParts.slice(0, -1).join(' ') : sv.prix
             const currency = hasCurrency ? 'FCFA' : ''
-            const half = Math.ceil(sv.features.length / 2)
-            const col1 = sv.features.slice(0, half)
-            const col2 = sv.features.slice(half)
+            const descriptionCourte = (sv.features || []).slice(0, 2).join(', ')
+            const featuresRestantes = (sv.features || []).slice(2)
 
             return (
-              <RevealOnScroll key={serviceActif} as="div" direction="left" delay={150} style={{
-                position: 'relative',
-                overflow: 'hidden',
-                borderRadius: 16,
-                border: `1px solid ${isPopular ? `rgba(${aRgb},0.3)` : eff.borderStrong}`,
-                background: isPopular ? `rgba(${aRgb},0.04)` : eff.cardBg,
-                WebkitBackdropFilter: 'blur(16px)',
-                backdropFilter: 'blur(16px)',
-                flex: 1,
-                minWidth: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-end',
-                animation: 'fadeInUp 0.4s ease',
-                padding: isMobile ? '28px 24px' : '44px 48px',
-              }}>
-                {/* Prix en filigrane */}
+              <div
+                key={sv.titre}
+                style={{
+                  position: 'relative',
+                  padding: isMobile ? '44px 0' : '64px 0',
+                  borderBottom: i < services.length - 1
+                    ? `1px solid ${isLight ? 'rgba(20,20,20,0.1)' : 'rgba(242,240,236,0.1)'}`
+                    : 'none',
+                }}
+              >
                 <span style={{
                   position: 'absolute',
-                  right: isMobile ? -14 : -30,
-                  bottom: isMobile ? -30 : -60,
-                  fontFamily: 'Space Mono, monospace',
-                  fontWeight: 700,
-                  fontSize: isMobile ? 90 : 170,
-                  color: a,
-                  opacity: 0.07,
+                  right: isMobile ? -8 : 0,
+                  top: isMobile ? -14 : -24,
+                  fontFamily: 'Fraunces, serif',
+                  fontWeight: 800,
+                  fontSize: isMobile ? 100 : 190,
+                  color: isPopular ? a : eff.texte,
+                  opacity: isPopular ? 0.1 : 0.045,
                   lineHeight: 1,
                   userSelect: 'none',
                   pointerEvents: 'none',
+                  zIndex: 0,
                 }}>
-                  {priceMain.replace(/\s/g, '')}
+                  {String(i + 1).padStart(2, '0')}
                 </span>
 
-                <div style={{ position: 'relative' }}>
-                  {sv.badge && (
-                    <div style={{
-                      display: 'inline-block',
-                      background: a, color: '#050505',
-                      fontFamily: 'Space Mono, monospace', fontSize: 8, fontWeight: 700,
-                      letterSpacing: '0.1em', padding: '4px 10px', borderRadius: 4,
-                      marginBottom: 16,
-                    }}>{sv.badge}</div>
-                  )}
+                {isPopular && (
+                  <span style={{
+                    position: 'relative',
+                    display: 'inline-block',
+                    fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.15em',
+                    color: a, border: `1px solid rgba(${aRgb},0.4)`, borderRadius: 20,
+                    padding: '3px 10px', marginBottom: 14, zIndex: 1,
+                  }}>
+                    POPULAIRE
+                  </span>
+                )}
 
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
+                <div style={{
+                  display: 'flex', alignItems: 'baseline', gap: 10,
+                  marginBottom: 4, position: 'relative', zIndex: 1,
+                }}>
+                  <span style={{
+                    fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9,
+                    letterSpacing: '0.15em', color: `rgba(${aRgb},0.5)`,
+                  }}>
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span style={{
+                    fontFamily: 'Fraunces, serif', fontWeight: 800,
+                    fontSize: isMobile ? 38 : 68, color: eff.texte,
+                    lineHeight: 1, letterSpacing: '-0.025em',
+                  }}>
+                    {sv.titre}
+                  </span>
+                </div>
+
+                <div style={{
+                  display: 'flex', alignItems: 'baseline', gap: 10,
+                  marginBottom: isMobile ? 18 : 26, position: 'relative', zIndex: 1,
+                  paddingLeft: isMobile ? 0 : 26,
+                }}>
+                  <span style={{
+                    fontFamily: 'Fraunces, serif', fontWeight: 700, fontStyle: 'italic',
+                    fontSize: isMobile ? 22 : 30, color: a,
+                  }}>
+                    {priceMain}
+                  </span>
+                  {currency && (
                     <span style={{
-                      fontFamily: 'Fraunces, serif', fontWeight: 800,
-                      fontSize: isMobile ? 32 : 48, color: a, lineHeight: 1,
-                    }}>{priceMain}</span>
-                    {currency && (
-                      <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, color: `rgba(${aRgb},0.6)` }}>
-                        {currency}
+                      fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 10 : 12,
+                      color: `rgba(${aRgb},0.55)`, letterSpacing: '0.05em',
+                    }}>
+                      {currency}
+                    </span>
+                  )}
+                  <span style={{
+                    fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9,
+                    color: eff.textFaint, letterSpacing: '0.1em', marginLeft: 10,
+                  }}>
+                    · {sv.delai.toUpperCase()}
+                  </span>
+                </div>
+
+                <div style={{
+                  fontFamily: 'Fraunces, serif', fontStyle: 'italic', fontSize: isMobile ? 14 : 16,
+                  color: eff.textMuted, lineHeight: 1.7, maxWidth: 480,
+                  paddingLeft: isMobile ? 0 : 26, marginBottom: featuresRestantes.length ? 16 : 0,
+                  position: 'relative', zIndex: 1,
+                }}>
+                  {descriptionCourte}.
+                </div>
+
+                {featuresRestantes.length > 0 && (
+                  <div style={{
+                    display: 'flex', gap: isMobile ? 10 : 16, flexWrap: 'wrap',
+                    paddingLeft: isMobile ? 0 : 26, position: 'relative', zIndex: 1,
+                  }}>
+                    {featuresRestantes.map(f => (
+                      <span key={f} style={{
+                        fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9,
+                        letterSpacing: '0.06em', color: `rgba(${aRgb},0.5)`,
+                      }}>
+                        ✓ {f.toUpperCase()}
                       </span>
-                    )}
-                  </div>
-
-                  <div style={{
-                    fontFamily: 'Fraunces, serif', fontWeight: 600,
-                    fontSize: isMobile ? 16 : 19, color: eff.texte, marginBottom: 6,
-                  }}>{sv.titre}</div>
-
-                  <div style={{
-                    fontFamily: 'Space Mono, monospace', fontSize: 9,
-                    color: `rgba(${aRgb},0.45)`, letterSpacing: '0.1em',
-                    marginBottom: 24, display: 'flex', alignItems: 'center', gap: 6,
-                  }}>
-                    <span style={{ color: a }}>●</span><span>Délai : {sv.delai}</span>
-                  </div>
-
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-                    gap: '10px 24px',
-                    marginBottom: 28,
-                    maxWidth: isMobile ? '100%' : 480,
-                  }}>
-                    {[col1, col2].map((col, ci) => (
-                      <div key={ci} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        {col.map(f => (
-                          <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <div style={{
-                              width: 16, height: 16, flexShrink: 0,
-                              background: `rgba(${aRgb},0.1)`, border: `1px solid rgba(${aRgb},0.25)`,
-                              borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              fontSize: 9, color: a,
-                            }}>✓</div>
-                            <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300, fontSize: 12, color: eff.textMuted }}>{f}</div>
-                          </div>
-                        ))}
-                      </div>
                     ))}
                   </div>
-
-                  <a href="mailto:devfred58@gmail.com" style={{
-                    display: 'inline-block',
-                    background: `rgba(${aRgb},0.1)`, border: `1px solid rgba(${aRgb},0.3)`,
-                    color: a, fontFamily: 'Space Mono, monospace', fontSize: 10,
-                    letterSpacing: '0.18em', padding: '12px 24px', borderRadius: 8,
-                    textDecoration: 'none', width: isMobile ? '100%' : 'fit-content', textAlign: 'center',
-                  }}>COMMANDER</a>
-                </div>
-              </RevealOnScroll>
+                )}
+              </div>
             )
-          })()}
+          })}
 
-          {/* BLOCS D'INVITATION */}
           <div style={{
-            display: isMobile ? 'grid' : 'flex',
-            gridTemplateColumns: isMobile ? '1fr 1fr' : undefined,
-            flexDirection: isMobile ? undefined : 'column',
-            gap: 12,
-            width: isMobile ? '100%' : 220,
-            flexShrink: 0,
+            marginTop: isMobile ? 40 : 56, display: 'flex', alignItems: 'center',
+            gap: 24, flexWrap: 'wrap',
           }}>
-            {services.map((sv, i) => {
-              if (i === serviceActif) return null
-              const prixParts = sv.prix.split(' ')
-              const hasCurrency = prixParts[prixParts.length - 1] === 'FCFA'
-              const displayPrix = hasCurrency ? `dès ${sv.prix}` : sv.prix
-              return (
-                <RevealOnScroll
-                  key={sv.titre}
-                  as="div"
-                  direction="right"
-                  delay={250}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`Voir l'offre ${sv.titre}`}
-                  onClick={() => setServiceActif(i)}
-                  onKeyDown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') setServiceActif(i) }}
-                  style={{
-                    position: 'relative',
-                    borderRadius: 14,
-                    border: `1px solid ${eff.borderMedium}`,
-                    background: `rgba(${aRgb},0.02)`,
-                    padding: isMobile ? 16 : 20,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    flex: isMobile ? undefined : 1,
-                    minHeight: isMobile ? 90 : 100,
-                    transition: 'border-color 0.2s, background 0.2s, transform 0.2s',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = `rgba(${aRgb},0.35)`
-                    e.currentTarget.style.background = `rgba(${aRgb},0.06)`
-                    if (!isMobile) e.currentTarget.style.transform = 'translateX(-3px)'
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = eff.borderMedium
-                    e.currentTarget.style.background = `rgba(${aRgb},0.02)`
-                    e.currentTarget.style.transform = 'translateX(0)'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <div style={{
-                      width: 28, height: 28, borderRadius: 8,
-                      background: `rgba(${aRgb},0.1)`, border: `1px solid rgba(${aRgb},0.25)`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: 11, color: a,
-                    }}>{String(i + 1).padStart(2, '0')}</div>
-                    <span style={{ color: `rgba(${aRgb},0.4)`, fontSize: 13 }}>↗</span>
-                  </div>
-                  <div>
-                    <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: 12, color: eff.texte, marginBottom: 3 }}>
-                      {sv.titre}
-                    </div>
-                    <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: `rgba(${aRgb},0.5)` }}>
-                      {displayPrix}
-                    </div>
-                  </div>
-                </RevealOnScroll>
-              )
-            })}
+            <a href="mailto:devfred58@gmail.com" style={{
+              padding: isMobile ? '14px 26px' : '16px 34px',
+              background: isLight ? '#141414' : '#f2f0ec',
+              color: isLight ? '#f5f5f0' : '#0a0a0a',
+              borderRadius: 2,
+              fontFamily: 'Space Mono, monospace',
+              fontSize: 10,
+              letterSpacing: '0.15em',
+              fontWeight: 700,
+              textDecoration: 'none',
+              textTransform: 'uppercase',
+            }}>
+              Demander un devis
+            </a>
+            <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.1em', color: eff.textFaint }}>
+              RÉPONSE SOUS 24H
+            </span>
           </div>
         </div>
       </section>
@@ -2281,238 +2278,407 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
 
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div style={s.secNum}>05 // MÉTHODE</div>
-          <RevealOnScroll as="h2" direction="up" delay={0} style={s.secTitle}>Ma <span style={s.accent}>Méthode</span> de Travail</RevealOnScroll>
+          <RevealOnScroll as="h2" direction="up" delay={0} style={s.secTitle}>Ma <span style={s.accent}>Méthode</span></RevealOnScroll>
 
-          <RevealOnScroll direction="up" delay={200} as="div" style={{
-            background: eff.cardBg,
-            border: `1px solid ${eff.borderStrong}`,
-            borderRadius: 16,
-            overflow: 'hidden',
-            width: '100%',
-            padding: isMobile ? '20px' : '48px',
-            position: 'relative',
-          }}>
-          <div style={{
-            position: 'absolute', top: 0, left: 40, right: 40, height: 1,
-            background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.3),transparent)`,
-          }} />
-
+          {/* Sommaire — onglets fins */}
           <div style={{
             display: 'flex',
-            flexDirection: isMobile ? 'column' : 'row',
-            gap: 6,
-            height: isMobile ? 'auto' : 420,
+            gap: isMobile ? 14 : 26,
+            marginBottom: isMobile ? 28 : 44,
+            borderBottom: `1px solid ${eff.borderLight}`,
+            paddingBottom: 14,
+            flexWrap: isMobile ? 'nowrap' : 'wrap',
+            overflowX: isMobile ? 'auto' : 'visible',
+            WebkitOverflowScrolling: 'touch',
           }}>
-            {etapes.map((e, i) => {
-              const isActive = i === etapeActive
+            {etapes.map((e, i) => (
+              <button
+                key={e.n || i}
+                onClick={() => setEtapeActive(i)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  fontFamily: 'Space Mono, monospace',
+                  fontSize: isMobile ? 8 : 9,
+                  letterSpacing: '0.15em',
+                  color: i === etapeActive ? a : eff.textFaint,
+                  borderBottom: i === etapeActive ? `1px solid ${a}` : '1px solid transparent',
+                  paddingBottom: 6,
+                  whiteSpace: 'nowrap',
+                  textTransform: 'uppercase',
+                  transition: 'color 0.2s, border-color 0.2s',
+                }}
+              >
+                {e.n || String(i + 1).padStart(2, '0')} {e.titre}
+              </button>
+            ))}
+          </div>
+
+          {/* Page active en pleine grandeur — carrousel */}
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'stretch', gap: isMobile ? 8 : 20 }}>
+            {!isMobile && (
+              <button
+                onClick={() => setEtapeActive((etapeActive - 1 + etapes.length) % etapes.length)}
+                aria-label="Étape précédente"
+                style={{
+                  background: 'none',
+                  border: `1px solid ${eff.borderMedium}`,
+                  borderRadius: '50%',
+                  width: 40,
+                  height: 40,
+                  flexShrink: 0,
+                  alignSelf: 'center',
+                  cursor: 'pointer',
+                  color: eff.textFaint,
+                  fontSize: 16,
+                  fontFamily: 'Space Mono, monospace',
+                  transition: 'border-color 0.2s, color 0.2s',
+                }}
+                onMouseEnter={ev => { ev.currentTarget.style.borderColor = `rgba(${aRgb},0.5)`; ev.currentTarget.style.color = a }}
+                onMouseLeave={ev => { ev.currentTarget.style.borderColor = eff.borderMedium; ev.currentTarget.style.color = eff.textFaint }}
+              >
+                ←
+              </button>
+            )}
+
+            {(() => {
+              const e = etapes[etapeActive]
+              const i = etapeActive
               return (
-                <div
-                  key={e.n || i}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={e.titre}
-                  onClick={() => setEtapeActive(i)}
-                  onKeyDown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') setEtapeActive(i) }}
-                  style={{
-                    position: 'relative',
-                    flex: isMobile ? 'none' : (isActive ? 9 : 1),
-                    minWidth: 0,
-                    height: isMobile ? (isActive ? 320 : 56) : '100%',
-                    cursor: 'pointer',
-                    borderRadius: 14,
-                    border: `1px solid ${isActive ? eff.borderStrong : eff.borderMedium}`,
-                    borderLeft: isActive ? `2px solid ${a}` : `1px solid ${eff.borderMedium}`,
-                    background: isActive ? eff.cardBg : `rgba(${aRgb},0.02)`,
-                    overflow: 'hidden',
-                    transition: isMobile
-                      ? 'height 0.45s cubic-bezier(0.22,1,0.36,1), background 0.3s'
-                      : 'flex 0.45s cubic-bezier(0.22,1,0.36,1), background 0.3s',
-                    display: 'flex',
-                  }}
-                >
+                <div key={i} style={{
+                  position: 'relative',
+                  minHeight: isMobile ? 'auto' : 340,
+                  animation: 'fadeInUp 0.4s ease',
+                  flex: 1,
+                  minWidth: 0,
+                }}>
                   <span style={{
                     position: 'absolute',
+                    right: isMobile ? -10 : -20,
+                    bottom: isMobile ? -10 : -30,
                     fontFamily: 'Fraunces, serif',
                     fontWeight: 800,
+                    fontSize: isMobile ? 140 : 280,
                     color: a,
+                    opacity: 0.08,
                     lineHeight: 1,
                     userSelect: 'none',
                     pointerEvents: 'none',
-                    ...(isActive
-                      ? { fontSize: isMobile ? 140 : 340, right: isMobile ? -20 : -40, bottom: isMobile ? -40 : -90, opacity: 0.09 }
-                      : isMobile
-                        ? { fontSize: 20, left: 18, top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }
-                        : { fontSize: 26, top: 14, left: '50%', transform: 'translateX(-50%)', opacity: 0.4 }
-                    ),
+                    zIndex: 0,
                   }}>
                     {e.n || String(i + 1).padStart(2, '0')}
                   </span>
 
-                  {isActive ? (
+                  <div style={{ position: 'relative', zIndex: 1 }}>
                     <div style={{
-                      position: 'relative',
-                      padding: isMobile ? '26px 24px' : '36px 40px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'flex-end',
-                      width: '100%',
-                      maxWidth: isMobile ? '100%' : 520,
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                        <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, color: a }}>
-                          {e.n || String(i + 1).padStart(2, '0')}
-                        </span>
-                        <span style={{ width: 3, height: 3, borderRadius: '50%', background: eff.textFaint }} />
-                        <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, color: eff.textFaint }}>
-                          {e.duree}
-                        </span>
-                      </div>
-
-                      <span style={{
-                        fontFamily: 'Fraunces, serif', fontWeight: 700,
-                        fontSize: isMobile ? 24 : 34, color: eff.textPrimary,
-                        marginBottom: 14, lineHeight: 1.15,
-                      }}>
-                        {e.titre}
-                      </span>
-
-                      <span style={{
-                        fontFamily: 'Inter, sans-serif', fontWeight: 300, fontSize: 14,
-                        color: eff.textMuted, lineHeight: 1.7, marginBottom: 18,
-                      }}>
-                        {e.desc}
-                      </span>
-
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                        {(e.tags || []).map((t, ti) => (
-                          <span key={ti} style={{
-                            fontFamily: 'Space Mono, monospace', fontSize: 11, color: a,
-                            border: `1px solid rgba(${aRgb},0.35)`, borderRadius: 8, padding: '4px 10px',
-                          }}>
-                            {t}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ) : isMobile ? (
-                    <div style={{ display: 'flex', alignItems: 'center', width: '100%', padding: '0 18px 0 52px' }}>
-                      <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, color: eff.textMuted, letterSpacing: '0.05em' }}>
-                        {e.titre}
-                      </span>
-                    </div>
-                  ) : (
-                    <span style={{
-                      position: 'absolute',
-                      bottom: 24,
-                      left: '50%',
-                      transform: 'translateX(-50%) rotate(180deg)',
-                      writingMode: 'vertical-rl',
                       fontFamily: 'Space Mono, monospace',
-                      fontSize: 13,
-                      letterSpacing: '0.05em',
-                      color: eff.textMuted,
-                      whiteSpace: 'nowrap',
+                      fontSize: isMobile ? 8 : 9,
+                      letterSpacing: '0.2em',
+                      color: eff.textFaint,
+                      marginBottom: isMobile ? 12 : 16,
+                      textTransform: 'uppercase',
+                    }}>
+                      CHAPITRE {e.n || String(i + 1).padStart(2, '0')} · {e.duree}
+                    </div>
+
+                    <div style={{
+                      fontFamily: 'Fraunces, serif',
+                      fontWeight: 800,
+                      fontSize: isMobile ? 40 : 64,
+                      lineHeight: 0.96,
+                      color: eff.texte,
+                      letterSpacing: '-0.02em',
+                      marginBottom: isMobile ? 20 : 28,
+                      maxWidth: isMobile ? '100%' : 560,
                     }}>
                       {e.titre}
-                    </span>
-                  )}
+                    </div>
+
+                    <div style={{
+                      fontFamily: 'Fraunces, serif',
+                      fontStyle: 'italic',
+                      fontSize: isMobile ? 14 : 17,
+                      lineHeight: 1.7,
+                      color: eff.textMuted,
+                      maxWidth: isMobile ? '100%' : 500,
+                      marginBottom: isMobile ? 22 : 28,
+                    }}>
+                      {e.desc}
+                    </div>
+
+                    {(e.livrables || []).length > 0 && (
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 8,
+                        marginBottom: isMobile ? 22 : 28,
+                        maxWidth: isMobile ? '100%' : 420,
+                      }}>
+                        {e.livrables.map(l => (
+                          <div key={l} style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                            <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 10, color: a }}>→</span>
+                            <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 300, fontSize: isMobile ? 12 : 13, color: eff.textMuted }}>
+                              {l}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: isMobile ? 16 : 24, flexWrap: 'wrap' }}>
+                      {(e.tags || []).map(t => (
+                        <span key={t} style={{
+                          fontFamily: 'Space Mono, monospace',
+                          fontSize: isMobile ? 8 : 9,
+                          letterSpacing: '0.1em',
+                          color: a,
+                          borderBottom: `1px solid rgba(${aRgb},0.4)`,
+                          paddingBottom: 4,
+                        }}>
+                          {t.toUpperCase()}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )
-            })}
-          </div>
-        </RevealOnScroll>
-      </div>
-      </section>
-      <section id="pf-contact" style={sectionStyle}>
-        <div style={s.secNum}>06 // CONTACT</div>
-        <RevealOnScroll as="h2" direction="up" delay={0} style={s.secTitle}>Travaillons <span style={s.accent}>Ensemble</span></RevealOnScroll>
+            })()}
 
-        {accesDirecte && (
-          <AxisBouton
-            isMobile={isMobile}
-            a={a}
-            aRgb={aRgb}
-            navigate={navigate}
-            eff={eff}
-          />
+            {!isMobile && (
+              <button
+                onClick={() => setEtapeActive((etapeActive + 1) % etapes.length)}
+                aria-label="Étape suivante"
+                style={{
+                  background: 'none',
+                  border: `1px solid ${eff.borderMedium}`,
+                  borderRadius: '50%',
+                  width: 40,
+                  height: 40,
+                  flexShrink: 0,
+                  alignSelf: 'center',
+                  cursor: 'pointer',
+                  color: eff.textFaint,
+                  fontSize: 16,
+                  fontFamily: 'Space Mono, monospace',
+                  transition: 'border-color 0.2s, color 0.2s',
+                }}
+                onMouseEnter={ev => { ev.currentTarget.style.borderColor = `rgba(${aRgb},0.5)`; ev.currentTarget.style.color = a }}
+                onMouseLeave={ev => { ev.currentTarget.style.borderColor = eff.borderMedium; ev.currentTarget.style.color = eff.textFaint }}
+              >
+                →
+              </button>
+            )}
+          </div>
+
+          {/* Points indicateurs du carrousel */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: isMobile ? 24 : 32 }}>
+            {etapes.map((e, i) => (
+              <button
+                key={e.n || i}
+                onClick={() => setEtapeActive(i)}
+                aria-label={`Aller à l'étape ${i + 1}`}
+                style={{
+                  width: i === etapeActive ? 22 : 7,
+                  height: 7,
+                  borderRadius: 4,
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  background: i === etapeActive ? a : eff.borderMedium,
+                  transition: 'width 0.3s cubic-bezier(.65,0,.35,1), background 0.3s',
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Pied de page magazine */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: isMobile ? 24 : 32,
+            borderTop: `1px solid ${eff.borderLight}`,
+            paddingTop: 20,
+            flexWrap: 'wrap',
+            gap: 14,
+          }}>
+            <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 8, letterSpacing: '0.15em', color: eff.textFaint }}>
+              P. {String(etapeActive + 1).padStart(2, '0')} / {String(etapes.length).padStart(2, '0')}
+            </span>
+            <button
+              onClick={() => setEtapeActive((etapeActive + 1) % etapes.length)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 10,
+                background: a,
+                color: '#050505',
+                border: 'none',
+                borderRadius: 8,
+                padding: isMobile ? '10px 18px' : '12px 24px',
+                fontFamily: 'Space Mono, monospace',
+                fontSize: isMobile ? 9 : 10,
+                letterSpacing: '0.15em',
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: `0 0 20px rgba(${aRgb},0.25)`,
+                transition: 'opacity 0.2s, transform 0.2s',
+              }}
+              onMouseEnter={ev => { ev.currentTarget.style.opacity = '0.88'; ev.currentTarget.style.transform = 'translateX(3px)' }}
+              onMouseLeave={ev => { ev.currentTarget.style.opacity = '1'; ev.currentTarget.style.transform = 'translateX(0)' }}
+            >
+              SUIVANT · {etapes[(etapeActive + 1) % etapes.length].titre.toUpperCase()} →
+            </button>
+          </div>
+        </div>
+      </section>
+      <section id="pf-contact" style={{ ...sectionStyle, position: 'relative', overflow: 'hidden' }}>
+        {/* Réseau abstrait de fond — nœud central relié à des satellites */}
+        {!isMobile && (
+          <svg viewBox="0 0 600 680" style={{
+            position: 'absolute', right: -80, top: '50%', transform: 'translateY(-50%)',
+            width: 560, height: 640, opacity: isLight ? 0.3 : 0.45, zIndex: 0, pointerEvents: 'none',
+          }}>
+            <path d="M 130 160 C 230 160, 230 280, 300 280" fill="none" stroke={a} strokeWidth="1.4" />
+            <path d="M 130 480 C 230 480, 230 360, 300 360" fill="none" stroke={a} strokeWidth="1.4" />
+            <path d="M 500 160 C 400 160, 400 280, 300 280" fill="none" stroke={a} strokeWidth="1.4" />
+            <path d="M 500 480 C 400 480, 400 360, 300 360" fill="none" stroke={a} strokeWidth="1.4" />
+            <line x1="30" y1="320" x2="255" y2="320" stroke={a} strokeWidth="1" strokeDasharray="3 5" opacity="0.5" />
+            <line x1="345" y1="320" x2="570" y2="320" stroke={a} strokeWidth="1" strokeDasharray="3 5" opacity="0.5" />
+
+            <g transform="translate(300,320)">
+              <rect x="-32" y="-32" width="64" height="64" rx="10" fill={eff.fond} stroke={a} strokeWidth="1.6" transform="rotate(45)" />
+              <polygon points="0,-20 17,-10 17,10 0,20 -17,10 -17,-10" fill="none" stroke={a} strokeWidth="1.6" />
+            </g>
+
+            {[[130,160],[130,480],[500,160],[500,480]].map(([cx,cy], idx) => (
+              <g key={idx}>
+                <circle cx={cx} cy={cy} r={54} fill={isLight ? 'rgba(20,20,20,0.04)' : 'rgba(242,240,236,0.03)'} stroke={a} strokeWidth="1" />
+                <circle cx={cx} cy={cy} r={11} fill={a} opacity="0.6" />
+              </g>
+            ))}
+          </svg>
         )}
 
-        {/* Phrase d'accroche */}
-        <RevealOnScroll direction="up" delay={150} as="div" style={{
-          maxWidth: 600, marginBottom: 48,
-          padding: '24px 32px',
-          background: `rgba(${aRgb},0.04)`,
-          border: `1px solid rgba(${aRgb},0.12)`,
-          borderLeft: `3px solid ${a}`,
-          borderRadius: 12,
-        }}>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, color: eff.textMedium, lineHeight: 1.8, margin: 0 }}>
-            Vous avez un projet web, une idée à concrétiser ou vous cherchez un développeur  passionné par l'IA ? Je suis disponible pour des missions freelance, des collaborations et des opportunités à temps plein.
-          </p>
-        </RevealOnScroll>
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={s.secNum}>06 // CONTACT</div>
 
-        {/* Disponibilité */}
-        <RevealOnScroll direction="up" delay={150} as="div" style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          marginBottom: 40,
-          padding: '12px 20px',
-          background: `rgba(${aRgb},0.06)`,
-          border: `1px solid rgba(${aRgb},0.2)`,
-          borderRadius: 50,
-          width: 'fit-content',
-        }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: a, animation: 'pulse 1.4s infinite' }} />
-          <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 10, color: a, letterSpacing: '0.2em' }}>
-            DISPONIBLE POUR DE NOUVEAUX PROJETS
-          </span>
-        </RevealOnScroll>
+          <RevealOnScroll as="div" direction="up" delay={0} style={{
+            fontFamily: 'Fraunces, serif',
+            fontWeight: 800,
+            fontSize: isMobile ? 40 : 88,
+            lineHeight: isMobile ? 1.02 : 0.94,
+            color: eff.texte,
+            letterSpacing: '-0.03em',
+            marginBottom: isMobile ? 28 : 44,
+            maxWidth: isMobile ? '100%' : 640,
+          }}>
+            Travaillons <span style={{ color: a, fontStyle: 'italic', fontWeight: 500 }}>ensemble</span>.
+          </RevealOnScroll>
 
-        {/* Liens de contact */}
-        <RevealOnScroll direction="up" delay={250} as="div" style={contactGridStyle}>
-          {[
-            { label: 'Email', val: 'devfred58@gmail.com', href: 'mailto:devfred58@gmail.com', desc: 'Réponse sous 24h' },
-            { label: 'Téléphone', val: '+225 0767998373', href: 'tel:+2250767998373', desc: 'Lun–Sam, 8h–18h' },
-            { label: 'WhatsApp', val: 'Envoyer un message', href: 'https://wa.me/2250767998373', desc: 'Chat rapide' },
-            { label: 'LinkedIn', val: 'Voir le profil', href: 'https://www.linkedin.com/in/frejus-kouadio-316238329', desc: 'Réseau professionnel' },
-          ].map(({ label, val, href, desc }) => (
-            <a key={label} href={href} target="_blank" rel="noopener"
-              className="pf-card"
-              style={{ ...s.card, padding: isMobile ? '12px 12px' : s.card.padding, textDecoration: 'none', display: 'block', transition: 'border-color 0.2s, transform 0.2s', marginBottom: isMobile ? 0 : 20 }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = `rgba(${aRgb},0.35)`; e.currentTarget.style.transform = 'translateY(-3px)' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = eff.borderStrong; e.currentTarget.style.transform = 'translateY(0)' }}
+          {accesDirecte && (
+            <AxisBouton
+              isMobile={isMobile}
+              a={a}
+              aRgb={aRgb}
+              navigate={navigate}
+              eff={eff}
+            />
+          )}
+
+          <RevealOnScroll as="div" direction="up" delay={150} style={{
+            fontFamily: 'Fraunces, serif',
+            fontStyle: 'italic',
+            fontSize: isMobile ? 16 : 22,
+            lineHeight: 1.6,
+            color: eff.textMuted,
+            maxWidth: isMobile ? '100%' : 480,
+            marginBottom: isMobile ? 28 : 40,
+          }}>
+            Un projet en tête ? Que ce soit une refonte, une application sur mesure ou une collaboration ponctuelle — je suis disponible pour des missions freelance, des collaborations et des opportunités à temps plein.
+          </RevealOnScroll>
+
+          <RevealOnScroll as="div" direction="up" delay={200} style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            marginBottom: isMobile ? 44 : 64,
+            padding: '12px 20px',
+            background: `rgba(${aRgb},0.06)`,
+            border: `1px solid rgba(${aRgb},0.2)`,
+            borderRadius: 50,
+            width: 'fit-content',
+          }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: a, animation: 'pulse 1.4s infinite' }} />
+            <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 10, color: a, letterSpacing: '0.2em' }}>
+              DISPONIBLE POUR DE NOUVEAUX PROJETS
+            </span>
+          </RevealOnScroll>
+
+          <div style={{ maxWidth: isMobile ? '100%' : 640 }}>
+            {[
+              { label: 'Email', val: 'devfred58@gmail.com', href: 'mailto:devfred58@gmail.com', desc: 'Réponse sous 24h' },
+              { label: 'Téléphone', val: '+225 0767998373', href: 'tel:+2250767998373', desc: 'Lun–Sam, 8h–18h' },
+              { label: 'WhatsApp', val: 'Envoyer un message', href: 'https://wa.me/2250767998373', desc: 'Chat rapide' },
+              { label: 'LinkedIn', val: 'Voir le profil', href: 'https://www.linkedin.com/in/frejus-kouadio-316238329', desc: 'Réseau professionnel' },
+            ].map(({ label, val, href, desc }, ci) => (
+              <RevealOnScroll key={label} as="a" direction="up" delay={250 + ci * 100}
+                href={href} target="_blank" rel="noopener"
+                style={{
+                  display: 'flex',
+                  flexDirection: isMobile ? 'column' : 'row',
+                  justifyContent: 'space-between',
+                  alignItems: isMobile ? 'flex-start' : 'baseline',
+                  gap: isMobile ? 4 : 16,
+                  padding: isMobile ? '20px 0' : '28px 0',
+                  borderBottom: `1px solid ${isLight ? 'rgba(20,20,20,0.1)' : 'rgba(242,240,236,0.1)'}`,
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
+                  <span style={{ fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9, color: `rgba(${aRgb},0.5)`, letterSpacing: '0.15em' }}>
+                    {String(ci + 1).padStart(2, '0')}
+                  </span>
+                  <span style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: isMobile ? 26 : 40, color: eff.texte, letterSpacing: '-0.02em' }}>
+                    {label}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+                  <span style={{ fontFamily: 'Fraunces, serif', fontStyle: 'italic', fontWeight: 500, fontSize: isMobile ? 13 : 16, color: a }}>
+                    {val}
+                  </span>
+                  <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 8, color: eff.textFaint, letterSpacing: '0.08em' }}>
+                    · {desc.toUpperCase()}
+                  </span>
+                </div>
+              </RevealOnScroll>
+            ))}
+          </div>
+
+          <RevealOnScroll as="div" direction="up" delay={650} style={{ marginTop: isMobile ? 44 : 64 }}>
+            <a href="mailto:devfred58@gmail.com"
+              style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: isMobile ? 'center' : undefined, gap: 12,
+                background: a, color: '#050505',
+                padding: isMobile ? '16px 20px' : '18px 44px',
+                fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 11 : 12,
+                letterSpacing: '0.2em', fontWeight: 700,
+                textDecoration: 'none', borderRadius: 8,
+                transition: 'opacity 0.2s, transform 0.2s',
+                boxShadow: `0 0 30px rgba(${aRgb},0.3)`,
+                width: isMobile ? '100%' : 'auto'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)' }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                <div style={{ fontSize: 8, color: `rgba(${aRgb},0.5)`, letterSpacing: '0.2em', fontFamily: 'Space Mono, monospace' }}>{label.toUpperCase()}</div>
-                <div style={{ fontSize: 8, color: `rgba(${aRgb},0.35)`, fontFamily: 'Space Mono, monospace' }}>{desc}</div>
-              </div>
-              <div style={{ fontSize: isMobile ? 11 : 13, color: a, fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>{val}</div>
+              DÉMARRER UN PROJET →
             </a>
-          ))}
-        </RevealOnScroll>
-
-        {/* CTA principal */}
-        <RevealOnScroll direction="up" delay={350} as="div" style={{ marginTop: 48, textAlign: 'center' }}>
-          <a href="mailto:devfred58@gmail.com"
-            style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: isMobile ? 'center' : undefined, gap: 12,
-              background: a, color: '#050505',
-              padding: isMobile ? '14px 18px' : '16px 40px',
-              fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 11 : 11,
-              letterSpacing: '0.2em', fontWeight: 700,
-              textDecoration: 'none', borderRadius: 8,
-              transition: 'opacity 0.2s, transform 0.2s',
-              boxShadow: `0 0 30px rgba(${aRgb},0.3)`,
-              width: isMobile ? '100%' : 'auto'
-            }}
-            onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'translateY(-2px)' }}
-            onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)' }}
-          >
-            DÉMARRER UN PROJET →
-          </a>
-          <p style={{ marginTop: 16, fontFamily: 'Space Mono, monospace', fontSize: 9, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.15em' }}>
-            Ou envoyez un message sur WhatsApp pour une réponse rapide
-          </p>
-        </RevealOnScroll>
+            <p style={{ marginTop: 16, fontFamily: 'Space Mono, monospace', fontSize: 9, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.15em' }}>
+              Ou envoyez un message sur WhatsApp pour une réponse rapide
+            </p>
+          </RevealOnScroll>
+        </div>
       </section>
 
       {/* FOOTER */}
