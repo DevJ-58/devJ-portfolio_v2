@@ -538,6 +538,21 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           85%  { opacity: 0; }
           100% { transform: translate(120%, 120%) rotate(35deg); opacity: 0; }
         }
+        @keyframes networkSignal {
+          to { stroke-dashoffset: -300; }
+        }
+        @keyframes centralPulse {
+          0%, 100% { transform: rotate(0deg) scale(1); filter: drop-shadow(0 0 0px transparent); }
+          50% { transform: rotate(3deg) scale(1.04); filter: drop-shadow(0 0 10px var(--pulse-color, transparent)); }
+        }
+        @keyframes nodeBreathe {
+          0%, 100% { opacity: var(--node-op, 0.6); r: var(--node-r, 11); }
+          50% { opacity: calc(var(--node-op, 0.6) * 1.6); }
+        }
+        @keyframes priceSlideIn {
+          from { opacity: 0; transform: translateX(24px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
 
         #pf-wrap .pf-card { transition: transform 300ms ease, border-color 300ms ease, box-shadow 300ms ease; }
         #pf-wrap .pf-card:hover { transform: translateY(-4px); border-color: rgba(${aRgb},0.3); box-shadow: 0 8px 30px ${eff.shadow}; }
@@ -2068,10 +2083,10 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             opacity: isLight ? 0.35 : 0.55, zIndex: 0, pointerEvents: 'none',
           }}>
             <g stroke={isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.4)'} fill="none" strokeWidth="1.6">
-              <path d="M 900 860 A 720 720 0 0 0 180 140" />
-              <path d="M 900 700 A 560 560 0 0 0 340 140" />
-              <path d="M 900 540 A 400 400 0 0 0 500 140" />
-              <path d="M 900 380 A 240 240 0 0 0 660 140" />
+              <path d="M 900 860 A 720 720 0 0 0 180 140" style={{ strokeDasharray: '8 14', animation: 'networkSignal 8s linear infinite', animationDelay: '0s' }} />
+              <path d="M 900 700 A 560 560 0 0 0 340 140" style={{ strokeDasharray: '8 14', animation: 'networkSignal 9.5s linear infinite', animationDelay: '-2s' }} />
+              <path d="M 900 540 A 400 400 0 0 0 500 140" style={{ strokeDasharray: '8 14', animation: 'networkSignal 11s linear infinite', animationDelay: '-4s' }} />
+              <path d="M 900 380 A 240 240 0 0 0 660 140" style={{ strokeDasharray: '8 14', animation: 'networkSignal 12.5s linear infinite', animationDelay: '-6s' }} />
             </g>
             <g stroke={a} strokeWidth="2.2">
               <line x1="470" y1="470" x2="600" y2="210" />
@@ -2079,24 +2094,24 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             </g>
             <g stroke={isLight ? 'rgba(20,20,20,0.4)' : 'rgba(242,240,236,0.45)'} strokeWidth="1.8">
               <line x1="470" y1="470" x2="740" y2="310" />
-              <circle cx="740" cy="310" r="8" fill={isLight ? 'rgba(20,20,20,0.45)' : 'rgba(242,240,236,0.55)'} />
+              <circle cx="740" cy="310" r="8" fill={isLight ? 'rgba(20,20,20,0.45)' : 'rgba(242,240,236,0.55)'} style={{ '--node-op': 0.72, '--node-r': 8, animation: 'nodeBreathe 3s ease-in-out infinite', animationDelay: '0s' }} />
               <line x1="470" y1="470" x2="800" y2="470" />
-              <circle cx="800" cy="470" r="5" fill={isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.45)'} />
+              <circle cx="800" cy="470" r="5" fill={isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.45)'} style={{ '--node-op': 0.68, '--node-r': 5, animation: 'nodeBreathe 4s ease-in-out infinite', animationDelay: '-1s' }} />
               <line x1="470" y1="470" x2="720" y2="640" />
-              <circle cx="720" cy="640" r="10" fill={isLight ? 'rgba(20,20,20,0.3)' : 'rgba(242,240,236,0.35)'} />
+              <circle cx="720" cy="640" r="10" fill={isLight ? 'rgba(20,20,20,0.3)' : 'rgba(242,240,236,0.35)'} style={{ '--node-op': 0.8, '--node-r': 10, animation: 'nodeBreathe 5s ease-in-out infinite', animationDelay: '-2s' }} />
               <line x1="470" y1="470" x2="560" y2="720" />
-              <circle cx="560" cy="720" r="6" fill={isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.4)'} />
+              <circle cx="560" cy="720" r="6" fill={isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.4)'} style={{ '--node-op': 0.7, '--node-r': 6, animation: 'nodeBreathe 4.5s ease-in-out infinite', animationDelay: '-3s' }} />
             </g>
           </svg>
         )}
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.4em', color: a, marginBottom: 16, textTransform: 'uppercase' }}>
+          <RevealOnScroll as="div" direction="up" delay={0} style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.4em', color: a, marginBottom: 16, textTransform: 'uppercase' }}>
             04 // SERVICES
-          </div>
-          <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: isMobile ? 30 : 48, color: eff.texte, marginBottom: isMobile ? 50 : 90, letterSpacing: '-0.02em' }}>
+          </RevealOnScroll>
+          <RevealOnScroll as="div" direction="up" delay={0} style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: isMobile ? 30 : 48, color: eff.texte, marginBottom: isMobile ? 50 : 90, letterSpacing: '-0.02em' }}>
             Offres <span style={{ color: a, fontStyle: 'italic', fontWeight: 500 }}>& tarifs</span>
-          </div>
+          </RevealOnScroll>
 
           {services.map((sv, i) => {
             const isPopular = !!sv.badge
@@ -2108,8 +2123,11 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             const featuresRestantes = (sv.features || []).slice(2)
 
             return (
-              <div
+              <RevealOnScroll
                 key={sv.titre}
+                as="div"
+                direction="up"
+                delay={i * 150}
                 style={{
                   position: 'relative',
                   padding: isMobile ? '44px 0' : '64px 0',
@@ -2217,11 +2235,11 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                     ))}
                   </div>
                 )}
-              </div>
+              </RevealOnScroll>
             )
           })}
 
-          <div style={{
+          <RevealOnScroll as="div" direction="up" delay={services.length * 150 + 100} style={{
             marginTop: isMobile ? 40 : 56, display: 'flex', alignItems: 'center',
             gap: 24, flexWrap: 'wrap',
           }}>
@@ -2242,7 +2260,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.1em', color: eff.textFaint }}>
               RÉPONSE SOUS 24H
             </span>
-          </div>
+          </RevealOnScroll>
         </div>
       </section>
 
