@@ -3,7 +3,7 @@
   import { db } from '@/services/firebase'
 
   const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY
-  const MODELE = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile'
+  const MODELE = import.meta.env.VITE_GROQ_MODEL || 'openai/gpt-oss-120b'
 
   function construireResumePortfolio(data) {
     const { personal_info, skills, projects, services } = data
