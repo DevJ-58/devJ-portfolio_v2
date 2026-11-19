@@ -1,0 +1,139 @@
+/* ═══ ACCUEIL — dialogue avec AXIS (couleurs unies, aucun dégradé) ═══════ */
+.ac-page {
+  --pad: clamp(20px, 5.6vw, 104px);
+  min-height: 100vh; min-height: 100dvh; display: grid; grid-template-rows: auto 1fr; overflow-x: hidden;
+  background: var(--fond); color: var(--texte); font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased;
+}
+.ac-page *, .ac-page *::before, .ac-page *::after { box-sizing: border-box; }
+:where(.ac-page) :is(h1, h2, p) { margin: 0; }
+:where(.ac-page) button { cursor: pointer; font: inherit; }
+.ac-page :focus-visible { outline: 2px solid var(--a); outline-offset: 4px; }
+
+/* En-tête */
+.ac-tete { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 22px var(--pad); border-bottom: 1px solid var(--bord-3); }
+.ac-logo { font: 700 1.1rem / 1 'Fraunces', Georgia, serif; letter-spacing: 0.04em; }
+.ac-logo span { color: var(--a); }
+.ac-etapes { display: flex; align-items: center; gap: 16px; margin: 0; padding: 0; list-style: none; }
+.ac-etapes li { display: flex; align-items: center; gap: 10px; font: 400 0.7rem / 1 'Space Mono', monospace; letter-spacing: 0.16em; text-transform: uppercase; color: var(--t4); transition: color 0.5s; }
+.ac-etapes em { font-style: normal; }
+.ac-etapes i { display: block; width: 34px; height: 1px; margin-left: 6px; background: var(--bord); transition: background 0.5s; }
+.ac-etapes li:last-child i { display: none; }
+.ac-etapes li.est-actif { color: var(--texte); }
+.ac-etapes li.est-actif em { color: var(--a); }
+.ac-etapes li.est-fait { color: var(--t3); }
+.ac-etapes li.est-fait i { background: var(--a); }
+.ac-portfolio { border: 0; background-color: transparent; }
+
+/* Scène */
+.ac-scene { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: center; gap: clamp(32px, 6vw, 110px); padding: clamp(28px, 6vh, 80px) var(--pad); }
+.ac-axis { display: grid; justify-items: center; gap: 28px; }
+.ac-axis__avatar { position: relative; display: grid; place-items: center; }
+.ac-axis__avatar > :last-child { position: relative; z-index: 1; }
+.ac-axis__fond {
+  position: absolute; z-index: 0; user-select: none; pointer-events: none;
+  font: 800 clamp(7rem, 15vw, 15rem) / 1 'Fraunces', Georgia, serif; letter-spacing: -0.05em;
+  color: transparent; -webkit-text-stroke: 1px rgba(var(--a-rgb), 0.24);
+}
+.ac-bulle { display: grid; gap: 12px; max-width: 27rem; padding: 22px 24px; border: 1px solid var(--bord); border-radius: 4px 22px 22px 22px; background: var(--carte); }
+.ac-bulle p { font: italic 400 1.1rem / 1.55 'Fraunces', Georgia, serif; color: var(--t2); }
+
+.ac-dialogue { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; align-content: center; max-width: 42rem; }
+.ac-question { font: 800 clamp(2.8rem, 6.4vw, 6.6rem) / 0.94 'Fraunces', Georgia, serif; letter-spacing: -0.045em; font-variation-settings: 'opsz' 144; }
+.ac-texte { max-width: 40ch; font-size: clamp(1rem, 1.2vw, 1.15rem); line-height: 1.65; color: var(--t3); }
+
+/* Étape 1 : prénom */
+.ac-champ { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 10px; }
+.ac-champ label { font: 400 0.7rem / 1 'Space Mono', monospace; letter-spacing: 0.2em; text-transform: uppercase; color: var(--a); }
+.ac-champ__ligne { display: flex; align-items: center; gap: 16px; padding-bottom: 12px; border-bottom: 2px solid var(--bord); transition: border-color 0.4s; }
+.ac-champ__ligne:focus-within { border-color: var(--a); }
+.ac-champ input {
+  flex: 1; min-width: 0; padding: 0; border: 0; outline: none; background: none; color: var(--texte); caret-color: var(--a);
+  font: 400 clamp(1.8rem, 3.4vw, 3rem) / 1.15 'Fraunces', Georgia, serif; letter-spacing: -0.02em;
+}
+.ac-champ input::placeholder { color: var(--t4); }
+.ac-champ input:focus-visible { outline: none; }
+.ac-envoi {
+  flex-shrink: 0; width: 64px; height: 64px; display: grid; place-items: center; padding: 0;
+  border: 0; border-radius: 50%; background: var(--a); color: var(--sur-a);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+}
+.ac-envoi:disabled { opacity: 0.32; cursor: not-allowed; }
+.ac-envoi:not(:disabled):hover { transform: rotate(-45deg) scale(1.06); }
+
+/* Étape 2 : rôle */
+.ac-roles { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 8px; }
+.ac-role {
+  position: relative; isolation: isolate; overflow: hidden; display: grid;
+  grid-template-columns: auto 1fr auto; grid-template-areas: 'num icone fleche' 'titre titre titre' 'sous sous sous';
+  align-items: center; gap: 8px 12px; padding: 22px; text-align: left;
+  border: 1px solid var(--bord); border-radius: 16px; background: var(--carte); color: var(--texte);
+  transition: border-color 0.4s, color 0.4s;
+}
+.ac-role::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--a); transform: scaleY(0); transform-origin: bottom; transition: transform 0.6s cubic-bezier(0.76, 0, 0.24, 1); }
+.ac-role:hover::before, .ac-role:focus-visible::before, .ac-role.est-choisi::before { transform: scaleY(1); }
+.ac-role:hover, .ac-role:focus-visible, .ac-role.est-choisi { color: var(--sur-a); border-color: var(--a); }
+.ac-role__num { grid-area: num; font: 400 0.7rem / 1 'Space Mono', monospace; color: var(--a-doux); transition: color 0.4s; }
+.ac-role__icone { grid-area: icone; color: var(--a); transition: color 0.4s; }
+.ac-role__fleche { grid-area: fleche; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+.ac-role__titre { grid-area: titre; margin-top: 18px; font: 800 1.7rem / 1 'Fraunces', Georgia, serif; letter-spacing: -0.03em; }
+.ac-role__sous { grid-area: sous; font-size: 0.92rem; color: var(--t3); transition: color 0.4s; }
+.ac-role:is(:hover, :focus-visible, .est-choisi) :is(.ac-role__num, .ac-role__icone, .ac-role__sous) { color: inherit; }
+.ac-role:is(:hover, :focus-visible, .est-choisi) .ac-role__fleche { transform: rotate(-45deg); }
+
+/* Étape 3 : micro */
+.ac-micro { display: flex; flex-wrap: wrap; align-items: center; gap: 36px; margin-top: 10px; }
+.ac-micro__bouton { position: relative; flex-shrink: 0; width: 128px; height: 128px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: var(--a); color: var(--sur-a); }
+.ac-micro__onde { position: absolute; inset: 0; border: 1px solid var(--a); border-radius: 50%; animation: ac-onde 2.4s ease-out infinite; }
+.ac-micro__onde + .ac-micro__onde { animation-delay: 1.2s; }
+@keyframes ac-onde { from { transform: scale(1); opacity: 0.7; } to { transform: scale(1.75); opacity: 0; } }
+.ac-micro__actions { display: grid; justify-items: start; gap: 14px; }
+.ac-sans-micro { display: inline-flex; align-items: center; gap: 8px; padding: 8px 0; border: 0; background: none; font: 400 0.72rem / 1 'Space Mono', monospace; letter-spacing: 0.14em; text-transform: uppercase; color: var(--t2); transition: color 0.3s; }
+.ac-sans-micro:hover { color: var(--a); }
+
+/* Fenêtre d'ambiance */
+.ac-modal { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 24px; overflow-y: auto; background: var(--fond); }
+.ac-modal__carte { display: grid; gap: 22px; width: min(760px, 100%); }
+.ac-modal__titre { font: 800 clamp(2.6rem, 7vw, 6rem) / 0.92 'Fraunces', Georgia, serif; letter-spacing: -0.045em; }
+.ac-modal__mode { display: inline-flex; justify-self: start; gap: 4px; padding: 4px; border: 1px solid var(--bord); border-radius: 999px; }
+.ac-modal__mode button { padding: 11px 24px; border: 0; border-radius: 999px; background: none; color: var(--t2); font: 400 0.72rem / 1 'Space Mono', monospace; letter-spacing: 0.14em; text-transform: uppercase; transition: background 0.4s, color 0.4s; }
+.ac-modal__mode button.est-actif { background: var(--a); color: var(--sur-a); font-weight: 700; }
+.ac-modal__couleurs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.ac-modal__couleurs button {
+  display: grid; justify-items: start; gap: 16px; padding: 18px; text-align: left;
+  border: 1px solid var(--bord); border-radius: 16px; background: var(--carte); color: var(--texte);
+  transition: border-color 0.3s, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ac-modal__couleurs button:hover, .ac-modal__couleurs button:focus-visible { border-color: var(--c); transform: translateY(-4px); }
+.ac-modal__couleurs button.est-actif { border-color: var(--c); box-shadow: inset 0 0 0 1px var(--c); }
+.ac-modal__couleurs i { display: block; width: 44px; height: 44px; border-radius: 50%; background: var(--c); }
+.ac-modal__couleurs span { font: 700 1rem / 1.2 'Fraunces', Georgia, serif; }
+.ac-modal__passer { justify-self: start; padding: 8px 0; border: 0; background: none; font: 400 0.72rem / 1 'Space Mono', monospace; letter-spacing: 0.16em; text-transform: uppercase; color: var(--t3); transition: color 0.3s; }
+.ac-modal__passer:hover { color: var(--a); }
+
+/* Mobile */
+@media (max-width: 900px) {
+  .ac-tete { padding: 14px 16px; gap: 12px; }
+  .ac-etapes { gap: 6px; }
+  .ac-etapes span { display: none; }
+  .ac-etapes i { width: 12px; margin-left: 0; }
+  .ac-tete .ac-portfolio { white-space: nowrap; font-size: 0.62rem; }
+  .ac-scene { grid-template-columns: minmax(0, 1fr); align-items: start; align-content: start; gap: 34px; padding: 22px 20px 40px; }
+  .ac-dialogue { min-width: 0; }
+  .ac-axis { grid-template-columns: auto minmax(0, 1fr); justify-items: start; align-items: center; gap: 14px; }
+  .ac-axis__fond { display: none; }
+  .ac-bulle { padding: 14px 16px; }
+  .ac-bulle p { font-size: 0.95rem; }
+  .ac-bulle .pf-label { display: none; }
+  .ac-question { font-size: clamp(2.5rem, 12.5vw, 4rem); }
+  .ac-roles { grid-template-columns: 1fr; gap: 10px; }
+  .ac-role { padding: 18px; }
+  .ac-role__titre { margin-top: 6px; font-size: 1.4rem; }
+  .ac-micro { gap: 24px; }
+  .ac-micro__bouton { width: 104px; height: 104px; }
+  .ac-modal__couleurs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ac-modal__carte { gap: 18px; padding: 24px 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ac-micro__onde { animation: none; opacity: 0; }
+  .ac-role::before, .ac-envoi, .ac-role__fleche { transition: none; }
+}

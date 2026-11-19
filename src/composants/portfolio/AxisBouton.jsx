@@ -52,7 +52,7 @@ export default function AxisBouton({ isMobile, a, aRgb, navigate, eff }) {
         }}>
           <div style={{
             position: 'absolute', top: 0, left: 12, right: 12, height: 1,
-            background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.4),transparent)`,
+            background: `rgba(${aRgb},0.3)`,
           }} />
           <div style={{
             position: 'absolute',
@@ -134,7 +134,7 @@ export default function AxisBouton({ isMobile, a, aRgb, navigate, eff }) {
             <div style={{
               position: 'absolute',
               left: 0, right: 0, height: 1,
-              background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.6),transparent)`,
+              background: `rgba(${aRgb},0.45)`,
               animation: 'axisScan 2s linear infinite',
               zIndex: 2, pointerEvents: 'none',
             }} />

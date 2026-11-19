@@ -10,7 +10,10 @@ import { signalerPositionVoix } from '@/composants/ui/axis/canalParole'
 // Import du hook AXIS renommé sans changer le nom du fichier
 import Portfolio from '@/composants/Portfolio'
 import PanneauParametres from '@/composants/ui/PanneauParametres'
-import { Volume2, Layout, RotateCcw, Send, MapPin, Briefcase, Zap } from 'lucide-react'
+import { Volume2, Layout, RotateCcw, Send, MapPin, Briefcase, Zap, Mic, MessageSquare, PenLine, X, SlidersHorizontal } from 'lucide-react'
+import { gsap, useGSAP, EASE, mouvementReduit } from '@/composants/portfolio/moteur/gsap'
+import { variablesTheme } from '@/composants/portfolio/moteur/contexte'
+import './experience.css'
 import cartesPortfolio from '@/donnees/cartesPortfolio'
 import usePortfolioData from '@/hooks/usePortfolioData'
 
@@ -30,14 +33,6 @@ export default function Experience() {
   const { theme, setTheme, mode, getThemeEffectif } = utiliserTheme()
   const eff = getThemeEffectif ? getThemeEffectif() : theme
   const isLight = mode === 'light'
-  const a = eff.accent
-  const aRgb = eff.accentRgb
-  // Texte en accent semi-transparent : en mode clair, opacité relevée pour rester lisible
-  const ta = (o) => `rgba(${aRgb},${isLight ? Math.min(1, 0.72 + o * 0.28) : o})`
-  // Accent d'origine, pour les surfaces qui restent sombres en mode clair (carte photo)
-  const av = eff.accentVif || a
-  const avRgb = eff.accentVifRgb || aRgb
-  const overlayBg = isLight ? 'rgba(15,23,42,0.12)' : 'rgba(0,0,0,0.35)'
 
   useEffect(() => {
     const handler = (e) => {
@@ -67,14 +62,13 @@ export default function Experience() {
   const [ecoute, setEcoute] = useState(false) // vraie = micro actif
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [drawerSys, setDrawerSys] = useState(false)
-  const [drawerMod, setDrawerMod] = useState(false)
   const [dernierMessage, setDernierMessage] = useState('')
   const [bulleVisible, setBulleVisible] = useState(false)
   const [photoFrejusVisible, setPhotoFrejusVisible] = useState(false)
   const [inputCmd, setInputCmd] = useState('')
   const [heure, setHeure] = useState('')
   const [dateStr, setDateStr] = useState('')
-  const [sectionActive, setSectionActive] = useState(null)
+  const [, setSectionActive] = useState(null)
   const [cartesActives, setCartesActives] = useState([])
   // CORRECTION 2B — État pour afficher/masquer la zone d'écriture dans le portfolio
   const [inputPortfolioVisible, setInputPortfolioVisible] = useState(false)
@@ -99,6 +93,18 @@ export default function Experience() {
   }, [])
 
   const portfolioRef = useRef(null)
+  const xpRef = useRef(null)
+
+  // Entrée de l'espace AXIS
+  useGSAP(() => {
+    if (mouvementReduit() || !xpRef.current) return
+    const q = gsap.utils.selector(xpRef)
+    gsap.timeline({ defaults: { ease: EASE.sortie } })
+      .from(q('[data-xp-tete] > *'), { y: -24, autoAlpha: 0, duration: 0.9, stagger: 0.08 })
+      .from(q('[data-xp-avatar]'), { scale: 0.82, autoAlpha: 0, duration: 1.5 }, 0.1)
+      .from(q('[data-xp-panneau] > *'), { y: 30, autoAlpha: 0, duration: 1, stagger: 0.08 }, 0.3)
+      .from(q('[data-xp-saisie]'), { y: 40, autoAlpha: 0, duration: 1 }, 0.5)
+  }, { scope: xpRef })
   const derniereQuestionRef = useRef('')
   const sectionEnAttenteRef = useRef(null)
   const { envoyerMessage, estEnChargement, estEnTrain, messageCourant } = useAxis()
@@ -700,13 +706,6 @@ export default function Experience() {
     envoyerMessageRef.current(cmd)
   }
 
-  const naviguerPortfolio = useCallback((section) => {
-    if (!portfolioRef.current) return
-    portfolioRef.current.naviguerVers(section)
-    setSectionActive(section)
-    setTimeout(() => setSectionActive(null), 3000)
-  }, [])
-
   useEffect(() => {
     if (!modePortfolio) return
 
@@ -781,1307 +780,260 @@ export default function Experience() {
     }
   }, [modeParler])
 
-  const avatarTransform = cartesActives.length > 0
-    ? (isMobile ? 'translateX(-50%) translateY(30%)' : 'translateX(-50%) translateY(-65%)')
-    : (modeChat && bulleVisible ? 'translateX(-50%) translateY(-60%)' : 'translateX(-50%) translateY(-50%)')
+  // ── Affichage ───────────────────────────────────────────────────────────
+  const libelleEtat = aiState === 'idle' ? 'En attente' : aiState === 'thinking' ? 'Réflexion…' : 'Parole'
+  const profils = { recruiter: 'Recruteur', recruteur: 'Recruteur', client: 'Client', collaborateur: 'Collaborateur', collab: 'Collaborateur', curieux: 'Curieux' }
+  const libelleProfil = profils[visiteur.profession] || visiteur.profession || '—'
+  const raccourcis = ['> voir le portfolio', '> mes projets', '> me contacter', '> mon parcours']
+  const avatarTaille = isMobile ? 230 : 340
+  const reponseVisible = bulleVisible && (modeChat || !modeVocal) && !modePortfolio
 
-  if (isMobile) {
-    return (
-      <div style={{ position: 'relative', height: '100vh', width: '100vw', overflow: 'hidden', overflowX: 'hidden', backgroundColor: eff.fond, display: 'flex', flexDirection: 'column' }}>
-        <style>{`
-          @keyframes fadeInDown {
-            from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
-            to   { opacity: 1; transform: translateX(-50%) translateY(0px); }
-          }
-          @keyframes slideFromRight {
-            from { opacity: 0; transform: translateX(184px) translateY(-50%); }
-            to   { opacity: 1; transform: translateX(0px) translateY(-50%); }
-          }
-          @keyframes scanAnim {
-            from { top: 0%; }
-            to   { top: 100%; }
-          }
-          @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50%       { opacity: 0.35; }
-          }
-        `}</style>
-
-        <div style={{ height: 56, background: isLight ? 'rgba(240,242,245,0.95)' : 'rgba(0,0,0,0.85)', borderBottom: `1px solid rgba(${aRgb},0.12)`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <img src="/asset/DEVJ.PNG" alt="DevJ" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 6 }} />
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, color: eff.textMedium }}>&lt;/DevJ&gt;</div>
-          </div>
-          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 16, color: a }}>{heure}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 8, color: a, letterSpacing: '0.18em' }}>● EN LIGNE</div>
-            <button onClick={() => naviguer('/')} style={{ width: 28, height: 28, border: '1px solid rgba(255,100,100,0.2)', background: 'rgba(255,100,100,0.05)', color: isLight ? '#b91c1c' : 'rgba(255,100,100,0.8)', borderRadius: 8, display: 'grid', placeItems: 'center', padding: 0 }}>
-              <RotateCcw size={14} />
-            </button>
-          </div>
-        </div>
-
-        <div style={{ position: 'absolute', left: '50%', top: '50%', transform: avatarTransform, transition: 'transform 0.5s cubic-bezier(0.16,1,0.3,1)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, zIndex: 20, width: '100%' }}>
-          <AvatarStable width={200} height={200} etat={aiState} />
-          <div style={{ textAlign: 'center', fontFamily: 'Space Mono, monospace', color: isLight ? eff.texte : 'rgba(255,255,255,0.9)', fontSize: 9, lineHeight: 1.4, maxWidth: '88vw' }}>
-            <div>// FRÉJUS KOUADIO</div>
-            <div style={{ color: aiState === 'idle' ? ta(0.4) : a }}>
-              {aiState === 'idle' ? '// EN ATTENTE' : aiState === 'thinking' ? '// TRAITEMENT...' : '// EN TRAIN DE PARLER'}
-            </div>
-          </div>
-          {modeChat && bulleVisible && !modePortfolio && (
-            <div style={{ width: 'calc(100vw - 64px)', maxWidth: 340, background: eff.glassOverlay, border: `1px solid rgba(${aRgb},0.1)`, borderRadius: 14, padding: 16, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', color: eff.texte }}>
-              <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: a, letterSpacing: '0.25em', marginBottom: 8 }}>AXIS // TRANSMISSION</div>
-              <div style={{ fontSize: 12, color: eff.textHigh, lineHeight: 1.6 }}>{dernierMessage}</div>
-            </div>
-          )}
-        </div>
-
-        <button onClick={() => setDrawerSys(true)} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 42, background: isLight ? 'rgba(240,242,245,0.9)' : eff.navOverlay, border: `1px solid rgba(${aRgb},0.25)`, padding: '10px 0', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: 14, zIndex: 21 }}>
-          <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: isLight ? '#334155' : '#fff', transform: 'rotate(-90deg)', display: 'inline-block' }}>SYS</span>
-        </button>
-        <button onClick={() => setDrawerMod(true)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 42, background: isLight ? 'rgba(240,242,245,0.9)' : eff.navOverlay, border: `1px solid rgba(${aRgb},0.25)`, padding: '10px 0', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: 14, zIndex: 21 }}>
-          <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: isLight ? '#334155' : '#fff', transform: 'rotate(-90deg)', display: 'inline-block' }}>MOD</span>
-        </button>
-
-        {(drawerSys || drawerMod) && (
-          <div onClick={() => { setDrawerSys(false); setDrawerMod(false) }} style={{ position: 'fixed', inset: 0, zIndex: 30, background: overlayBg }} />
-        )}
-
-        <div style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: 220, zIndex: 35, background: isLight ? 'rgba(240,242,245,0.98)' : 'rgba(0,0,0,0.95)', borderRight: `1px solid rgba(${aRgb},0.2)`, backdropFilter: 'blur(20px)', transform: drawerSys ? 'translateX(0)' : 'translateX(-100%)', transition: 'transform 0.35s ease', padding: '18px 14px', overflowY: 'auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: a, letterSpacing: '0.2em' }}>// SYSTÈME</div>
-            <button onClick={() => setDrawerSys(false)} style={{ background: 'transparent', border: 'none', color: isLight ? '#334155' : 'rgba(255,255,255,0.7)', fontSize: 14, cursor: 'pointer' }}>✕</button>
-          </div>
-          <div style={{ border: `1px solid rgba(${aRgb},0.14)`, background: `rgba(${aRgb},0.05)`, padding: '12px', marginBottom: 12, borderRadius: 14 }}>
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.22em', color: ta(0.55), marginBottom: 6 }}>VISITEUR</div>
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, fontWeight: 700, color: a }}>{visiteur.prenom || '—'}</div>
-          </div>
-          <div style={{ border: `1px solid rgba(${aRgb},0.14)`, background: `rgba(${aRgb},0.05)`, padding: '12px', marginBottom: 12, borderRadius: 14 }}>
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.22em', color: ta(0.55), marginBottom: 6 }}>PROFIL</div>
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, fontWeight: 700, color: a }}>{({ recruiter:'RECRUTEUR', client:'CLIENT', collaborateur:'COLLABORATEUR', curieux:'CURIEUX' }[visiteur.profession] || visiteur.profession?.toUpperCase() || '—')}</div>
-          </div>
-          <div style={{ border: `1px solid rgba(${aRgb},0.14)`, background: `rgba(${aRgb},0.05)`, padding: '12px', marginBottom: 20, borderRadius: 14, display: 'flex', gap: 10, alignItems: 'center' }}>
-            <div style={{ width: 8, height: 8, borderRadius: 9999, background: a, animation: 'pulse 1.4s infinite' }} />
-            <div>
-              <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: ta(0.55), marginBottom: 4 }}>STATUT</div>
-              <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, fontWeight: 700, color: a }}>● CONNECTÉ</div>
-            </div>
-          </div>
-          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.18em', color: eff.textMuted, marginBottom: 10 }}>NAVIGATION RAPIDE</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {['> voir le portfolio', '> mes projets', '> me contacter', '> mon parcours'].map((cmd) => (
-              <button key={cmd} onClick={() => { envoyerCommande(cmd); setDrawerSys(false) }} style={{ textAlign: 'left', border: `1px solid ${eff.borderLight}`, background: eff.cardBg, color: ta(0.75), padding: '10px 12px', fontFamily: 'Space Mono, monospace', fontSize: 9, borderRadius: 12, cursor: 'pointer' }}>
-                {cmd.replace('>', '›')}
-              </button>
-            ))}
-          </div>
-          <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid rgba(${aRgb},0.08)` }}>
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: isLight ? '#475569' : 'rgba(255,255,255,0.45)', letterSpacing: '0.18em', marginBottom: 10 }}>AUDIO</div>
-            <button onClick={() => setModeVocal(prev => !prev)} style={{ width: '100%', background: modeVocal ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.04)', border: `1px solid ${modeVocal ? a : `rgba(${aRgb},0.25)`}`, color: modeVocal ? (isLight ? a : '#fff') : (isLight ? '#526075' : ta(0.9)), padding: '10px 0', borderRadius: 12, fontFamily: 'Space Mono, monospace', fontSize: 10, cursor: 'pointer' }}>
-              {modeVocal ? 'VOCAL ON' : 'VOCAL OFF'}
-            </button>
-          </div>
-        </div>
-
-        <div style={{ position: 'fixed', right: 0, top: 0, bottom: 0, width: 220, zIndex: 35, background: isLight ? 'rgba(240,242,245,0.98)' : 'rgba(0,0,0,0.95)', borderLeft: `1px solid rgba(${aRgb},0.2)`, backdropFilter: 'blur(20px)', transform: drawerMod ? 'translateX(0)' : 'translateX(100%)', transition: 'transform 0.35s ease', padding: '18px 14px', overflowY: 'auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: a, letterSpacing: '0.2em' }}>// MODES</div>
-            <button onClick={() => setDrawerMod(false)} style={{ background: 'transparent', border: 'none', color: isLight ? '#334155' : 'rgba(255,255,255,0.7)', fontSize: 14, cursor: 'pointer' }}>✕</button>
-          </div>
-          <button onClick={() => setModeVocal(prev => !prev)} style={{ width: '100%', border: `1px solid ${modeVocal ? a : 'rgba(255,255,255,0.12)'}`, background: modeVocal ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.04)', color: modeVocal ? (isLight ? a : '#fff') : (isLight ? '#526075' : ta(0.9)), padding: '12px', borderRadius: 14, fontFamily: 'Space Mono, monospace', fontSize: 10, marginBottom: 12, cursor: 'pointer' }}>VOCAL</button>
-          <button onClick={() => setModeChat(prev => !prev)} style={{ width: '100%', border: `1px solid ${modeChat ? a : 'rgba(255,255,255,0.12)'}`, background: modeChat ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.04)', color: modeChat ? (isLight ? a : '#fff') : (isLight ? '#526075' : ta(0.9)), padding: '12px', borderRadius: 14, fontFamily: 'Space Mono, monospace', fontSize: 10, marginBottom: 12, cursor: 'pointer' }}>CHAT</button>
-          <button onClick={toggleParler} style={{ width: '100%', border: `1px solid ${modeParler ? a : 'rgba(255,255,255,0.12)'}`, background: modeParler ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.04)', color: modeParler ? (isLight ? a : '#fff') : (isLight ? '#526075' : ta(0.9)), padding: '12px', borderRadius: 14, fontFamily: 'Space Mono, monospace', fontSize: 10, cursor: 'pointer' }}>PARLER</button>
-          <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid rgba(${aRgb},0.08)` }}>
-            <button onClick={() => { setModePortfolio(true); setDrawerMod(false) }} style={{ width: '100%', background: `rgba(${aRgb},0.1)`, border: `1px solid rgba(${aRgb},0.3)`, color: a, padding: '12px', borderRadius: 14, fontFamily: 'Space Mono, monospace', fontSize: 10, textTransform: 'uppercase', cursor: 'pointer' }}>PORTFOLIO</button>
-          </div>
-          <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid rgba(${aRgb},0.08)` }}>
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: isLight ? '#475569' : 'rgba(255,255,255,0.45)', letterSpacing: '0.18em', marginBottom: 10 }}>SYS_STATUS</div>
-            {[['MODÈLE','GROQ'],['SESSION','ACTIVE'],['VOIX','FR-FR']].map(([k,v]) => (
-              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: isLight ? '#334155' : 'rgba(255,255,255,0.75)', marginBottom: 8 }}>
-                <span style={{ color: isLight ? '#526075' : 'rgba(255,255,255,0.3)' }}>{k}</span><span style={{ color: a }}>{v}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid rgba(${aRgb},0.08)` }}>
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: isLight ? '#475569' : 'rgba(255,255,255,0.45)', letterSpacing: '0.18em', marginBottom: 10 }}>PARAMÈTRES</div>
-            <PanneauParametres />
-          </div>
-        </div>
-
-        {portfolioVisible && (
-          <div className={`pf-overlay${modePortfolio ? '' : ' est-sortie'}`} style={{ position: 'fixed', inset: 0, zIndex: 50, overflow: 'hidden' }}>
-            <Portfolio ref={portfolioRef} onClose={() => { setModePortfolio(false); setInputPortfolioVisible(false) }} />
-            {/* CORRECTION 2B — Bouton classeur + zone d'écriture dans le portfolio mobile */}
-            <div style={{
-              position: 'fixed',
-              bottom: 90,
-              left: 12,
-              zIndex: 52,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'flex-start',
-              gap: 8,
-            }}>
-              {inputPortfolioVisible && (
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0,
-                  background: isLight ? 'rgba(255,255,255,0.95)' : 'rgba(5,5,5,0.88)',
-                  border: `1px solid rgba(${aRgb},0.25)`,
-                  borderRadius: 14,
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
-                  boxShadow: isLight ? '0 8px 28px rgba(15,23,42,0.14)' : '0 8px 32px rgba(0,0,0,0.4)',
-                  overflow: 'hidden',
-                  width: 'calc(100vw - 100px)',
-                  maxWidth: 400,
-                }}>
-                  <button
-                    onClick={() => setInputPortfolioVisible(false)}
-                    style={{
-                      padding: '12px 12px',
-                      border: 'none',
-                      borderRight: `1px solid rgba(${aRgb},0.12)`,
-                      background: 'transparent',
-                      color: ta(0.5),
-                      cursor: 'pointer',
-                      fontSize: 12,
-                      flexShrink: 0,
-                    }}
-                  >✕</button>
-                  <input
-                    value={inputCmd}
-                    onChange={e => setInputCmd(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        soumettre()
-                        setInputPortfolioVisible(false)
-                      }
-                    }}
-                    placeholder="Message à AXIS..."
-                    autoFocus
-                    style={{
-                      flex: 1,
-                      background: 'transparent',
-                      border: 'none',
-                      outline: 'none',
-                      padding: '12px 14px',
-                      fontFamily: 'Space Mono, monospace',
-                      fontSize: 11,
-                      color: isLight ? '#0f172a' : '#fff',
-                      caretColor: a,
-                    }}
-                  />
-                  <button
-                    onClick={() => { soumettre(); setInputPortfolioVisible(false) }}
-                    style={{
-                      padding: '12px 14px',
-                      border: 'none',
-                      borderLeft: `1px solid rgba(${aRgb},0.12)`,
-                      background: `rgba(${aRgb},0.08)`,
-                      color: a,
-                      cursor: 'pointer',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                      stroke={a} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="22" y1="2" x2="11" y2="13"/>
-                      <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                    </svg>
-                  </button>
-                </div>
-              )}
-              {/* CORRECTION 1 — Icône crayon seule, sans label texte */}
-              <button
-                type="button"
-                onClick={() => setInputPortfolioVisible(prev => !prev)}
-                title={inputPortfolioVisible ? 'Fermer' : 'Écrire à AXIS'}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 36,
-                  height: 36,
-                  background: inputPortfolioVisible ? `rgba(${aRgb},0.2)` : (isLight ? 'rgba(255,255,255,0.9)' : 'rgba(5,5,5,0.65)'),
-                  border: `1px solid rgba(${aRgb},${inputPortfolioVisible ? '0.55' : '0.18'})`,
-                  borderRadius: '50%',
-                  cursor: 'pointer',
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
-                  transition: 'all 200ms',
-                }}
-              >
-                {inputPortfolioVisible ? (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                    stroke={a} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                ) : (
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                    stroke={a} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                  </svg>
-                )}
-              </button>
-            </div>
-            <div style={{
-              position: 'fixed',
-              bottom: 16,
-              right: 12,
-              zIndex: 52,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 6,
-            }}>
-              {/* CORRECTION 1 — Bouton fermer explicite toujours visible sur mobile */}
-              <button
-                onClick={() => { setModePortfolio(false); setInputPortfolioVisible(false) }}
-                style={{
-                  background: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.7)',
-                  border: `1px solid rgba(${aRgb},0.3)`,
-                  borderRadius: 20,
-                  color: a,
-                  fontFamily: 'Space Mono, monospace',
-                  fontSize: 8,
-                  letterSpacing: '0.15em',
-                  padding: '6px 12px',
-                  cursor: 'pointer',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                  marginBottom: 4,
-                  pointerEvents: 'auto',
-                }}
-              >
-                ✕ FERMER
-              </button>
-              {/* CORRECTION 2 — button natif pour clic fiable sur mobile */}
-              <button
-                type="button"
-                onClick={() => { setModePortfolio(false); setInputPortfolioVisible(false) }}
-                style={{
-                  position: 'relative',
-                  cursor: 'pointer',
-                  borderRadius: '50%',
-                  overflow: 'hidden',
-                  width: 72,
-                  height: 72,
-                  background: isLight ? 'rgba(255,255,255,0.8)' : 'rgba(5,5,5,0.55)',
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
-                  border: `1px solid rgba(${aRgb},0.2)`,
-                  boxShadow: `0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(${aRgb},0.08)`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: 0,
-                  pointerEvents: 'auto',
-                  zIndex: 55,
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                <div style={{
-                  position: 'absolute',
-                  inset: -2,
-                  borderRadius: '50%',
-                  border: `1px solid rgba(${aRgb},${aiState !== 'idle' ? '0.6' : '0.15'})`,
-                  animation: aiState !== 'idle' ? 'pulse 1.4s infinite' : 'none',
-                  pointerEvents: 'none',
-                }} />
-                <AvatarStable width={68} height={68} etat={aiState} />
-              </button>
-              <div style={{
-                fontFamily: 'Space Mono, monospace',
-                fontSize: 7,
-                color: aiState === 'idle' ? ta(0.35) : a,
-                letterSpacing: '0.12em',
-                background: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.7)',
-                backdropFilter: 'blur(12px)',
-                padding: '3px 8px',
-                borderRadius: 20,
-                border: `1px solid rgba(${aRgb},0.1)`,
-              }}>
-                {aiState === 'idle' ? '●' : aiState === 'thinking' ? '◌' : '◉'}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Removed: floating inputs rendered inside the portfolio overlay (desktop & mobile). Kept the global bottom input intact. */}
-
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 72, background: isLight ? 'rgba(240,242,245,0.95)' : 'rgba(0,0,0,0.85)', borderTop: `1px solid rgba(${aRgb},0.12)`, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8, zIndex: 25 }}>
-          {!modeParler ? (
-            <>
-              <input
-                ref={inputRef}
-                value={inputCmd}
-                onChange={(e) => setInputCmd(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); soumettre() } }}
-                placeholder="Entrez votre commande..."
-                style={{ flex: 1, background: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.04)', border: `1px solid rgba(${aRgb},0.15)`, borderRadius: 14, outline: 'none', padding: '12px 14px', fontFamily: 'Space Mono, monospace', fontSize: 12, color: isLight ? '#0f172a' : '#fff', caretColor: a }}
-              />
-              <button onClick={soumettre} style={{ padding: '12px 14px', border: 'none', borderRadius: 14, background: `rgba(${aRgb},0.1)`, color: a, fontFamily: 'Space Mono, monospace', fontSize: 12, cursor: 'pointer' }}>
-                <Send size={14} color={a} />
-              </button>
-            </>
-          ) : (
-            <div style={{ flex: 1, textAlign: 'center', fontFamily: 'Space Mono, monospace', fontSize: 10, color: a, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              {ecoute ? '● ÉCOUTE EN COURS' : '// MICRO PRÊT'}
-              {ecoute && <span style={{ width: 8, height: 8, borderRadius: '50%', background: a, animation: 'pulse 1.4s infinite', display: 'inline-block' }} />}
-            </div>
-          )}
-        </div>
-
-        {cartesActives.length > 0 && (
-          <div style={{ position: 'absolute', top: 130, left: '50%', transform: 'translateX(-50%)', width: 'calc(100vw - 32px)', maxWidth: 320, zIndex: 40, opacity: 0, animation: 'fadeInDown 0.4s ease forwards', cursor: 'pointer' }} onClick={() => {
-            setModePortfolio(true)
-            setTimeout(() => {
-              if (portfolioRef.current) {
-                const sectionMap = {
-                  projets: 'projects',
-                  competences: 'skills',
-                  contact: 'contact',
-                  parcours: 'about',
-                }
-                const cible = sectionMap[cartesActives[0].id] || 'hero'
-                portfolioRef.current.naviguerVers(cible)
-              }
-            }, 400)
-            setCartesActives([])
-          }}>
-            <div style={{ border: `1px solid ${av}`, background: 'rgba(3,12,8,0.97)', boxShadow: `0 0 40px rgba(${avRgb},0.3), 0 0 80px rgba(${avRgb},0.1)`, backdropFilter: 'blur(16px)', position: 'relative', overflow: 'hidden', transition: 'box-shadow 0.2s', borderRadius: 16 }}>
-              {[['top','left'],['top','right'],['bottom','left'],['bottom','right']].map(([v,h],i) => (
-                <div key={i} style={{ position:'absolute', [v]:0, [h]:0, width:14, height:14, [`border${v.charAt(0).toUpperCase()+v.slice(1)}`]:`2px solid ${av}`, [`border${h.charAt(0).toUpperCase()+h.slice(1)}`]:`2px solid ${av}`, zIndex:3 }} />
-              ))}
-              <div style={{ padding: '8px 16px', borderBottom: `1px solid rgba(${avRgb},0.25)`, background: `rgba(${avRgb},0.07)`, fontFamily: 'Space Mono, monospace', fontSize: 8, color: av, letterSpacing: '0.25em', textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>{cartesActives[0].label}</span>
-                <span style={{ fontSize: 10, color: `rgba(${avRgb},0.5)` }}>→</span>
-              </div>
-              <div style={{ width: '100%', height: 200, position: 'relative', overflow: 'hidden', background: '#000' }}>
-                <img src={cartesActives[0].image} alt={cartesActives[0].titre} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', display: 'block' }} onError={(e) => { e.currentTarget.style.display = 'none' }} />
-                <div style={{ position:'absolute', left:0, right:0, height:2, background:`linear-gradient(90deg,transparent,rgba(${avRgb},0.7),transparent)`, animation:'scanAnim 2.5s linear infinite', zIndex:2 }} />
-                <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg,transparent 80%,rgba(3,12,8,0.5) 100%)', zIndex:1 }} />
-                <div style={{ position:'absolute', inset:0, zIndex:1, backgroundImage:`linear-gradient(rgba(${avRgb},0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(${avRgb},0.03) 1px,transparent 1px)`, backgroundSize:'40px 40px' }} />
-              </div>
-              <div style={{ padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid rgba(${avRgb},0.15)` }}>
-                <div style={{ fontFamily:'Space Mono, monospace', fontSize:9, color:av, letterSpacing:'0.1em', fontWeight:'bold' }}>{cartesActives[0].titre.toUpperCase()}</div>
-                <div style={{ display:'flex', gap:16 }}>
-                  {cartesActives[0].stats.map((s, si) => (
-                    <div key={si} style={{ fontFamily:'Space Mono, monospace', fontSize:8, color: si===0 ? `rgba(${avRgb},0.9)` : `rgba(${avRgb},0.5)`, letterSpacing:'0.1em' }}>{si===0 ? '▶ ' : ''}{s}</div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {photoFrejusVisible && (
-          <div style={{ position: 'fixed', top: 64, left: '50%', transform: 'translateX(-50%)', zIndex: 45, width: 200, opacity: 0, animation: 'fadeInDown 0.6s ease forwards' }}>
-            <div style={{ position: 'relative', background: 'rgba(4,6,5,0.92)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: `1px solid ${av}`, borderRadius: '14px', overflow: 'hidden', boxShadow: `0 0 40px rgba(${avRgb},0.25), 0 0 80px rgba(${avRgb},0.1), inset 0 1px 0 rgba(${avRgb},0.15)` }}>
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg,transparent,${av},transparent)`, zIndex: 3 }} />
-              {[['top','left'],['top','right'],['bottom','left'],['bottom','right']].map(([v,h],i) => (
-                <div key={i} style={{ position:'absolute', [v]:6, [h]:6, width:12, height:12, [`border${v.charAt(0).toUpperCase()+v.slice(1)}`]:`2px solid ${av}`, [`border${h.charAt(0).toUpperCase()+h.slice(1)}`]:`2px solid ${av}`, zIndex:4 }} />
-              ))}
-              <div style={{ padding: '8px 14px', borderBottom: `1px solid rgba(${avRgb},0.15)`, background: `rgba(${avRgb},0.06)`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 8, color: av, letterSpacing: '0.22em', textTransform: 'uppercase' }}>FRÉJUS KOUADIO</span>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: av, boxShadow: `0 0 6px ${av}`, animation: 'pulse 1.5s infinite' }} />
-              </div>
-              <div style={{ width: '100%', height: 280, position: 'relative', overflow: 'hidden', background: '#000' }}>
-                <img src="/captures/frejus3.jpg" alt="Fréjus Kouadio" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', display: 'block', filter: 'contrast(1.05) brightness(1.02)' }} />
-                <div style={{ position: 'absolute', left: 0, right: 0, height: 2, background: `linear-gradient(90deg,transparent,rgba(${avRgb},0.6),transparent)`, animation: 'scanAnim 3s linear infinite', zIndex: 2 }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,transparent 55%,rgba(4,6,5,0.85) 100%)', zIndex: 1 }} />
-                <div style={{ position: 'absolute', inset: 0, zIndex: 1, backgroundImage: `linear-gradient(rgba(${avRgb},0.03) 1px,transparent 1px), linear-gradient(90deg,rgba(${avRgb},0.03) 1px,transparent 1px)`, backgroundSize: '30px 30px' }} />
-                <div style={{ position: 'absolute', bottom: 12, left: 12, right: 12, zIndex: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 11, fontWeight: 700, color: '#ffffff', letterSpacing: '0.08em', textShadow: '0 1px 8px rgba(0,0,0,0.8)' }}>Fréjus Kouadio</div>
-                  <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 8, color: av, letterSpacing: '0.18em', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>DEV FULLSTACK · IA</div>
-                </div>
-              </div>
-              <div style={{ padding: '10px 14px', display: 'flex', justifyContent: 'space-between', borderTop: `1px solid rgba(${avRgb},0.1)` }}>
-                {[
-                  { Icon: MapPin, label: 'Yamoussoukro' },
-                  { Icon: Briefcase, label: 'Freelance' },
-                  { Icon: Zap, label: 'IA · React' }
-                ].map(({ Icon, label }, i) => (
-                  <div key={i} style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: i === 0 ? av : `rgba(${avRgb},0.55)`, letterSpacing: '0.08em', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-                    <Icon size={11} color={i === 0 ? av : `rgba(${avRgb},0.55)`} />
-                    <span>{label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    )
+  const ouvrirCarte = () => {
+    const carte = cartesActives[0]
+    setModePortfolio(true)
+    setTimeout(() => {
+      if (portfolioRef.current) {
+        const sectionMap = { projets: 'projects', competences: 'skills', contact: 'contact', parcours: 'academic', services: 'services' }
+        portfolioRef.current.naviguerVers(sectionMap[carte?.id] || 'hero')
+      }
+    }, 400)
+    setCartesActives([])
   }
 
+  const fermerPortfolio = () => { setModePortfolio(false); setInputPortfolioVisible(false) }
+
+  const blocSession = (
+    <section className="xp-bloc" aria-label="Session">
+      <span className="pf-label"><b>01</b> Session</span>
+      <dl className="xp-session">
+        <div><dt>Visiteur</dt><dd>{visiteur.prenom || '—'}</dd></div>
+        <div><dt>Profil</dt><dd>{libelleProfil}</dd></div>
+        <div><dt>Statut</dt><dd className="xp-session__statut"><i aria-hidden="true" />Connecté</dd></div>
+      </dl>
+    </section>
+  )
+  const blocRaccourcis = (
+    <section className="xp-bloc" aria-label="Raccourcis">
+      <span className="pf-label"><b>02</b> Raccourcis</span>
+      <ul className="xp-raccourcis">
+        {raccourcis.map((cmd) => (
+          <li key={cmd}>
+            <button type="button" onClick={() => { envoyerCommande(cmd); setDrawerSys(false) }}>
+              <span>{cmd.replace('> ', '')}</span><i aria-hidden="true">↗</i>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+  const interrupteur = (actif) => <span className={`xp-switch${actif ? ' est-actif' : ''}`} aria-hidden="true"><i /></span>
+  const blocModes = (
+    <section className="xp-bloc" aria-label="Modes">
+      <span className="pf-label"><b>03</b> Modes</span>
+      <div className="xp-modes">
+        <button type="button" role="switch" aria-checked={modeVocal} onClick={() => setModeVocal((p) => !p)}>
+          <Volume2 size={16} aria-hidden="true" /><span>Voix d'AXIS</span>{interrupteur(modeVocal)}
+        </button>
+        <button type="button" role="switch" aria-checked={modeChat} onClick={() => setModeChat((p) => !p)}>
+          <MessageSquare size={16} aria-hidden="true" /><span>Afficher le texte</span>{interrupteur(modeChat)}
+        </button>
+        <button type="button" role="switch" aria-checked={modeParler} onClick={toggleParler}>
+          <Mic size={16} aria-hidden="true" /><span>{ecoute ? 'Écoute en cours…' : 'Micro'}</span>{interrupteur(modeParler)}
+        </button>
+      </div>
+    </section>
+  )
+  const blocSysteme = (
+    <section className="xp-bloc" aria-label="Système">
+      <span className="pf-label"><b>04</b> Système</span>
+      <dl className="xp-systeme">
+        {[['Moteur', 'AXIS'], ['Session', 'Active'], ['Voix', 'FR-FR']].map(([k, v]) => (
+          <div key={k}><dt>{k}</dt><dd>{v}</dd></div>
+        ))}
+      </dl>
+    </section>
+  )
+
   return (
-    <div style={{ backgroundColor: eff.fond || '#050505', height: '100vh', width: '100vw', overflow: 'hidden', position: 'relative' }}>
-      <style>{`
-        @keyframes slideFromLeft {
-          from { opacity: 0; transform: translateX(-24px) translateY(-50%); }
-          to   { opacity: 1; transform: translateX(0px)  translateY(-50%); }
-        }
-        @keyframes slideFromRight {
-          from { opacity: 0; transform: translateX(184px) translateY(-50%); }
-          to   { opacity: 1; transform: translateX(160px) translateY(-50%); }
-        }
-        @keyframes scanAnim {
-          from { top: 0%; }
-          to   { top: 100%; }
-        }
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-          to   { opacity: 1; transform: translateX(-50%) translateY(0px); }
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0.35; }
-        }
-        input::placeholder { color: ${isLight ? '#526075' : 'rgba(255,255,255,0.3)'}; }
-      `}</style>
+    <div className={`xp ${isLight ? 'est-clair' : 'est-sombre'}`} style={variablesTheme(eff, isLight)} ref={xpRef}>
+      <header className="xp-tete" data-xp-tete>
+        <div className="xp-tete__gauche">
+          <span className="xp-logo">&lt;<span>/DevJ</span>&gt;</span>
+          <span className="xp-statut"><i aria-hidden="true" />AXIS en ligne</span>
+          <span className="xp-date">{dateStr}</span>
+        </div>
+        <div className="xp-horloge" aria-label="Heure">{heure}</div>
+        <nav className="xp-commandes" aria-label="Commandes">
+          <button type="button" className={`xp-puce${modeVocal ? ' est-actif' : ''}`} aria-pressed={modeVocal} onClick={() => setModeVocal((p) => !p)}>
+            <Volume2 size={14} aria-hidden="true" /><span>Voix</span>
+          </button>
+          <button type="button" className={`xp-puce${modeParler ? ' est-actif' : ''}${ecoute ? ' est-ecoute' : ''}`} aria-pressed={modeParler} onClick={toggleParler}>
+            <Mic size={14} aria-hidden="true" /><span>{ecoute ? 'Écoute' : 'Micro'}</span>
+          </button>
+          <button type="button" className={`xp-puce${modeChat ? ' est-actif' : ''}`} aria-pressed={modeChat} onClick={() => setModeChat((p) => !p)}>
+            <MessageSquare size={14} aria-hidden="true" /><span>Texte</span>
+          </button>
+          <button type="button" className="xp-puce xp-puce--plein" onClick={() => setModePortfolio(true)}>
+            <Layout size={14} aria-hidden="true" /><span>Portfolio</span>
+          </button>
+          <button type="button" className="xp-puce xp-puce--icone" onClick={() => naviguer('/')} aria-label="Recommencer" title="Recommencer">
+            <RotateCcw size={14} aria-hidden="true" />
+          </button>
+        </nav>
+        <button type="button" className="xp-menu" onClick={() => setDrawerSys((v) => !v)} aria-expanded={drawerSys} aria-label={drawerSys ? 'Fermer le panneau' : 'Ouvrir le panneau'}>
+          {drawerSys ? <X size={18} aria-hidden="true" /> : <SlidersHorizontal size={18} aria-hidden="true" />}
+        </button>
+      </header>
 
-      <div style={{ position: 'absolute', inset: 0, zIndex: 0, backgroundImage: `linear-gradient(rgba(${aRgb},0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(${aRgb},0.03) 1px, transparent 1px)`, backgroundSize: '60px 60px' }} />
-      <div style={{ position:'absolute', inset:0, zIndex:0, background: isLight ? 'radial-gradient(ellipse at center, transparent 35%, rgba(255,255,255,0.35) 100%)' : 'radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.75) 100%)', pointerEvents:'none' }} />
+      <aside className="xp-panneau xp-panneau--gauche" data-xp-panneau>
+        {blocSession}
+        {blocRaccourcis}
+      </aside>
 
-      <div style={{ position: 'absolute', left: 0, right: 0, height: 1, zIndex: 1, top: 0, background: `linear-gradient(90deg, transparent, rgba(${aRgb},0.12), transparent)`, animation: 'scanAnim 6s linear infinite' }} />
-
-      <svg width="28" height="28" style={{position:'absolute',top:0,left:0,zIndex:10}} viewBox="0 0 28 28">
-        <path d="M0 28 L0 0 L28 0" fill="none" stroke={`rgba(${aRgb},0.4)`} strokeWidth="1"/>
-      </svg>
-      <svg width="28" height="28" style={{position:'absolute',top:0,right:0,zIndex:10}} viewBox="0 0 28 28">
-        <path d="M0 0 L28 0 L28 28" fill="none" stroke={`rgba(${aRgb},0.4)`} strokeWidth="1"/>
-      </svg>
-      <svg width="28" height="28" style={{position:'absolute',bottom:0,left:0,zIndex:10}} viewBox="0 0 28 28">
-        <path d="M0 0 L0 28 L28 28" fill="none" stroke={`rgba(${aRgb},0.4)`} strokeWidth="1"/>
-      </svg>
-      <svg width="28" height="28" style={{position:'absolute',bottom:0,right:0,zIndex:10}} viewBox="0 0 28 28">
-        <path d="M28 0 L28 28 L0 28" fill="none" stroke={`rgba(${aRgb},0.4)`} strokeWidth="1"/>
-      </svg>
-
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20, background: isLight ? 'rgba(248,249,251,0.92)' : 'rgba(0,0,0,0.75)', borderBottom: `1px solid rgba(${aRgb},0.12)` }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 20px 4px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Space Mono, monospace', color: isLight ? 'rgba(15,23,42,0.82)' : 'rgba(255,255,255,0.25)' }}>
-            <span>&lt;</span>
-            <span style={{ color: a }}>/DevJ</span>
-            <span>&gt;</span>
-            <div style={{ width: 1, height: 20, background: isLight ? '#cbd5e1' : '#2d2d2d' }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 8px', border: `1px solid rgba(${aRgb},0.3)`, color: a, textTransform: 'uppercase', fontSize: 9, letterSpacing: '0.25em' }}>
-              <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 9999, background: a, animation: 'pulse 1.4s infinite' }} />
-              <span style={{ borderRadius: '20px', padding: '3px 8px' }}>EN LIGNE</span>
-            </div>
-            <div style={{ marginLeft: 8, fontFamily: 'Space Mono, monospace', fontSize: 8, color: isLight ? 'rgba(15,23,42,0.75)' : 'rgba(255,255,255,0.15)' }}>{dateStr}</div>
+      <main className="xp-scene">
+        <span className="xp-scene__fond" aria-hidden="true">AXIS</span>
+        <div className="xp-avatar" data-xp-avatar>
+          <span className={`xp-avatar__anneau est-${aiState}`} aria-hidden="true" />
+          <AvatarStable etat={aiState} width={avatarTaille} height={avatarTaille} />
+        </div>
+        <div className={`xp-etat est-${aiState}`} role="status"><i aria-hidden="true" />{libelleEtat}</div>
+        <p className="xp-identite">Fréjus Kouadio · Développeur fullstack &amp; IA</p>
+        {reponseVisible && (
+          <div className="xp-bulle" aria-live="polite">
+            <span className="pf-label"><b>AXIS</b> Réponse</span>
+            <p>{dernierMessage}</p>
           </div>
+        )}
+      </main>
 
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <button onClick={() => setModeVocal((prev) => !prev)} style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1px solid', borderColor: modeVocal ? a : `rgba(${aRgb},0.25)`, background: modeVocal ? `rgba(${aRgb},0.15)` : isLight ? `rgba(${aRgb},0.06)` : 'transparent', color: modeVocal ? (isLight ? a : '#ffffff') : a, padding: '6px 14px', fontFamily: 'Space Mono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', borderRadius: '6px', transition: 'all .2s' }}>
-              <Volume2 size={12} />
-              <span>AUDIO</span>
+      <aside className="xp-panneau xp-panneau--droite" data-xp-panneau>
+        {blocModes}
+        {blocSysteme}
+      </aside>
+
+      <footer className="xp-saisie" data-xp-saisie>
+        {!modeParler ? (
+          <form className="xp-champ" onSubmit={(e) => { e.preventDefault(); soumettre() }}>
+            <label htmlFor="xp-commande" className="xp-visuel-cache">Commande pour AXIS</label>
+            <input
+              id="xp-commande"
+              ref={inputRef}
+              value={inputCmd}
+              onChange={(e) => setInputCmd(e.target.value)}
+              placeholder="Entrez votre commande..."
+              autoComplete="off"
+            />
+            <button type="button" className="xp-champ__micro" onClick={toggleParler} aria-label="Parler à AXIS">
+              <Mic size={18} aria-hidden="true" />
             </button>
-            {/* Mode PARLER */}
-            <div
-              className={`mode-item ${modeParler ? 'actif' : ''}`}
-              onClick={toggleParler}
-              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, border: '1px solid', borderColor: modeParler ? a : `rgba(${aRgb},0.25)`, background: modeParler ? `rgba(${aRgb},0.15)` : isLight ? `rgba(${aRgb},0.06)` : 'transparent', color: modeParler ? (isLight ? a : '#ffffff') : a, padding: '6px 14px', fontFamily: 'Space Mono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', borderRadius: '6px', transition: 'all .2s' }}
-            >
-              <span className="mode-label">
-                {ecoute ? '⬤ ÉCOUTE' : 'PARLER'}
+            <button type="submit" className="xp-champ__envoi" aria-label="Envoyer" disabled={!inputCmd.trim()}>
+              <Send size={18} aria-hidden="true" />
+            </button>
+          </form>
+        ) : (
+          <div className={`xp-ecoute${ecoute ? ' est-ecoute' : ''}`}>
+            <span className="xp-ecoute__barres" aria-hidden="true"><i /><i /><i /><i /><i /></span>
+            <span>{ecoute ? 'Écoute en cours — parlez' : 'Micro prêt — en attente'}</span>
+            <button type="button" onClick={toggleParler}>Écrire plutôt</button>
+          </div>
+        )}
+        <span className="xp-saisie__aide">{estEnChargement ? 'AXIS réfléchit…' : 'Entrée pour envoyer · ou essayez « montre-moi ses projets »'}</span>
+      </footer>
+
+      {(cartesActives.length > 0 || photoFrejusVisible) && (
+        <div className="xp-volants">
+          {photoFrejusVisible && (
+            <figure className="xp-photo">
+              <img src="/captures/frejus3.jpg" alt="Fréjus Kouadio" />
+              <figcaption>
+                <strong>Fréjus Kouadio</strong>
+                <span>Développeur fullstack · IA</span>
+                <ul>
+                  <li><MapPin size={12} aria-hidden="true" />Yamoussoukro</li>
+                  <li><Briefcase size={12} aria-hidden="true" />Freelance</li>
+                  <li><Zap size={12} aria-hidden="true" />IA · React</li>
+                </ul>
+              </figcaption>
+            </figure>
+          )}
+          {cartesActives.length > 0 && (
+            <button type="button" className="xp-carte" onClick={ouvrirCarte}>
+              <span className="xp-carte__tete"><span>{cartesActives[0].label}</span><i aria-hidden="true">↗</i></span>
+              <span className="xp-carte__image">
+                <img src={cartesActives[0].image} alt="" onError={(e) => { e.currentTarget.style.display = 'none' }} />
               </span>
-              <span className={`mode-toggle ${modeParler ? 'on' : 'off'}`}>
-                {modeParler ? 'ON' : 'OFF'}
+              <span className="xp-carte__pied">
+                <strong>{cartesActives[0].titre}</strong>
+                <span>{cartesActives[0].stats.join(' · ')}</span>
               </span>
-            </div>
-            <button onClick={() => setModeChat((prev) => !prev)} style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1px solid', borderColor: modeChat ? a : `rgba(${aRgb},0.25)`, background: modeChat ? `rgba(${aRgb},0.15)` : isLight ? `rgba(${aRgb},0.06)` : 'transparent', color: modeChat ? (isLight ? '#0f172a' : '#ffffff') : (isLight ? '#526075' : 'rgba(255,255,255,0.3)'), padding: '6px 14px', fontFamily: 'Space Mono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', borderRadius: '6px', transition: 'all .2s' }}>
-              <span>TEXTE</span>
             </button>
-            <div style={{ width: 1, height: 20, background: isLight ? '#cbd5e1' : '#2d2d2d' }} />
-            <button onClick={() => setModePortfolio(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, border: `1px solid rgba(${aRgb},0.25)`, background: `rgba(${aRgb},0.05)`, color: a, padding: '6px 14px', fontFamily: 'Space Mono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', borderRadius: '6px', transition: 'all .2s' }}>
-              <Layout size={12} />
-              <span>PORTFOLIO</span>
-            </button>
-            <button onClick={() => naviguer('/')} style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1px solid rgba(255,100,100,0.08)', background: 'rgba(255,100,100,0.05)', color: isLight ? '#b91c1c' : 'rgba(255,100,100,0.35)', padding: '6px 14px', fontFamily: 'Space Mono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', borderRadius: '6px', transition: 'all .2s' }}>
-              <RotateCcw size={12} />
-              <span>RESET</span>
-            </button>
-          </div>
-        </div>
-
-        <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Space Mono, monospace', fontSize: 19, color: a }}>{heure}</div>
-      </div>
-
-<div style={{ position:'absolute', left:200, top:'50%', transform:'translateY(-50%)', zIndex:8, display:'flex', alignItems:'center', gap:8, pointerEvents:'none' }}>
-          <div style={{width:3,height:3,borderRadius:'50%', background:`rgba(${aRgb},0.4)`}}/>
-          <div style={{width:40,height:1, background:`linear-gradient(90deg,rgba(${aRgb},0.25),transparent)`, opacity:0.7}}/>
-          <div style={{fontSize:7,color:ta(0.4), letterSpacing:'0.15em'}}>NEURAL_LINK</div>
-        </div>
-        <div style={{ position:'absolute', right:200, top:'50%', transform:'translateY(-50%)', zIndex:8, display:'flex', alignItems:'center', gap:8, flexDirection:'row-reverse', pointerEvents:'none' }}>
-          <div style={{width:3,height:3,borderRadius:'50%', background:`rgba(${aRgb},0.4)`}}/>
-          <div style={{width:40,height:1, background:`linear-gradient(270deg,rgba(${aRgb},0.25),transparent)`, opacity:0.7}}/>
-          <div style={{fontSize:7,color:ta(0.4), letterSpacing:'0.15em'}}>SYNC_OK</div>
-        </div>
-        <div style={{ position: 'absolute', left: '50%', top: 90, bottom: 90, transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
-        <AvatarStable etat={aiState} />
-
-        <div style={{ marginTop: 16, fontFamily: 'Space Mono, monospace', fontSize: 9, color: ta(0.5), letterSpacing: '0.22em', textAlign: 'center' }}>
-          <div>// FRÉJUS KOUADIO</div>
-          <div>DEV FULLSTACK · IA</div>
-        </div>
-
-        <div style={{ marginTop: 10, fontFamily: 'Space Mono, monospace', fontSize: 9, color: aiState === 'idle' ? ta(0.4) : a, textAlign: 'center' }}>
-          <span>
-            {aiState === 'idle' ? '// EN ATTENTE' : 
-             aiState === 'thinking' ? '// TRAITEMENT...' : 
-             '// EN TRAIN DE PARLER'}
-          </span>
-        </div>
-      </div>
-
-      {bulleVisible && (modeChat || !modeVocal) && (
-        <div style={{ position: 'absolute', top: 90, left: '50%', transform: 'translateX(-50%)', width: 380, zIndex: 25, opacity: bulleVisible ? 1 : 0, transition: 'opacity 0.4s' }}>
-          <div style={{ position: 'relative', background: isLight ? '#ffffff' : 'rgba(3,3,3,0.82)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderRadius: '14px', border: `1px solid rgba(${aRgb},0.1)`, padding: '16px 20px', fontFamily: 'Syne, sans-serif', color: eff.texte }}>
-            <div style={{ position:'absolute',top:0,left:20,right:20,height:1, background:`linear-gradient(90deg,transparent,rgba(${aRgb},0.22),transparent)` }} />
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: a, letterSpacing: '0.25em', marginBottom: 8 }}>AXIS // TRANSMISSION</div>
-            <div style={{ fontSize: 14, color: eff.texte, lineHeight: 1.7 }}>{dernierMessage}</div>
-          </div>
+          )}
         </div>
       )}
 
-      <div style={{ position: 'absolute', left: 16, top: 90, zIndex: 10, width: 150, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ fontSize: 7, color: ta(0.45), letterSpacing: '0.3em', textTransform: 'uppercase', paddingBottom: 8, borderBottom: `1px solid rgba(${aRgb},0.08)`, marginBottom: 10 }}>// SYSTÈME</div>
-        <div style={{ border: `1px solid rgba(${aRgb},0.14)`, background: `rgba(${aRgb},0.05)`, padding: '10px 12px', marginBottom: '6px', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position:'absolute',top:0,left:0,right:0,height:1, background:`linear-gradient(90deg,transparent,rgba(${aRgb},0.18),transparent)` }} />
-          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.25em', color: ta(0.55), marginBottom: 6 }}>VISITEUR</div>
-          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, fontWeight: 700, color: a }}>{visiteur.prenom || '—'}</div>
-        </div>
-        <div style={{ border: `1px solid rgba(${aRgb},0.14)`, background: `rgba(${aRgb},0.05)`, padding: '10px 12px', marginBottom: '6px', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position:'absolute',top:0,left:0,right:0,height:1, background:`linear-gradient(90deg,transparent,rgba(${aRgb},0.18),transparent)` }} />
-          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.25em', color: ta(0.55), marginBottom: 6 }}>PROFIL</div>
-          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, fontWeight: 700, color: a }}>{(() => {
-            const map = {
-              recruiter: 'RECRUTEUR',
-              client: 'CLIENT',
-              collaborateur: 'COLLABORATEUR',
-              curieux: 'CURIEUX'
-            }
-            return map[visiteur.profession] || visiteur.profession?.toUpperCase() || '—'
-          })()}</div>
-        </div>
-        <div style={{ border: `1px solid rgba(${aRgb},0.14)`, background: `rgba(${aRgb},0.05)`, padding: '10px 12px', marginBottom: '6px', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ position:'absolute',top:0,left:0,right:0,height:1, background:`linear-gradient(90deg,transparent,rgba(${aRgb},0.18),transparent)` }} />
-          <div style={{ width: 8, height: 8, borderRadius: 9999, background: a, animation: 'pulse 1.4s infinite', position:'relative', zIndex:1 }} />
-          <div style={{ position:'relative', zIndex:1 }}>
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.25em', color: ta(0.55), marginBottom: 4 }}>STATUT</div>
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, fontWeight: 700, color: a }}>● CONNECTÉ</div>
-          </div>
-        </div>
-
-        <div>
-          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.25em', color: isLight ? '#475569' : 'rgba(255,255,255,0.22)', textTransform: 'uppercase', marginBottom: 6 }}>NAVIGATION RAPIDE</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {['> voir le portfolio', '> mes projets', '> me contacter', '> mon parcours'].map((cmd) => (
-              <div key={cmd} onClick={() => envoyerCommande(cmd)} style={{ display: 'flex', gap: 6, borderBottom: isLight ? '1px solid rgba(15,23,42,0.06)' : '1px solid rgba(255,255,255,0.03)', padding: '5px 0', fontFamily: 'Space Mono, monospace', fontSize: 8, color: ta(0.55), cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.color = a} onMouseLeave={(e) => e.currentTarget.style.color = ta(0.55)}>
-                {cmd.replace('>', '›')}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ position: 'absolute', right: 16, top: 90, zIndex: 10, width: 150, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div style={{ fontSize: 7, color: ta(0.45), letterSpacing: '0.3em', textTransform: 'uppercase', paddingBottom: 8, borderBottom: `1px solid rgba(${aRgb},0.08)`, marginBottom: 10 }}>// MODES</div>
-        <button onClick={() => setModeVocal((prev) => !prev)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid', borderColor: modeVocal ? `rgba(${aRgb},0.4)` : isLight ? 'rgba(15,23,42,0.15)' : 'rgba(255,255,255,0.08)', background: modeVocal ? `rgba(${aRgb},0.07)` : isLight ? 'rgba(15,23,42,0.04)' : 'rgba(255,255,255,0.015)', color: modeVocal ? a : isLight ? '#526075' : 'rgba(255,255,255,0.35)', padding: '6px 8px', fontFamily: 'Space Mono, monospace', fontSize: 9, cursor: 'pointer', borderRadius: '8px' }}>
-          <span>VOCAL</span>
-          <span style={{ width: 20, height: 10, border: `1px solid ${a}`, position: 'relative' }}>
-            <span style={{ position: 'absolute', top: 1, left: modeVocal ? 10 : 2, width: 6, height: 6, background: modeVocal ? a : `rgba(${aRgb},0.3)`, transition: 'left 0.2s' }} />
-          </span>
-        </button>
-        <button onClick={() => setModeChat((prev) => !prev)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid', borderColor: modeChat ? `rgba(${aRgb},0.4)` : isLight ? 'rgba(15,23,42,0.15)' : 'rgba(255,255,255,0.08)', background: modeChat ? `rgba(${aRgb},0.07)` : isLight ? 'rgba(15,23,42,0.04)' : 'rgba(255,255,255,0.015)', color: modeChat ? a : isLight ? '#526075' : 'rgba(255,255,255,0.35)', padding: '6px 8px', fontFamily: 'Space Mono, monospace', fontSize: 9, cursor: 'pointer', borderRadius: '8px' }}>
-          <span>CHAT</span>
-          <span style={{ width: 20, height: 10, border: `1px solid ${a}`, position: 'relative' }}>
-            <span style={{ position: 'absolute', top: 1, left: modeChat ? 10 : 2, width: 6, height: 6, background: modeChat ? a : `rgba(${aRgb},0.3)`, transition: 'left 0.2s' }} />
-          </span>
-        </button>
-        <button onClick={() => setModePortfolio(true)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid', borderColor: modePortfolio ? `rgba(${aRgb},0.4)` : isLight ? 'rgba(15,23,42,0.15)' : 'rgba(255,255,255,0.08)', background: modePortfolio ? `rgba(${aRgb},0.07)` : isLight ? 'rgba(15,23,42,0.04)' : 'rgba(255,255,255,0.015)', color: modePortfolio ? a : isLight ? '#526075' : 'rgba(255,255,255,0.35)', padding: '6px 8px', fontFamily: 'Space Mono, monospace', fontSize: 9, cursor: 'pointer', borderRadius: '8px' }}>
-          <span>PORTFOLIO</span>
-          <span style={{ width: 20, height: 10, border: `1px solid ${a}`, position: 'relative' }}>
-            <span style={{ position: 'absolute', top: 1, left: 2, width: 6, height: 6, background: `rgba(${aRgb},0.3)` }} />
-          </span>
-        </button>
-        <div style={{ marginTop: 16, padding: '10px 12px', borderRadius: 8, background: isLight ? `rgba(${aRgb},0.05)` : `rgba(${aRgb},0.02)`, border: isLight ? `1px solid rgba(${aRgb},0.18)` : `1px solid rgba(${aRgb},0.07)` }}>
-          <div style={{fontSize:7,color:ta(0.3), letterSpacing:'0.25em',marginBottom:8}}>SYS_STATUS</div>
-          {[['MODÈLE','GROQ'],['SESSION','ACTIVE'],['VOIX','FR-FR']].map(([k,v])=>(
-            <div key={k} style={{display:'flex',justifyContent:'space-between', fontSize:7,marginBottom:4}}>
-              <span style={{color:isLight ? '#526075' : 'rgba(255,255,255,0.3)'}}>{k}</span>
-              <span style={{color:ta(0.85)}}>{v}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {portfolioVisible && (
+      {drawerSys && (
         <>
-          <div className={`pf-overlay${modePortfolio ? '' : ' est-sortie'}`} style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 50,
-            overflow: 'hidden'
-          }}>
-            <Portfolio ref={portfolioRef} onClose={() => { setModePortfolio(false); setInputPortfolioVisible(false) }} />
-
-            <div style={{
-              position: 'fixed',
-              bottom: 24,
-              right: 24,
-              zIndex: 52,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 0,
-            }}>
-            {/* Bouton glassmorphique pour masquer/afficher l'avatar */}
-            {/* CORRECTION 2 — button natif pour clic fiable sur desktop */}
-            <button
-              type="button"
-              onClick={() => { setModePortfolio(false); setInputPortfolioVisible(false) }}
-              title="Fermer le portfolio"
-              style={{
-                position: 'relative',
-                cursor: 'pointer',
-                borderRadius: '50%',
-                overflow: 'hidden',
-                width: 120,
-                height: 120,
-                background: isLight ? 'rgba(255,255,255,0.8)' : 'rgba(5,5,5,0.45)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: 'none',
-                boxShadow: isLight ? '0 8px 28px rgba(15,23,42,0.14)' : `0 8px 32px rgba(0,0,0,0.4)`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'box-shadow 0.3s',
-                padding: 0,
-                pointerEvents: 'auto',
-                zIndex: 55,
-                WebkitTapHighlightColor: 'transparent',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.boxShadow = `0 8px 40px rgba(0,0,0,0.5)`
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.boxShadow = `0 8px 32px rgba(0,0,0,0.4)`
-              }}
-            >
-              {/* Anneau animé selon l'état */}
-              <div style={{
-                position: 'absolute',
-                inset: -2,
-                borderRadius: '50%',
-                border: `1px solid rgba(${aRgb},${aiState !== 'idle' ? '0.5' : '0.15'})`,
-                animation: aiState !== 'idle' ? 'pulse 1.4s infinite' : 'none',
-                pointerEvents: 'none',
-              }} />
-              <AvatarStable etat={aiState} width={110} height={110} />
-            </button>
-
-            {/* Statut sous l'avatar */}
-            <div style={{
-              marginTop: 8,
-              fontFamily: 'Space Mono, monospace',
-              fontSize: 8,
-              color: aiState === 'idle' ? ta(0.35) : a,
-              letterSpacing: '0.15em',
-              textAlign: 'center',
-              background: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.6)',
-              backdropFilter: 'blur(12px)',
-              padding: '4px 10px',
-              borderRadius: 20,
-              border: `1px solid rgba(${aRgb},0.1)`,
-            }}>
-              {aiState === 'idle' ? '● EN ATTENTE' : 
-               aiState === 'thinking' ? '◌ TRAITEMENT' : 
-               '◉ EN PAROLE'}
-            </div>
+          <div className="xp-voile" onClick={() => setDrawerSys(false)} aria-hidden="true" />
+          <div className="xp-feuille" role="dialog" aria-modal="true" aria-label="Panneau AXIS">
+            <span className="xp-feuille__poignee" aria-hidden="true" />
+            {blocModes}
+            {blocSession}
+            {blocRaccourcis}
+            {blocSysteme}
+            <PanneauParametres variante="integre" />
           </div>
-        </div>
-
-        {/* Input flottant mobile dans le portfolio */}
-        {(modeChat || modeParler) && (
-          <div style={{
-            position: 'fixed',
-            bottom: isMobile ? 0 : 24,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: isMobile ? '100%' : 480,
-            zIndex: 53,
-            padding: isMobile ? '12px 16px' : 0,
-            background: isMobile ? (isLight ? 'rgba(248,249,251,0.95)' : 'rgba(0,0,0,0.9)') : 'transparent',
-            borderTop: isMobile ? `1px solid rgba(${aRgb},0.1)` : 'none',
-          }}>
-            {!modeParler ? (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                background: isLight ? 'rgba(255,255,255,0.92)' : 'rgba(5,5,5,0.85)',
-                border: `1px solid rgba(${aRgb},0.2)`,
-                borderRadius: isMobile ? 14 : 16,
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(${aRgb},0.05)`,
-                overflow: 'hidden',
-              }}>
-                {/* Ligne lumineuse top */}
-                <div style={{
-                  position: 'absolute',
-                  top: 0, left: 40, right: 40, height: 1,
-                  background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.25),transparent)`,
-                  pointerEvents: 'none',
-                }} />
-                <input
-                  value={inputCmd}
-                  onChange={e => setInputCmd(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); soumettre() } }}
-                  placeholder="Posez une question à AXIS..."
-                  style={{
-                    flex: 1,
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    padding: isMobile ? '14px 16px' : '14px 20px',
-                    fontFamily: 'Space Mono, monospace',
-                    fontSize: isMobile ? 11 : 12,
-                    color: isLight ? '#0f172a' : '#fff',
-                    caretColor: a,
-                  }}
-                />
-                <button
-                  onClick={soumettre}
-                  style={{
-                    padding: isMobile ? '14px 16px' : '14px 20px',
-                    border: 'none',
-                    borderLeft: `1px solid rgba(${aRgb},0.15)`,
-                    background: `rgba(${aRgb},0.08)`,
-                    color: a,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'background 0.2s',
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = `rgba(${aRgb},0.18)`}
-                  onMouseLeave={e => e.currentTarget.style.background = `rgba(${aRgb},0.08)`}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                    stroke={a} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13"/>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                  </svg>
-                </button>
-              </div>
-            ) : (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 10,
-                background: isLight ? 'rgba(255,255,255,0.92)' : 'rgba(5,5,5,0.85)',
-                border: `1px solid rgba(${aRgb},0.2)`,
-                borderRadius: isMobile ? 14 : 16,
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                boxShadow: isLight ? '0 8px 28px rgba(15,23,42,0.12)' : `0 8px 32px rgba(0,0,0,0.5)`,
-                padding: isMobile ? '14px 20px' : '14px 28px',
-              }}>
-                <div style={{
-                  width: 8, height: 8,
-                  borderRadius: '50%',
-                  background: ecoute ? a : `rgba(${aRgb},0.4)`,
-                  animation: ecoute ? 'pulse 1s infinite' : 'none',
-                  flexShrink: 0,
-                }} />
-                <span style={{
-                  fontFamily: 'Space Mono, monospace',
-                  fontSize: isMobile ? 9 : 10,
-                  color: ecoute ? a : ta(0.55),
-                  letterSpacing: '0.18em',
-                }}>
-                  {ecoute ? 'ÉCOUTE EN COURS — PARLEZ' : 'MICRO PRÊT — EN ATTENTE'}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-        {/* CORRECTION 2B — Zone d'écriture flottante pour portfolio desktop */}
-        <div style={{
-          position: 'fixed',
-          bottom: 24,
-          left: 24,
-          zIndex: 52,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-start',
-          gap: 8,
-        }}>
-          {inputPortfolioVisible && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0,
-              background: isLight ? 'rgba(255,255,255,0.95)' : 'rgba(5,5,5,0.88)',
-              border: `1px solid rgba(${aRgb},0.25)`,
-              borderRadius: 14,
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              boxShadow: isLight ? '0 8px 28px rgba(15,23,42,0.14)' : '0 8px 32px rgba(0,0,0,0.4)',
-              overflow: 'hidden',
-              width: 360,
-            }}>
-              <button
-                onClick={() => setInputPortfolioVisible(false)}
-                style={{
-                  padding: '12px 12px',
-                  border: 'none',
-                  borderRight: `1px solid rgba(${aRgb},0.12)`,
-                  background: 'transparent',
-                  color: ta(0.5),
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  flexShrink: 0,
-                }}
-              >✕</button>
-              <input
-                value={inputCmd}
-                onChange={e => setInputCmd(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    soumettre()
-                    setInputPortfolioVisible(false)
-                  }
-                }}
-                placeholder="Message à AXIS..."
-                autoFocus
-                style={{
-                  flex: 1,
-                  background: 'transparent',
-                  border: 'none',
-                  outline: 'none',
-                  padding: '12px 14px',
-                  fontFamily: 'Space Mono, monospace',
-                  fontSize: 11,
-                  color: isLight ? '#0f172a' : '#fff',
-                  caretColor: a,
-                }}
-              />
-              <button
-                onClick={() => { soumettre(); setInputPortfolioVisible(false) }}
-                style={{
-                  padding: '12px 14px',
-                  border: 'none',
-                  borderLeft: `1px solid rgba(${aRgb},0.12)`,
-                  background: `rgba(${aRgb},0.08)`,
-                  color: a,
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                }}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                  stroke={a} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="22" y1="2" x2="11" y2="13"/>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                </svg>
-              </button>
-            </div>
-          )}
-          {/* CORRECTION 1 — Icône crayon seule, sans label texte */}
-          <button
-            type="button"
-            onClick={() => setInputPortfolioVisible(prev => !prev)}
-            title={inputPortfolioVisible ? 'Fermer' : 'Écrire à AXIS'}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 36,
-              height: 36,
-              background: inputPortfolioVisible ? `rgba(${aRgb},0.2)` : (isLight ? 'rgba(255,255,255,0.9)' : 'rgba(5,5,5,0.65)'),
-              border: `1px solid rgba(${aRgb},${inputPortfolioVisible ? '0.55' : '0.18'})`,
-              borderRadius: '50%',
-              cursor: 'pointer',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              transition: 'all 200ms',
-            }}
-          >
-            {inputPortfolioVisible ? (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                stroke={a} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            ) : (
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                stroke={a} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
-            )}
-          </button>
-        </div>
         </>
       )}
 
-      <div style={{ position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)', width: 480, zIndex: 20 }}>
-        <div style={{
-          fontFamily: 'Space Mono, monospace', fontSize: 8,
-          color: ta(0.38), letterSpacing: '0.2em',
-          marginBottom: 4, textAlign: 'center'
-        }}>
-          ENTRÉE_DIRECTE // {estEnChargement ? 'TRAITEMENT...' : 'EN_ATTENTE...'}
-        </div>
+      {portfolioVisible && (
+        <div className={`pf-overlay${modePortfolio ? '' : ' est-sortie'}`} style={{ position: 'fixed', inset: 0, zIndex: 50, overflow: 'hidden' }}>
+          <Portfolio ref={portfolioRef} onClose={fermerPortfolio} />
 
-        <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.25em', color: ta(0.22), marginBottom: 6 }}>ENTRÉE DE COMMANDE</div>
-        <div style={{
-          display: modeParler ? 'none' : 'flex', alignItems: 'center',
-          border: `1px solid rgba(${aRgb},0.15)`,
-          background: isLight ? 'rgba(240,242,245,0.85)' : 'rgba(0,0,0,0.6)',
-          borderRadius: '12px',
-          backdropFilter: 'blur(16px)'
-        }}>
-          <input
-            ref={inputRef}
-            value={inputCmd}
-            onChange={(e) => setInputCmd(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); soumettre() } }}
-            placeholder="Entrez votre commande..."
-            style={{
-              flex: 1, background: 'transparent', border: 'none',
-              outline: 'none', padding: '10px 14px',
-              fontFamily: 'Space Mono, monospace', fontSize: 11,
-              color: eff.texte, caretColor: a
-            }}
-          />
-          <button onClick={soumettre} style={{
-            padding: '10px 16px',
-            border: 'none',
-            borderLeft: `1px solid rgba(${aRgb},0.2)`,
-            background: `rgba(${aRgb},0.06)`,
-            color: a, cursor: 'pointer',
-            borderRadius: '0 12px 12px 0'
-          }}>
-            <Send size={13} color={a} />
-          </button>
-        </div>
-        {modeParler && (
-          <div style={{
-            textAlign: 'center',
-            color: ta(0.7),
-            fontSize: '11px',
-            letterSpacing: '2px',
-            padding: '12px'
-          }}>
-            {ecoute
-              ? '// ÉCOUTE EN COURS — PARLEZ MAINTENANT'
-              : '// EN ATTENTE — MICROPHONE PRÊT'
-            }
+          <div className="xp-pf-avatar">
+            <button type="button" onClick={fermerPortfolio} title="Fermer le portfolio" aria-label="Fermer le portfolio et revenir à AXIS">
+              <span className={`xp-avatar__anneau est-${aiState}`} aria-hidden="true" />
+              <AvatarStable etat={aiState} width={isMobile ? 64 : 104} height={isMobile ? 64 : 104} />
+            </button>
+            <span className={`xp-etat est-${aiState}`}><i aria-hidden="true" />{libelleEtat}</span>
           </div>
-        )}
-      </div>
 
-      {cartesActives.length > 0 && (
-        <div style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translateX(160px) translateY(-50%)',
-          zIndex: 40,
-          width: 260,
-          opacity: 0,
-          animation: 'slideFromRight 0.5s cubic-bezier(0.16,1,0.3,1) forwards',
-          cursor: 'pointer',
-        }}
-        onClick={() => {
-          setModePortfolio(true)
-          setTimeout(() => {
-            if (portfolioRef.current) {
-              // CORRECTION 3 — Mise à jour du sectionMap pour naviguerVers
-              const sectionMap = {
-                projets:     'projects',
-                competences: 'skills',
-                contact:     'contact',
-                parcours:    'academic',
-                services:    'services',
-              }
-              const cible = sectionMap[cartesActives[0].id] || 'hero'
-              portfolioRef.current.naviguerVers(cible)
-            }
-          }, 400)
-          setCartesActives([])
-        }}
-        >
-          <div style={{
-            border: `1px solid ${av}`,
-            background: 'rgba(3,12,8,0.97)',
-            boxShadow: `0 0 40px rgba(${avRgb},0.3), 0 0 80px rgba(${avRgb},0.1)`,
-            backdropFilter: 'blur(16px)',
-            position: 'relative',
-            overflow: 'hidden',
-            transition: 'box-shadow 0.2s',
-          }}
-          onMouseEnter={e => e.currentTarget.style.boxShadow=`0 0 60px rgba(${avRgb},0.5), 0 0 100px rgba(${avRgb},0.2)`}
-          onMouseLeave={e => e.currentTarget.style.boxShadow=`0 0 40px rgba(${avRgb},0.3), 0 0 80px rgba(${avRgb},0.1)`}
-          >
-            {/* Coins HUD */}
-            {[['top','left'],['top','right'],['bottom','left'],['bottom','right']].map(([v,h],i) => (
-              <div key={i} style={{
-                position:'absolute', [v]:0, [h]:0, width:14, height:14,
-                [`border${v.charAt(0).toUpperCase()+v.slice(1)}`]:`2px solid ${av}`,
-                [`border${h.charAt(0).toUpperCase()+h.slice(1)}`]:`2px solid ${av}`,
-                zIndex:3,
-              }} />
-            ))}
-
-            {/* Header */}
-            <div style={{
-              padding: '8px 16px',
-              borderBottom: `1px solid rgba(${avRgb},0.25)`,
-              background: `rgba(${avRgb},0.07)`,
-              fontFamily: 'Space Mono, monospace',
-              fontSize: 8, color: av,
-              letterSpacing: '0.25em', textTransform: 'uppercase',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            }}>
-              <span>{cartesActives[0].label}</span>
-              <span style={{ fontSize: 10, color: `rgba(${avRgb},0.5)` }}>→</span>
-            </div>
-
-            {/* Image pleine largeur */}
-            <div style={{
-              width: '100%', height: 200,
-              position: 'relative', overflow: 'hidden',
-              background: '#000',
-            }}>
-              <img
-                src={cartesActives[0].image}
-                alt={cartesActives[0].titre}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  objectPosition: 'top center',
-                  opacity: 1,
-                  display: 'block',
-                }}
-                onError={(e) => { e.currentTarget.style.display = 'none' }}
-              />
-              {/* Scan line animée */}
-              <div style={{
-                position:'absolute', left:0, right:0, height:2,
-                background:`linear-gradient(90deg,transparent,rgba(${avRgb},0.7),transparent)`,
-                animation:'scanAnim 2.5s linear infinite',
-                zIndex:2,
-              }} />
-              {/* Vignette légère en bas */}
-              <div style={{
-                position:'absolute', inset:0,
-                background:'linear-gradient(180deg,transparent 80%,rgba(3,12,8,0.5) 100%)',
-                zIndex:1,
-              }} />
-              {/* Overlay grille très légère */}
-              <div style={{
-                position:'absolute', inset:0, zIndex:1,
-                backgroundImage:`linear-gradient(rgba(${avRgb},0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(${avRgb},0.03) 1px,transparent 1px)`,
-                backgroundSize:'40px 40px',
-              }} />
-            </div>
-
-            {/* Footer */}
-            <div style={{
-              padding: '12px 14px',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              borderTop: `1px solid rgba(${avRgb},0.15)`,
-            }}>
-              <div style={{
-                fontFamily:'Space Mono, monospace',
-                fontSize:9, color:av,
-                letterSpacing:'0.1em', fontWeight:'bold',
-              }}>
-                {cartesActives[0].titre.toUpperCase()}
-              </div>
-              <div style={{ display:'flex', gap:16 }}>
-                {cartesActives[0].stats.map((s, si) => (
-                  <div key={si} style={{
-                    fontFamily:'Space Mono, monospace', fontSize:8,
-                    color: si===0 ? `rgba(${avRgb},0.9)` : `rgba(${avRgb},0.5)`,
-                    letterSpacing:'0.1em',
-                  }}>
-                    {si===0 ? '▶ ' : ''}{s}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      {photoFrejusVisible && (
-        <div
-          style={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translateX(160px) translateY(-50%)',
-            zIndex: 45,
-            width: 220,
-            animation: 'slideFromRight 0.6s cubic-bezier(0.16,1,0.3,1) forwards',
-            opacity: 0,
-          }}
-        >
-          <div style={{
-            position: 'relative',
-            background: 'rgba(4,6,5,0.92)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-            border: `1px solid ${av}`,
-            borderRadius: '14px',
-            overflow: 'hidden',
-            boxShadow: `0 0 40px rgba(${avRgb},0.25), 
-                  0 0 80px rgba(${avRgb},0.1),
-                  inset 0 1px 0 rgba(${avRgb},0.15)`,
-          }}>
-            <div style={{
-              position: 'absolute', top: 0, left: 0, right: 0, height: 1,
-              background: `linear-gradient(90deg,transparent,${av},transparent)`,
-              zIndex: 3,
-            }} />
-            {[['top','left'],['top','right'],['bottom','left'],['bottom','right']].map(([v,h],i) => (
-              <div key={i} style={{
-                position:'absolute', [v]:6, [h]:6, width:12, height:12,
-                [`border${v.charAt(0).toUpperCase()+v.slice(1)}`]:`2px solid ${av}`,
-                [`border${h.charAt(0).toUpperCase()+h.slice(1)}`]:`2px solid ${av}`,
-                zIndex:4,
-              }} />
-            ))}
-            <div style={{
-              padding: '8px 14px',
-              borderBottom: `1px solid rgba(${avRgb},0.15)`,
-              background: `rgba(${avRgb},0.06)`,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-              <span style={{
-                fontFamily: 'Space Mono, monospace',
-                fontSize: 8, color: av,
-                letterSpacing: '0.22em', textTransform: 'uppercase',
-              }}>FRÉJUS KOUADIO</span>
-              <div style={{
-                width: 6, height: 6, borderRadius: '50%',
-                background: av,
-                boxShadow: `0 0 6px ${av}`,
-                animation: 'pulse 1.5s infinite',
-              }} />
-            </div>
-            <div style={{
-              width: '100%',
-              height: 280,
-              position: 'relative',
-              overflow: 'hidden',
-              background: '#000',
-            }}>
-              <img
-                src="/captures/frejus3.jpg"
-                alt="Fréjus Kouadio"
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  objectPosition: 'top center',
-                  display: 'block',
-                  filter: 'contrast(1.05) brightness(1.02)',
-                }}
-              />
-              <div style={{
-                position: 'absolute', left: 0, right: 0, height: 2,
-                background: `linear-gradient(90deg,transparent,rgba(${avRgb},0.6),transparent)`,
-                animation: 'scanAnim 3s linear infinite',
-                zIndex: 2,
-              }} />
-              <div style={{
-                position: 'absolute', inset: 0,
-                background: 'linear-gradient(180deg,transparent 55%,rgba(4,6,5,0.85) 100%)',
-                zIndex: 1,
-              }} />
-              <div style={{
-                position: 'absolute', inset: 0, zIndex: 1,
-                backgroundImage: `linear-gradient(rgba(${avRgb},0.03) 1px,transparent 1px),
-                  linear-gradient(90deg,rgba(${avRgb},0.03) 1px,transparent 1px)`,
-                backgroundSize: '30px 30px',
-              }} />
-              <div style={{
-                position: 'absolute', bottom: 12, left: 12, right: 12,
-                zIndex: 3,
-                display: 'flex', flexDirection: 'column', gap: 2,
-              }}>
-                <div style={{
-                  fontFamily: 'Space Mono, monospace',
-                  fontSize: 11, fontWeight: 700,
-                  color: '#ffffff',
-                  letterSpacing: '0.08em',
-                  textShadow: '0 1px 8px rgba(0,0,0,0.8)',
-                }}>Fréjus Kouadio</div>
-                <div style={{
-                  fontFamily: 'Space Mono, monospace',
-                  fontSize: 8, color: av,
-                  letterSpacing: '0.18em',
-                  textShadow: '0 1px 4px rgba(0,0,0,0.8)',
-                }}>DEV FULLSTACK · IA</div>
-              </div>
-            </div>
-            <div style={{
-              padding: '10px 14px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              borderTop: `1px solid rgba(${avRgb},0.1)`,
-            }}>
-              {[
-                { Icon: MapPin, label: 'Yamoussoukro' },
-                { Icon: Briefcase, label: 'Freelance' },
-                { Icon: Zap, label: 'IA · React' },
-              ].map(({ Icon, label }, i) => (
-                <div key={i} style={{
-                  fontFamily: 'Space Mono, monospace',
-                  fontSize: 7,
-                  color: i === 0 ? av : `rgba(${avRgb},0.55)`,
-                  letterSpacing: '0.08em',
-                  display: 'flex', flexDirection: 'column',
-                  alignItems: 'center', gap: 3,
-                }}>
-                  <Icon size={12} color={i === 0 ? av : `rgba(${avRgb},0.55)`} />
-                  <span>{label}</span>
+          {(modeChat || modeParler) && (
+            <div className="xp-pf-saisie">
+              {!modeParler ? (
+                <form className="xp-champ" onSubmit={(e) => { e.preventDefault(); soumettre() }}>
+                  <input value={inputCmd} onChange={(e) => setInputCmd(e.target.value)} placeholder="Posez une question à AXIS..." aria-label="Question pour AXIS" />
+                  <button type="submit" className="xp-champ__envoi" aria-label="Envoyer" disabled={!inputCmd.trim()}><Send size={16} aria-hidden="true" /></button>
+                </form>
+              ) : (
+                <div className={`xp-ecoute${ecoute ? ' est-ecoute' : ''}`}>
+                  <span className="xp-ecoute__barres" aria-hidden="true"><i /><i /><i /><i /><i /></span>
+                  <span>{ecoute ? 'Écoute en cours — parlez' : 'Micro prêt — en attente'}</span>
                 </div>
-              ))}
+              )}
             </div>
+          )}
+
+          <div className="xp-pf-ecrire">
+            {inputPortfolioVisible && (
+              <form className="xp-champ" onSubmit={(e) => { e.preventDefault(); soumettre(); setInputPortfolioVisible(false) }}>
+                <input value={inputCmd} onChange={(e) => setInputCmd(e.target.value)} placeholder="Message à AXIS..." aria-label="Message pour AXIS" autoFocus />
+                <button type="submit" className="xp-champ__envoi" aria-label="Envoyer" disabled={!inputCmd.trim()}><Send size={16} aria-hidden="true" /></button>
+              </form>
+            )}
+            <button
+              type="button"
+              className={`xp-pf-ecrire__bouton${inputPortfolioVisible ? ' est-actif' : ''}`}
+              onClick={() => setInputPortfolioVisible((p) => !p)}
+              title={inputPortfolioVisible ? 'Fermer' : 'Écrire à AXIS'}
+              aria-label={inputPortfolioVisible ? 'Fermer la saisie' : 'Écrire à AXIS'}
+            >
+              {inputPortfolioVisible ? <X size={16} aria-hidden="true" /> : <PenLine size={16} aria-hidden="true" />}
+            </button>
           </div>
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: -50,
-            width: 50,
-            height: 1,
-            background: `linear-gradient(270deg,rgba(${avRgb},0.4),transparent)`,
-            transform: 'translateY(-50%)',
-          }} />
         </div>
       )}
-      <div style={{ position: 'fixed', bottom: isMobile ? 80 : 16, right: isMobile ? 8 : 16, zIndex: 30 }}>
-        <PanneauParametres />
-      </div>
+
+      {!portfolioVisible && !isMobile && <PanneauParametres />}
     </div>
   )
 }

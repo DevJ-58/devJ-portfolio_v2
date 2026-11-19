@@ -136,7 +136,7 @@ export default function ProjectDetailPanel({ projet, categoryColor, onClose }) {
               position: 'absolute', top: 0, left: 0,
               width: '150%',
               height: '100%',
-              background: `linear-gradient(90deg, transparent 0%, ${categoryColor} 40%, ${categoryColor} 60%, transparent 100%)`,
+              background: categoryColor,
               transform: 'translateX(-100%)',
               animation: 'scanMove 4.5s linear infinite',
             }} />

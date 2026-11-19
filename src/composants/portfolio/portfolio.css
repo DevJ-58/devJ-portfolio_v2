@@ -4,7 +4,7 @@
    Typographie fluide (clamp), échelle d'espacement variée par section.
    ═══════════════════════════════════════════════════════════════════════ */
 
-.pf-wrap, .pj-page, .pf-pre {
+.pf-wrap, .pj-page, .pf-pre, .ac-page, .xp {
   --pad: clamp(20px, 5.6vw, 104px);
   --nav-h: 68px;
   --fs-giga: clamp(3.4rem, 14.6vw, 15.5rem);
@@ -52,7 +52,7 @@
 .pf-contenu { position: relative; }
 
 /* Masques générés par SplitText : laisser respirer descendantes et italiques */
-.pf-wrap [class*="-mask"], .pj-page [class*="-mask"], .pf-pre [class*="-mask"] { padding: 0.06em 0.08em 0.16em; margin: -0.06em -0.08em -0.16em; }
+.pf-wrap [class*="-mask"], .pj-page [class*="-mask"], .pf-pre [class*="-mask"], .ac-page [class*="-mask"], .xp [class*="-mask"] { padding: 0.06em 0.08em 0.16em; margin: -0.06em -0.08em -0.16em; }
 .pf-hero__nom [class*="-mask"] { padding-bottom: 0.3em; margin-bottom: -0.3em; }
 
 /* ── Typographie ──────────────────────────────────────────────────────── */
@@ -198,9 +198,7 @@
   position: fixed; inset: 0; z-index: 100; overflow-y: auto; overscroll-behavior: contain;
   grid-template-columns: minmax(0, 7fr) minmax(280px, 4fr); align-items: center; gap: clamp(28px, 5vw, 96px);
   padding: calc(var(--nav-h) + 16px) var(--pad) 32px;
-  background:
-    radial-gradient(70% 60% at 85% 10%, rgba(var(--a-rgb), 0.16), transparent 70%),
-    var(--fond);
+  background: var(--fond);
 }
 .pf-menu__num {
   position: absolute; right: -2vw; bottom: -8vh; z-index: 0; pointer-events: none;
@@ -315,10 +313,7 @@
 .pf-hero__portrait { position: absolute; top: 0; right: 0; bottom: 0; z-index: 1; width: min(47%, 780px); overflow: hidden; }
 .pf-hero__portrait img {
   width: 100%; height: 100%; object-fit: cover; object-position: top center;
-  -webkit-mask-image: linear-gradient(to left, #000 30%, rgba(0, 0, 0, 0.6) 62%, transparent 96%);
-  mask-image: linear-gradient(to left, #000 30%, rgba(0, 0, 0, 0.6) 62%, transparent 96%);
 }
-.pf-hero__portrait::after { content: ''; position: absolute; inset: auto 0 0; height: 34%; background: linear-gradient(to top, var(--fond), transparent); }
 .pf-hero__nom {
   grid-column: 2; grid-row: 2; align-self: center; position: relative; z-index: 2;
   display: flex; flex-direction: column; font: 800 var(--fs-giga) / 0.82 var(--serif); letter-spacing: -0.05em;
@@ -374,7 +369,7 @@
 .pf-apropos__photo img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
 .pf-apropos__photo figcaption {
   position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 18px 16px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  background: rgba(0, 0, 0, 0.62);
   font: 400 0.69rem / 1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: #f2f0ec;
 }
 .pf-faits { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 22px 52px; margin-top: 40px; }
@@ -422,7 +417,7 @@
 .pf-parcours__barre i { position: absolute; inset: 0; background: var(--a); transform: scaleX(0); transform-origin: left; }
 .pf-parcours__mobile { display: none; padding: clamp(100px, 14vh, 160px) var(--pad) 90px; }
 .pf-parcours__liste { position: relative; display: grid; gap: 44px; margin: 48px 0 0; padding: 0 0 0 58px; list-style: none; }
-.pf-parcours__fil { position: absolute; left: 20px; top: 8px; bottom: 8px; width: 1px; background: linear-gradient(var(--a), rgba(var(--a-rgb), 0.12)); }
+.pf-parcours__fil { position: absolute; left: 20px; top: 8px; bottom: 8px; width: 1px; background: rgba(var(--a-rgb), 0.45); }
 .pf-parcours__liste li { position: relative; display: grid; gap: 10px; }
 .pf-parcours__puce {
   position: absolute; left: -58px; top: -6px; width: 42px; height: 42px; border-radius: 50%;
@@ -441,7 +436,7 @@
 /* Rideau qui se lève, bord inférieur courbe */
 .pf-rideau {
   position: absolute; left: -10%; right: -10%; top: 0; height: 115%; z-index: 5; pointer-events: none;
-  background: linear-gradient(180deg, var(--a), color-mix(in srgb, var(--a) 70%, var(--fond)));
+  background: var(--a);
   border-radius: 0 0 50% 50% / 0 0 22vh 22vh; transform: translateY(-101%);
 }
 .pf-competences__cristal { position: absolute; right: -3vw; top: 7vh; z-index: 0; width: clamp(220px, 30vw, 460px); opacity: 0.5; pointer-events: none; }
@@ -464,7 +459,7 @@
 .pf-signal:has(.pf-signal__cat:hover) .pf-signal__cat:not(:hover), .pf-signal:has(.pf-signal__cat:focus-within) .pf-signal__cat:not(:focus-within) { opacity: 0.38; }
 .pf-signal__barres { display: flex; align-items: flex-end; gap: clamp(10px, 1.3vw, 22px); height: clamp(150px, 25vh, 260px); }
 .pf-signal__barres span {
-  width: 3px; height: calc(var(--niveau) * 100%); border-radius: 3px; background: linear-gradient(to top, var(--t2), rgba(var(--a-rgb), 0.55)); transform-origin: bottom;
+  width: 3px; height: calc(var(--niveau) * 100%); border-radius: 3px; background: var(--t3); transform-origin: bottom;
   transition: background 0.4s, box-shadow 0.4s;
 }
 .pf-signal__cat:hover .pf-signal__barres span, .pf-signal__cat:focus-within .pf-signal__barres span { background: var(--a); box-shadow: 0 0 16px rgba(var(--a-rgb), 0.65); }
@@ -499,10 +494,10 @@
   position: relative; overflow: hidden; min-height: 100vh; color: var(--texte);
   display: flex; flex-direction: column; gap: 4vh;
   padding: calc(var(--nav-h) + 52px) var(--pad) 56px;
-  background: radial-gradient(120% 90% at 72% 8%, var(--nuit-2), var(--nuit) 62%);
+  background: var(--nuit);
 }
 .pf-ciel { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; }
-.pf-scene__halo { position: absolute; left: 8%; top: 22%; z-index: 0; width: 62vw; height: 62vw; border-radius: 50%; background: radial-gradient(circle, rgba(var(--a-rgb), 0.16), transparent 62%); filter: blur(40px); pointer-events: none; }
+.pf-scene__halo { display: none; }
 .pf-scene__entete { position: relative; z-index: 2; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 32px; }
 .pf-scene__note { max-width: 24ch; text-align: right; font: 400 var(--fs-label) / 1.6 var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--t3); }
 .pf-constel { position: relative; z-index: 2; flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 26rem); align-items: center; gap: 4vw; }
@@ -566,7 +561,7 @@
   .pf-scene__note { text-align: left; }
   .pf-constel { display: none; }
   .pf-orbite-mobile { position: relative; display: grid; gap: 50px; margin: 4vh 0 2vh; padding: 0; list-style: none; z-index: 2; }
-  .pf-orbite-mobile__fil { position: absolute; left: 56px; top: 0; bottom: 0; width: 1px; background: linear-gradient(transparent, rgba(var(--a-rgb), 0.7), transparent); }
+  .pf-orbite-mobile__fil { position: absolute; left: 56px; top: 0; bottom: 0; width: 1px; background: rgba(var(--a-rgb), 0.45); }
   .pf-orbite-mobile > li { position: relative; display: grid; grid-template-columns: 112px 1fr; align-items: center; gap: 18px; }
   .pf-orbite-mobile__bulle { position: relative; width: 112px; height: 112px; overflow: hidden; padding: 0; border: 1px solid var(--a); border-radius: 50%; background: #0d1017; box-shadow: 0 0 44px -10px rgba(var(--a-rgb), 0.7); }
   .pf-orbite-mobile__bulle img { width: 100%; height: 100%; object-fit: cover; }
@@ -734,7 +729,7 @@
 .pf-pied__monogramme {
   padding-top: 4vh; margin-bottom: -0.08em; text-align: center; white-space: nowrap; transform-origin: 50% 100%;
   font: 800 clamp(5rem, 23vw, 26rem) / 0.8 var(--serif); letter-spacing: -0.06em;
-  background: linear-gradient(180deg, var(--texte) 30%, rgba(var(--a-rgb), 0.85)); -webkit-background-clip: text; background-clip: text; color: transparent;
+  color: var(--texte);
 }
 @media (max-width: 767px) {
   .pf-contact__grille { grid-template-columns: 1fr; }
@@ -780,7 +775,7 @@
 .pj-filtres button.est-actif i { background: #050505; }
 .pj-scene {
   position: relative; height: 76vh; margin: 0 var(--pad); overflow: hidden; border: 1px solid var(--bord-2); border-radius: 20px;
-  background: radial-gradient(120% 90% at 70% 0%, var(--nuit-2), var(--nuit) 65%);
+  background: var(--nuit);
 }
 .pj-scene__apercu {
   position: absolute; left: 24px; right: 116px; bottom: 24px; z-index: 15; pointer-events: none; margin: 0;
@@ -796,7 +791,7 @@
 }
 .pj-index button::before {
   content: ''; position: absolute; top: 0; bottom: 0; left: calc(-1 * var(--pad)); right: calc(-1 * var(--pad)); z-index: -1;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--c) 14%, transparent), transparent 75%);
+  background: color-mix(in srgb, var(--c) 10%, transparent);
   transform: scaleY(0); transform-origin: bottom; transition: transform 0.6s var(--ease-drame);
 }
 .pj-index button:hover::before, .pj-index button:focus-visible::before { transform: scaleY(1); }
@@ -854,7 +849,7 @@
 .pf-pre__logo { position: relative; overflow: hidden; padding: 0.04em 0.06em 0.12em; font: 800 clamp(4.2rem, 17vw, 15rem) / 0.92 var(--serif); letter-spacing: -0.05em; font-variation-settings: 'opsz' 144; }
 .pf-pre__logo-vide { display: block; color: transparent; -webkit-text-stroke: 1px rgba(var(--a-rgb), 0.45); }
 .pf-pre__logo-plein { position: absolute; inset: 0.04em 0.06em 0.12em; clip-path: inset(100% 0 0 0); color: var(--a); }
-.pf-pre__logo-plein::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--a), transparent); box-shadow: 0 0 14px 2px rgba(var(--a-rgb), 0.6); }
+.pf-pre__logo-plein::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--a); box-shadow: 0 0 14px 2px rgba(var(--a-rgb), 0.6); }
 .pf-pre__sous-titre { font-size: 0.75rem; letter-spacing: 0.42em; text-transform: uppercase; color: var(--a-doux); }
 .pf-pre__pied ul { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 0; padding: 0; list-style: none; }
 .pf-pre__pied li { display: inline-flex; gap: 8px; color: var(--t4); transition: color 0.5s; }
@@ -888,8 +883,7 @@
   /* Hero : portrait plein cadre, nom posé sur le dégradé, actions empilées */
   .pf-hero__portrait { height: 62svh; }
   .pf-hero__portrait img { object-position: 50% 12%; }
-  .pf-hero__portrait::after { height: 70%; background: linear-gradient(to top, var(--fond) 8%, color-mix(in srgb, var(--fond) 60%, transparent) 45%, transparent); }
-  .pf-hero__nom { margin-top: -15svh; font-size: clamp(3.6rem, 19.5vw, 6.6rem); }
+  .pf-hero__nom { margin-top: -7svh; font-size: clamp(3.6rem, 19.5vw, 6.6rem); }
   .pf-hero__l2 { padding-left: 0.45em; }
   .pf-hero__citation { font-size: 1.05rem; }
   .pf-hero__actions { flex-direction: column; align-items: stretch; gap: 14px; }

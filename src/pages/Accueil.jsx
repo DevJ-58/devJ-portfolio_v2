@@ -1,401 +1,249 @@
-import { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Target, Briefcase, Users, Eye, Mic, PenLine } from 'lucide-react'
 import AvatarAxis from '@/composants/ui/AvatarAxis'
 import utiliserStore from '@/store/utiliserStore'
 import utiliserTheme from '@/store/utiliserTheme'
+import { gsap, SplitText, useGSAP, EASE, mouvementReduit } from '@/composants/portfolio/moteur/gsap'
+import { variablesTheme } from '@/composants/portfolio/moteur/contexte'
+import '@/composants/portfolio/portfolio.css'
+import './accueil.css'
 
-const variantsStep = {
-  initial: { opacity: 0, y: 24 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -24 }
-}
+// Identifiants alignés sur ceux qu'attend AXIS (serviceIA)
+const ROLES = [
+  { key: 'recruiter', icon: Target, titre: 'Recruteur', sous: "À la recherche d'un talent" },
+  { key: 'client', icon: Briefcase, titre: 'Client', sous: "J'ai un projet en tête" },
+  { key: 'collaborateur', icon: Users, titre: 'Collaborateur', sous: 'Travaillons ensemble' },
+  { key: 'curieux', icon: Eye, titre: 'Curieux', sous: 'Je découvre simplement' },
+]
 
+const ETAPES = [
+  { n: '01', label: 'Identité' },
+  { n: '02', label: 'Profil' },
+  { n: '03', label: 'Micro' },
+]
+
+// Accueil : trois étapes de dialogue avec AXIS (prénom, rôle, micro), après
+// le choix d'une ambiance lors de la première visite.
 export default function Accueil() {
   const [etape, setEtape] = useState(1)
   const [prenom, setPrenom] = useState('')
   const [profil, setProfil] = useState(null)
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
-  const [showThemeModal, setShowThemeModal] = useState(
-    () => !sessionStorage.getItem('devj-theme-session')
-  )
+  const [showThemeModal, setShowThemeModal] = useState(() => !sessionStorage.getItem('devj-theme-session'))
   const store = utiliserStore()
-  const { theme, themes, changerTheme, mode, getThemeEffectif } = utiliserTheme()
+  const { theme, themes, changerTheme, mode, setMode, getThemeEffectif } = utiliserTheme()
   const eff = getThemeEffectif ? getThemeEffectif() : theme
   const isLight = mode === 'light'
-  const a = eff.accent
-  const aRgb = eff.accentRgb
   const navigate = useNavigate()
   const inputRef = useRef(null)
+  const ref = useRef(null)
+  const scrutRef = useRef(null)
+  const modalRef = useRef(null)
+  const [petit, setPetit] = useState(() => window.innerWidth < 900)
 
   useEffect(() => {
-    if (etape === 1) inputRef.current?.focus()
-  }, [etape])
-
-  useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth < 768)
-    window.addEventListener('resize', handler)
-    return () => window.removeEventListener('resize', handler)
+    const surResize = () => setPetit(window.innerWidth < 900)
+    window.addEventListener('resize', surResize)
+    return () => window.removeEventListener('resize', surResize)
   }, [])
+
+  useEffect(() => {
+    if (etape === 1 && !showThemeModal) inputRef.current?.focus({ preventScroll: true })
+  }, [etape, showThemeModal])
+
+  // Entrée de la page
+  useGSAP(() => {
+    if (mouvementReduit()) return
+    const q = gsap.utils.selector(ref)
+    gsap.timeline({ defaults: { ease: EASE.sortie } })
+      .from(q('[data-tete] > *'), { y: -24, autoAlpha: 0, duration: 0.9, stagger: 0.08 })
+      .from(q('[data-avatar]'), { scale: 0.8, autoAlpha: 0, duration: 1.4 }, 0.1)
+      .from(q('[data-bulle]'), { y: 20, autoAlpha: 0, duration: 1 }, 0.5)
+  }, { scope: ref })
+
+  // Changement d'étape : la question s'écrit, le contenu arrive en cascade
+  useGSAP(() => {
+    const zone = scrutRef.current
+    if (!zone || mouvementReduit()) return
+    const titre = zone.querySelector('[data-question]')
+    const split = SplitText.create(titre, { type: 'lines,words,chars', mask: 'lines', linesClass: 'pf-ligne', wordsClass: 'pf-mot', charsClass: 'pf-car' })
+    gsap.timeline({ defaults: { ease: EASE.sortie } })
+      .fromTo(split.chars, { yPercent: 110 }, { yPercent: 0, duration: 1.1, stagger: 0.02 })
+      .fromTo(zone.querySelectorAll('[data-entre]'), { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.9, stagger: 0.08 }, 0.25)
+    return () => split.revert()
+  }, { dependencies: [etape], scope: scrutRef, revertOnUpdate: true })
+
+  // Fenêtre d'ambiance
+  useGSAP(() => {
+    if (!showThemeModal || !modalRef.current || mouvementReduit()) return
+    const q = gsap.utils.selector(modalRef)
+    gsap.timeline({ defaults: { ease: EASE.sortie } })
+      .from(q('[data-modal-carte]'), { y: 40, autoAlpha: 0, duration: 1 })
+      .from(q('[data-pastille]'), { scale: 0, duration: 0.8, ease: EASE.ressort, stagger: 0.05 }, 0.3)
+  }, { dependencies: [showThemeModal], scope: modalRef })
+
+  const quitterEtape = (suite) => {
+    const zone = scrutRef.current
+    if (!zone || mouvementReduit()) { suite(); return }
+    gsap.to(zone.children, { y: -30, autoAlpha: 0, duration: 0.45, ease: EASE.rideau, stagger: 0.04, onComplete: suite })
+  }
 
   function submitIdentite(e) {
     e?.preventDefault()
-    if (!prenom.trim()) return
-    store.definirVisiteur({ prenom })
-    setEtape(2)
+    if (!prenom.trim()) { inputRef.current?.focus(); return }
+    store.definirVisiteur({ prenom: prenom.trim() })
+    quitterEtape(() => setEtape(2))
   }
 
   function choisirProfil(p) {
     setProfil(p)
-    setTimeout(() => setEtape(3), 350)
+    setTimeout(() => quitterEtape(() => setEtape(3)), 300)
   }
 
   function activerMicro() {
-    store.definirVisiteur({ prenom, profession: profil, microActif: true })
-    setTimeout(() => navigate('/experience'), 700)
+    store.definirVisiteur({ prenom: prenom.trim(), profession: profil, microActif: true })
+    quitterEtape(() => navigate('/experience'))
   }
 
   function continuerSansMicro() {
-    store.definirVisiteur({ prenom, profession: profil })
-    navigate('/experience')
+    store.definirVisiteur({ prenom: prenom.trim(), profession: profil })
+    quitterEtape(() => navigate('/experience'))
   }
 
   function fermerModal(themeId) {
-    if (themeId) {
-      changerTheme(themeId)
-    }
+    if (themeId) changerTheme(themeId)
     sessionStorage.setItem('devj-theme-session', '1')
-    setShowThemeModal(false)
+    const fermer = () => setShowThemeModal(false)
+    if (!modalRef.current || mouvementReduit()) { fermer(); return }
+    gsap.to(modalRef.current, { clipPath: 'inset(0% 0% 100% 0%)', duration: 0.8, ease: EASE.drame, onComplete: fermer })
+  }
+
+  const paroles = {
+    1: "Bonjour ! Je suis AXIS, l'IA de Fréjus. Je vais t'accompagner pour créer une expérience personnalisée.",
+    2: `Enchanté${prenom ? `, ${prenom.trim()}` : ''}. Dis-moi ce qui t'amène, j'adapterai mes réponses.`,
+    3: 'Tu peux me parler à voix haute, ou continuer par écrit. Comme tu préfères.',
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: eff.fond, backgroundImage: `linear-gradient(rgba(${aRgb},0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(${aRgb},0.03) 1px, transparent 1px)`, backgroundSize: '60px 60px' }}>
+    <div className={`ac-page ${isLight ? 'est-clair' : 'est-sombre'}`} ref={ref} style={variablesTheme(eff, isLight)}>
+      <header className="ac-tete" data-tete>
+        <span className="ac-logo">&lt;<span>/DevJ</span>&gt;</span>
+        <ol className="ac-etapes" aria-label="Progression">
+          {ETAPES.map((x, i) => (
+            <li key={x.n} className={etape === i + 1 ? 'est-actif' : etape > i + 1 ? 'est-fait' : ''} aria-current={etape === i + 1 ? 'step' : undefined}>
+              <em>{x.n}</em><span>{x.label}</span><i aria-hidden="true" />
+            </li>
+          ))}
+        </ol>
+        <button type="button" className="pf-lien ac-portfolio" onClick={() => navigate('/portfolio')}>Portfolio →</button>
+      </header>
 
-      <style>{`\n        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,800;1,9..144,400&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');\n        @keyframes scanY { 0%{ top:0% } 100%{ top:100% } }\n        @keyframes scanOpacity { 0%{opacity:.2}50%{opacity:.8}100%{opacity:.2} }\n        @keyframes pulseRing { 0%{ transform: scale(1); opacity: .6 } 100%{ transform: scale(1.3); opacity: 0 } }\n      `}</style>
-
-      {/* HUD corners */}
-      <div className="absolute top-4 left-4 w-5 h-5 border-t border-l" style={{ borderColor: a }} />
-      <div className="absolute top-4 right-4 w-5 h-5 border-t border-r" style={{ borderColor: a }} />
-      <div className="absolute bottom-4 left-4 w-5 h-5 border-b border-l" style={{ borderColor: a }} />
-      <div className="absolute bottom-4 right-4 w-5 h-5 border-b border-r" style={{ borderColor: a }} />
-
-      {/* Scan line (full page) */}
-      <div className="absolute left-0 right-0 h-px" style={{ top: 0, animation: 'scanY 4s linear infinite', pointerEvents: 'none' }}>
-        <div style={{ position: 'absolute', left: 0, right: 0, height: 1, background: `linear-gradient(90deg, transparent, rgba(${aRgb},0.15), transparent)` }} />
-      </div>
-
-      {/* Fixed logo top-left */}
-      <div className="absolute" style={{ top: 12, left: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-        <img src="/asset/DEVJ.PNG" alt="DevJ" style={{ width: 34, height: 34, objectFit: 'contain', borderRadius: 8 }} />
-        <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 11, color: eff.textFaint }}>
-          <span>&lt;</span>
-          <span style={{ color: a, margin: '0 6px' }}>/DevJ</span>
-          <span>&gt;</span>
-        </div>
-      </div>
-
-      {/* Counter top-right */}
-      <div className="absolute" style={{ top: 16, right: 16, fontFamily: 'Space Mono, monospace', fontSize: 10, color: eff.textFaint }}>
-        <span style={{ color: a }}>{'0' + etape}</span>
-        <span style={{ margin: '0 6px' }}>/ 03</span>
-      </div>
-
-      <div className="relative z-10 w-full max-w-3xl px-6" style={{ paddingLeft: isMobile ? 16 : undefined, paddingRight: isMobile ? 16 : undefined }}>
-        <div className="flex flex-col items-center text-center">
-          <div style={{ marginBottom: isMobile ? '16px' : '32px', display: 'flex', justifyContent: 'center' }}>
-            <AvatarAxis width={isMobile ? 140 : 220} height={isMobile ? 140 : 220} etat="idle" />
+      <main className="ac-scene">
+        <section className="ac-axis" aria-label="AXIS">
+          <div className="ac-axis__avatar" data-avatar>
+            <span className="ac-axis__fond" aria-hidden="true">AXIS</span>
+            <AvatarAxis width={petit ? 116 : 360} height={petit ? 116 : 360} etat="idle" />
           </div>
-          <div className="w-[48px] h-px mb-[20px]" style={{ background: a }} />
-          <div className="text-[10px] uppercase tracking-[0.25em] mb-[18px]" style={{ fontFamily: 'Space Mono, monospace', color: a }}>IDENTIFIANT</div>
+          <div className="ac-bulle" data-bulle aria-live="polite">
+            <span className="pf-label"><b>AXIS</b> En ligne</span>
+            <p key={etape}>{paroles[etape]}</p>
+          </div>
+        </section>
 
-          <AnimatePresence mode="wait">
-            {etape === 1 && (
-              <motion.div key="step1" variants={variantsStep} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="flex flex-col items-center">
-                    <h1 style={{ color: eff.texte, fontFamily: 'Syne, sans-serif', fontSize: isMobile ? 36 : 72, letterSpacing: '-0.03em', lineHeight: 1, fontWeight: 800, marginBottom: 14 }}>Bonjour, je suis AXIS</h1>
-                      <p style={{ fontSize: isMobile ? 14 : 17, marginBottom: isMobile ? '24px' : '44px', maxWidth: isMobile ? '100%' : undefined, color: eff.textMedium }} className="text-[17px] max-w-lg mb-[44px]">Je vais t'accompagner pour créer une expérience personnalisée. Commence par me dire comment t'appeler.</p>
-
-                <form onSubmit={submitIdentite} className="relative mb-8" style={{ width: isMobile ? '100%' : 440 }}>
-                  {/* wrapper corners */}
-                  <div className="absolute -top-2 -left-2 w-2 h-2 border" style={{ borderColor: a }} />
-                  <div className="absolute -top-2 -right-2 w-2 h-2 border" style={{ borderColor: a }} />
-                  <div className="absolute -bottom-2 -left-2 w-2 h-2 border" style={{ borderColor: a }} />
-                  <div className="absolute -bottom-2 -right-2 w-2 h-2 border" style={{ borderColor: a }} />
-
-                  <div className="text-left" style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: a, padding: '8px 12px 4px', letterSpacing: '0.2em', borderBottom: `1px solid rgba(${aRgb},0.2)` }}>IDENTITÉ_VISITEUR</div>
-
+        <section className="ac-dialogue" ref={scrutRef} key={etape}>
+          {etape === 1 && (
+            <>
+              <span className="pf-label" data-entre><b>01</b> Identité</span>
+              <h1 className="ac-question" data-question>Bonjour, je suis <em className="pf-it">AXIS</em></h1>
+              <p className="ac-texte" data-entre>Je vais t'accompagner pour créer une expérience personnalisée. Commence par me dire comment t'appeler.</p>
+              <form className="ac-champ" onSubmit={submitIdentite} data-entre>
+                <label htmlFor="ac-prenom">Ton prénom</label>
+                <div className="ac-champ__ligne">
                   <input
+                    id="ac-prenom"
                     ref={inputRef}
                     value={prenom}
                     onChange={(e) => setPrenom(e.target.value)}
-                    placeholder="Ton prénom ici..."
-                    className="w-full mt-2 px-4 py-4 placeholder:text-white/25 text-[20px]"
-                    style={{ background: isLight ? 'rgba(0,0,0,0.04)' : `rgba(${aRgb},0.04)`, borderLeft: `1px solid rgba(${aRgb},0.25)`, borderRight: `1px solid rgba(${aRgb},0.25)`, borderBottom: `1px solid rgba(${aRgb},0.25)`, borderTop: 'none', fontFamily: 'Syne, sans-serif', outline: 'none', caretColor: a, color: eff.texte, fontSize: 20, padding: '18px 16px' }}
-                    onKeyDown={(e) => { if (e.key === 'Enter') submitIdentite(e) }}
+                    placeholder="Ton prénom ici…"
+                    autoComplete="given-name"
+                    maxLength={40}
                   />
+                  <button type="submit" className="ac-envoi" aria-label="Continuer" disabled={!prenom.trim()}>
+                    <ArrowRight size={22} aria-hidden="true" />
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
 
-                  <div className="h-px mt-3" style={{ background: `linear-gradient(90deg, transparent, ${a}, transparent)`, animation: 'scanOpacity 2s linear infinite' }} />
-                </form>
+          {etape === 2 && (
+            <>
+              <span className="pf-label" data-entre><b>02</b> Profil</span>
+              <h1 className="ac-question" data-question>Quel est ton <em className="pf-it">rôle</em> ?</h1>
+              <p className="ac-texte" data-entre>Choisis la case qui te décrit le mieux.</p>
+              <div className="ac-roles" role="radiogroup" aria-label="Ton rôle">
+                {ROLES.map((r, i) => {
+                  const Icon = r.icon
+                  const choisi = profil === r.key
+                  return (
+                    <button key={r.key} type="button" role="radio" aria-checked={choisi} className={`ac-role${choisi ? ' est-choisi' : ''}`} onClick={() => choisirProfil(r.key)} data-entre>
+                      <span className="ac-role__num">{String(i + 1).padStart(2, '0')}</span>
+                      <Icon size={22} aria-hidden="true" className="ac-role__icone" />
+                      <span className="ac-role__titre">{r.titre}</span>
+                      <span className="ac-role__sous">{r.sous}</span>
+                      <ArrowRight size={18} aria-hidden="true" className="ac-role__fleche" />
+                    </button>
+                  )
+                })}
+              </div>
+            </>
+          )}
 
-                <button type="button" onClick={submitIdentite} className="flex items-center gap-[10px] transition duration-200 ease-[ease] rounded-none" style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, padding: '14px 40px', color: a, textTransform: 'uppercase', letterSpacing: '0.2em', border: `1px solid rgba(${aRgb},0.5)`, background: `rgba(${aRgb},0.08)` }} onMouseEnter={(e) => { e.currentTarget.style.background = `rgba(${aRgb},0.15)`; e.currentTarget.style.borderColor = a }} onMouseLeave={(e) => { e.currentTarget.style.background = `rgba(${aRgb},0.08)`; e.currentTarget.style.borderColor = `rgba(${aRgb},0.5)` }}>
-                  <span>Continuer</span>
-                  <ArrowRight size={15} color={a} />
+          {etape === 3 && (
+            <>
+              <span className="pf-label" data-entre><b>03</b> Micro</span>
+              <h1 className="ac-question" data-question>Active ton <em className="pf-it">micro</em></h1>
+              <p className="ac-texte" data-entre>Tu peux activer le micro pour parler à AXIS, ou continuer par écrit.</p>
+              <div className="ac-micro" data-entre>
+                <button type="button" className="ac-micro__bouton" onClick={activerMicro} aria-label="Activer le microphone">
+                  <span className="ac-micro__onde" aria-hidden="true" />
+                  <span className="ac-micro__onde" aria-hidden="true" />
+                  <Mic size={34} aria-hidden="true" />
                 </button>
-              </motion.div>
-            )}
-
-            {etape === 2 && (
-              <motion.div key="step2" variants={variantsStep} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="flex flex-col items-center">
-                <h1 style={{ color: eff.texte, fontFamily: 'Syne, sans-serif', fontSize: isMobile ? 36 : 72, letterSpacing: '-0.03em', lineHeight: 1, fontWeight: 800 }}>Quel est ton rôle ?</h1>
-                <p style={{ fontSize: isMobile ? 14 : 17, marginBottom: isMobile ? '24px' : '44px', maxWidth: isMobile ? '100%' : undefined, color: eff.textMedium }} className="text-[17px] max-w-lg mb-[44px]">Choisis une case qui te décrit le mieux.</p>
-
-                <div style={{ width: isMobile ? '100%' : 400 }} className={isMobile ? 'grid grid-cols-1 gap-[10px]' : 'grid grid-cols-2 gap-[12px]'}>
-                  {[
-                    { key: 'recruteur', icon: Target, title: 'Recruteur', subtitle: "À la recherche d'un talent" },
-                    { key: 'client', icon: Briefcase, title: 'Client', subtitle: "J'ai un projet en tête" },
-                    { key: 'collab', icon: Users, title: 'Collaborateur', subtitle: 'Travaillons ensemble' },
-                    { key: 'curieux', icon: Eye, title: 'Curieux', subtitle: 'Je découvre simplement' }
-                  ].map((c) => {
-                    const Icon = c.icon
-                    const selected = profil === c.key
-                    return (
-                      <button key={c.key} onClick={() => choisirProfil(c.key)} className="group relative overflow-hidden text-left p-[18px_16px] flex flex-col items-start gap-2 transition-[border-color,background] duration-200 rounded-none border" style={{ borderColor: selected ? a : (isLight ? `rgba(${aRgb},0.35)` : `rgba(${aRgb},0.18)`), background: selected ? `rgba(${aRgb},0.1)` : (isLight ? 'rgba(0,0,0,0.04)' : `rgba(${aRgb},0.025)`) }} onMouseEnter={(e) => { if (!selected) e.currentTarget.style.borderColor = `rgba(${aRgb},0.45)` }} onMouseLeave={(e) => { if (!selected) e.currentTarget.style.borderColor = selected ? a : (isLight ? `rgba(${aRgb},0.35)` : `rgba(${aRgb},0.18)`) }}>
-                        <div className={`absolute top-0 left-0 right-0 h-px origin-left transform transition-transform duration-300 ${selected ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} style={{ background: a }} />
-                        <div className="flex items-center gap-3">
-                          <Icon size={20} style={{ color: selected ? a : (isLight ? '#526075' : 'rgba(255,255,255,0.35)') }} />
-                        </div>
-                        <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.18em', color: selected ? a : eff.textFaint, textTransform: 'uppercase' }}>{c.title}</div>
-                        <div style={{ fontSize: 11, color: eff.textFaint, lineHeight: 1.4 }}>{c.subtitle}</div>
-                      </button>
-                    )
-                  })}
-                </div>
-              </motion.div>
-            )}
-
-            {etape === 3 && (
-              <motion.div key="step3" variants={variantsStep} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="flex flex-col items-center">
-                <h1 style={{ color: eff.texte, fontFamily: 'Syne, sans-serif', fontSize: isMobile ? 36 : 72, letterSpacing: '-0.03em', lineHeight: 1, fontWeight: 800 }}>Active ton micro</h1>
-                <p style={{ fontSize: isMobile ? 14 : 17, marginBottom: isMobile ? '24px' : '44px', maxWidth: isMobile ? '100%' : undefined, color: eff.textMedium }} className="text-[17px] max-w-lg mb-[44px]">Tu peux activer le micro pour parler à DevJ, ou continuer sans micro.</p>
-
-                <div className="flex flex-col items-center mb-10">
-                  <div className="relative w-[100px] h-[100px] mb-6 flex items-center justify-center">
-                    <div style={{ position: 'absolute', width: 100, height: 100, borderRadius: '50%', border: `1px solid rgba(${aRgb},0.3)`, animation: 'pulseRing 2s ease-out infinite' }} />
-                    <div style={{ position: 'absolute', width: 100, height: 100, borderRadius: '50%', border: `1px solid rgba(${aRgb},0.3)`, animation: 'pulseRing 2s ease-out infinite', animationDelay: '0.5s' }} />
-                    <div style={{ width: 64, height: 64, border: `1px solid ${a}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Mic size={28} color={a} />
-                    </div>
-                  </div>
-
-                  <button onClick={activerMicro} className="flex items-center gap-[10px] transition duration-200 ease-[ease] rounded-none" style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, color: a, padding: '14px 40px', textTransform: 'uppercase', letterSpacing: '0.2em', border: `1px solid rgba(${aRgb},0.5)`, background: `rgba(${aRgb},0.08)` }} onMouseEnter={(e) => { e.currentTarget.style.background = `rgba(${aRgb},0.15)`; e.currentTarget.style.borderColor = a }} onMouseLeave={(e) => { e.currentTarget.style.background = `rgba(${aRgb},0.08)`; e.currentTarget.style.borderColor = `rgba(${aRgb},0.5)` }}>
-                    <Mic size={14} color={a} />
-                    <span>Activer le microphone</span>
-                  </button>
-
-                  <button onClick={continuerSansMicro} className="mt-4" style={{ fontFamily: 'Space Mono, monospace', fontSize: 10, color: isLight ? '#526075' : 'rgba(255,255,255,0.3)', background: 'none', border: 'none', textDecoration: 'none' }}>
-                    <PenLine size={11} color={isLight ? '#64748b' : 'rgba(255,255,255,0.3)'} style={{ marginRight: 8 }} />
-                    Continuer sans micro
+                <div className="ac-micro__actions">
+                  <button type="button" className="pf-btn pf-btn--a" onClick={activerMicro}><span>Activer le microphone</span></button>
+                  <button type="button" className="ac-sans-micro" onClick={continuerSansMicro}>
+                    <PenLine size={14} aria-hidden="true" /> Continuer sans micro
                   </button>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* progression */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-3" style={{ bottom: isMobile ? 16 : 32 }}>
-            {[1,2,3].map((i) => (
-              <div key={i} className="h-px transition-all duration-300" style={{ width: etape === i ? 48 : 16, background: etape === i ? a : isLight ? '#94a3b8' : '#1f2937' }} />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Bouton d'accès direct au portfolio */}
-      <button
-        onClick={() => navigate('/portfolio')}
-        style={{
-          position: 'fixed',
-          bottom: isMobile ? 20 : 32,
-          right: isMobile ? 16 : 32,
-          zIndex: 50,
-          background: eff.navOverlay,
-          backdropFilter: 'blur(18px)',
-          WebkitBackdropFilter: 'blur(18px)',
-          border: `1px solid rgba(${aRgb},0.2)`,
-          borderRadius: 18,
-          padding: '12px 18px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          cursor: 'pointer',
-          color: a,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.border = `1px solid rgba(${aRgb},0.4)`
-          e.currentTarget.style.background = eff.navOverlay
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.border = `1px solid rgba(${aRgb},0.2)`
-          e.currentTarget.style.background = eff.navOverlay
-        }}
-      >
-        <Briefcase size={14} color={a} />
-        <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Portfolio</span>
-      </button>
+              </div>
+            </>
+          )}
+        </section>
+      </main>
 
       {showThemeModal && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 9999,
-          background: eff.navOverlay,
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 24,
-        }}>
-          <div style={{
-            width: '100%',
-            maxWidth: isMobile ? 440 : 520,
-            background: eff.cardBg,
-            border: `1px solid ${eff.borderStrong}`,
-            borderRadius: 24,
-            padding: isMobile ? '20px 16px 24px' : '48px 40px',
-            backdropFilter: 'blur(24px)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: isMobile ? 16 : 32,
-            fontFamily: 'Inter, sans-serif',
-          }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{
-                fontFamily: 'Space Mono, monospace',
-                fontSize: isMobile ? 8 : 10,
-                letterSpacing: isMobile ? '0.2em' : '0.35em',
-                color: eff.textFaint,
-                marginBottom: isMobile ? 10 : 16,
-              }}>
-                BIENVENUE SUR DEVJ PORTFOLIO
-              </div>
-              <h2 style={{
-                fontFamily: 'Fraunces, serif',
-                fontSize: isMobile ? 20 : 36,
-                fontWeight: 800,
-                color: eff.texte,
-                margin: 0,
-                lineHeight: 1.1,
-              }}>
-                Choisis ton thème
-              </h2>
-              <p style={{
-                fontFamily: 'Inter, sans-serif',
-                fontSize: isMobile ? 12 : 14,
-                color: eff.textMuted,
-                marginTop: isMobile ? 8 : 12,
-                lineHeight: 1.6,
-              }}>
-                Personnalise ton expérience avant d'explorer.
-                Tu pourras changer ça plus tard dans les paramètres.
-              </p>
+        <div className="ac-modal" ref={modalRef} role="dialog" aria-modal="true" aria-labelledby="ac-modal-titre">
+          <div className="ac-modal__carte" data-modal-carte>
+            <span className="pf-label"><b>00</b> Bienvenue sur DevJ</span>
+            <h2 id="ac-modal-titre" className="ac-modal__titre">Choisis ton <em className="pf-it">ambiance</em></h2>
+            <p className="ac-texte">Personnalise ton expérience avant d'explorer. Tu pourras la changer à tout moment dans les paramètres.</p>
+
+            <div className="ac-modal__mode" role="radiogroup" aria-label="Mode d'affichage">
+              <button type="button" role="radio" aria-checked={!isLight} className={!isLight ? 'est-actif' : ''} onClick={() => setMode('dark')}>Sombre</button>
+              <button type="button" role="radio" aria-checked={isLight} className={isLight ? 'est-actif' : ''} onClick={() => setMode('light')}>Clair</button>
             </div>
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(2, 1fr)',
-              gap: isMobile ? 8 : 14,
-            }}>
-              {themes.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => fermerModal(t.id)}
-                  style={{
-                    background: `rgba(${t.accentRgb},0.06)`,
-                    border: `1px solid rgba(${t.accentRgb},0.25)`,
-                    borderRadius: isMobile ? 12 : 16,
-                    padding: isMobile ? '12px 10px' : '20px 18px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: isMobile ? 8 : 12,
-                    alignItems: 'flex-start',
-                    transition: 'all 0.2s',
-                    textAlign: 'left',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.background = 
-                      `rgba(${t.accentRgb},0.14)`
-                    e.currentTarget.style.borderColor = t.accent
-                    e.currentTarget.style.transform = 'translateY(-2px)'
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.background = 
-                      `rgba(${t.accentRgb},0.06)`
-                    e.currentTarget.style.borderColor = 
-                      `rgba(${t.accentRgb},0.25)`
-                    e.currentTarget.style.transform = 'translateY(0)'
-                  }}
-                >
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                  }}>
-                    <div style={{
-                      width: isMobile ? 24 : 32,
-                      height: isMobile ? 24 : 32,
-                      borderRadius: '50%',
-                      background: t.accent,
-                      boxShadow: `0 0 16px rgba(${t.accentRgb},0.5)`,
-                      flexShrink: 0,
-                    }} />
-                    <div>
-                      <div style={{
-                        fontFamily: 'Syne, sans-serif',
-                        fontWeight: 700,
-                        fontSize: isMobile ? 13 : 15,
-                        color: eff.texte,
-                      }}>{t.nom || t.label}</div>
-                      <div style={{
-                        fontFamily: 'Space Mono, monospace',
-                        fontSize: isMobile ? 8 : 9,
-                        color: isLight ? (t.accentClair || t.accent) : t.accent,
-                        letterSpacing: '0.15em',
-                        marginTop: isMobile ? 1 : 2,
-                      }}>{t.accent}</div>
-                    </div>
-                  </div>
-                  <div style={{
-                    width: '100%',
-                    height: isMobile ? 4 : 6,
-                    marginTop: isMobile ? 8 : 0,
-                    borderRadius: 999,
-                    background: `linear-gradient(90deg, 
-                      ${t.accent}, 
-                      rgba(${t.accentRgb},0.2))`,
-                  }} />
+            <div className="ac-modal__couleurs">
+              {themes.filter((t) => !(isLight && t.id === 'blanc')).map((t) => (
+                <button key={t.id} type="button" className={theme.id === t.id ? 'est-actif' : ''} onClick={() => fermerModal(t.id)} style={{ '--c': isLight ? (t.accentClair || t.accent) : t.accent }}>
+                  <i data-pastille aria-hidden="true" />
+                  <span>{t.nom || t.label}</span>
                 </button>
               ))}
             </div>
 
-            <button
-              onClick={() => fermerModal(null)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: eff.textFaint,
-                fontFamily: 'Space Mono, monospace',
-                fontSize: isMobile ? 9 : 10,
-                letterSpacing: '0.2em',
-                cursor: 'pointer',
-                textAlign: 'center',
-                padding: isMobile ? '6px' : '8px',
-                marginTop: isMobile ? 4 : 0,
-              }}
-            >
-              PASSER — GARDER LE THÈME ACTUEL
-            </button>
+            <button type="button" className="ac-modal__passer" onClick={() => fermerModal(null)}>Passer — garder l'ambiance actuelle</button>
           </div>
         </div>
       )}

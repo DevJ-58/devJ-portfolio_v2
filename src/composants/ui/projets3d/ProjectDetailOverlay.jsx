@@ -53,7 +53,7 @@ export default function ProjectDetailOverlay({ projet, categoryColor, onClose })
           <div style={{
             position: 'absolute',
             inset: 0,
-            background: 'linear-gradient(180deg, transparent 45%, rgba(0,0,0,0.75) 100%)',
+            background: 'transparent',
           }} />
           <div style={{
             position: 'absolute',
@@ -127,7 +127,7 @@ export default function ProjectDetailOverlay({ projet, categoryColor, onClose })
             {projet.titre}
           </h2>
 
-          <div style={{ width: 44, height: 3, borderRadius: 999, background: `linear-gradient(90deg, ${categoryColor}, rgba(255,255,255,0.05))` }} />
+          <div style={{ width: 44, height: 3, borderRadius: 999, background: categoryColor }} />
 
           <p style={{
             margin: 0,
