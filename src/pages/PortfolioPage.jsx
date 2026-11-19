@@ -8,7 +8,7 @@ export default function PortfolioPage() {
   return (
     <>
       {!preloaderTermine && <PreloaderEditorial onTermine={() => setPreloaderTermine(true)} />}
-      <Portfolio accesDirecte={true} />
+      <Portfolio accesDirecte={true} pret={preloaderTermine} />
     </>
   )
 }
