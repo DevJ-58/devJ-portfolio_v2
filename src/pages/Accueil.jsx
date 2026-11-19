@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Target, Briefcase, Users, Eye, Mic, PenLine } from 'lucide-react'
-import AvatarParticulaire from '@/composants/ui/AvatarParticulaire'
+import AvatarAxis from '@/composants/ui/AvatarAxis'
 import utiliserStore from '@/store/utiliserStore'
 import utiliserTheme from '@/store/utiliserTheme'
 
@@ -104,7 +104,7 @@ export default function Accueil() {
       <div className="relative z-10 w-full max-w-3xl px-6" style={{ paddingLeft: isMobile ? 16 : undefined, paddingRight: isMobile ? 16 : undefined }}>
         <div className="flex flex-col items-center text-center">
           <div style={{ marginBottom: isMobile ? '16px' : '32px', display: 'flex', justifyContent: 'center' }}>
-            <AvatarParticulaire width={isMobile ? 140 : 220} height={isMobile ? 140 : 220} />
+            <AvatarAxis width={isMobile ? 140 : 220} height={isMobile ? 140 : 220} etat="idle" />
           </div>
           <div className="w-[48px] h-px mb-[20px]" style={{ background: a }} />
           <div className="text-[10px] uppercase tracking-[0.25em] mb-[18px]" style={{ fontFamily: 'Space Mono, monospace', color: a }}>IDENTIFIANT</div>

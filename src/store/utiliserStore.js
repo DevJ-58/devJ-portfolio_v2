@@ -22,9 +22,16 @@ const utiliserStore = create(
     estEcoutant:       false,   // écoute le micro
     estEnChargement:   false,   // attend la réponse de l'API
     messageCourant:    '',
+    texteParole:       '',      // texte que la bouche de l'avatar suit pendant la parole
     historiqueConversation: [],  // [{ role: 'user'|'assistant', contenu: string }]
   },
-  definirAxisParle:    (valeur) => definir((e) => ({ devjai: { ...e.devjai, estEnTrain: valeur } })),
+  definirAxisParle:    (valeur, texte) => definir((e) => ({
+    devjai: {
+      ...e.devjai,
+      estEnTrain: valeur,
+      texteParole: valeur ? (texte ?? e.devjai.texteParole) : '',
+    },
+  })),
   definirAxisEcoute:   (valeur) => definir((e) => ({ devjai: { ...e.devjai, estEcoutant: valeur } })),
   definirAxisCharge:   (valeur) => definir((e) => ({ devjai: { ...e.devjai, estEnChargement: valeur } })),
   definirMessageCourant: (msg)    => definir((e) => ({ devjai: { ...e.devjai, messageCourant: msg } })),
