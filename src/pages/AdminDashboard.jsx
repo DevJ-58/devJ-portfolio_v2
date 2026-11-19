@@ -10,7 +10,7 @@ import {
   listerCompetences, creerCompetence, modifierCompetence, supprimerCompetence,
 } from '@/services/portfolioAdmin'
 import utiliserTheme from '@/store/utiliserTheme'
-import AvatarParticulaire from '@/composants/ui/AvatarParticulaire'
+import AvatarAxis from '@/composants/ui/AvatarAxis'
 import PanneauParametres from '@/composants/ui/PanneauParametres'
 import { Volume2, Mic, MessageSquare, LayoutGrid, Radio, BarChart3, SlidersHorizontal, FolderKanban, Star, Settings2 } from 'lucide-react'
 
@@ -31,7 +31,7 @@ const COMPETENCES_DEFAUT_A_IMPORTER = [
 ]
 
 const AvatarStable = React.memo(function AvatarStable({ etat }) {
-  return <AvatarParticulaire width={160} height={160} etat={etat} />
+  return <AvatarAxis width={160} height={160} etat={etat} />
 })
 
 export default function AdminDashboard() {

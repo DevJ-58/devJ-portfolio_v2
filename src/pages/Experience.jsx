@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import utiliserStore from '@/store/utiliserStore'
 import utiliserTheme from '@/store/utiliserTheme'
 import { useAxis } from '@/hooks/utiliserDevJAI'
-import AvatarParticulaire from '@/composants/ui/AvatarParticulaire'
+import AvatarAxis from '@/composants/ui/AvatarAxis'
+import { dureeParole } from '@/composants/ui/axis/visemes'
+import { signalerPositionVoix } from '@/composants/ui/axis/canalParole'
 
 // Import du hook AXIS renommé sans changer le nom du fichier
 import Portfolio from '@/composants/Portfolio'
@@ -12,11 +14,11 @@ import { Volume2, Layout, RotateCcw, Send, MapPin, Briefcase, Zap } from 'lucide
 import cartesPortfolio from '@/donnees/cartesPortfolio'
 import usePortfolioData from '@/hooks/usePortfolioData'
 
-const AvatarStable = React.memo(function AvatarStable({ etat }) {
+const AvatarStable = React.memo(function AvatarStable({ etat, width = 280, height = 280 }) {
   return (
-    <AvatarParticulaire
-      width={280}
-      height={280}
+    <AvatarAxis
+      width={width}
+      height={height}
       etat={etat}
     />
   )
@@ -86,9 +88,10 @@ export default function Experience() {
   const portfolioRef = useRef(null)
   const derniereQuestionRef = useRef('')
   const sectionEnAttenteRef = useRef(null)
-  const [aiState, setAiState] = useState('idle')
-
-  const { envoyerMessage, estEnChargement, messageCourant } = useAxis()
+  const { envoyerMessage, estEnChargement, estEnTrain, messageCourant } = useAxis()
+  // État d'AXIS dérivé du store : réflexion pendant l'appel à Groq,
+  // parole pendant la lecture / l'affichage de la réponse
+  const aiState = estEnChargement ? 'thinking' : estEnTrain ? 'speaking' : 'idle'
   const envoyerMessageRef = useRef(envoyerMessage)
   useEffect(() => {
     envoyerMessageRef.current = envoyerMessage
@@ -441,6 +444,7 @@ export default function Experience() {
     if (typeof window === 'undefined' || !window.speechSynthesis) return
 
     let actif = true
+    let finTexteTimer = null
     const { definirAxisParle } = utiliserStore.getState()
 
     window.speechSynthesis.cancel()
@@ -475,7 +479,10 @@ export default function Experience() {
     function trySpeak() {
       if (!actif) return
       if (!modeVocal) {
-        setTimeout(() => { if (actif) definirAxisParle(false) }, 0)
+        // Sans voix : AXIS « parle » le temps que sa bouche suive le texte
+        const texte = nettoyerPourVoix(dernierMessage)
+        definirAxisParle(true, texte)
+        finTexteTimer = setTimeout(() => { if (actif) definirAxisParle(false) }, dureeParole(texte) * 1000)
         return
       }
 
@@ -504,6 +511,13 @@ export default function Experience() {
 
       const textePropre = nettoyerPourVoix(dernierMessage)
       const segments = segmenterTexte(textePropre)
+      // Position de chaque segment dans le texte complet (synchro de la bouche)
+      let curseur = 0
+      const debutsSegments = segments.map((seg) => {
+        const pos = textePropre.indexOf(seg, curseur)
+        curseur = (pos >= 0 ? pos : curseur) + seg.length
+        return pos >= 0 ? pos : curseur - seg.length
+      })
       let idx = 0
 
       // Détection iOS
@@ -522,7 +536,6 @@ export default function Experience() {
       function parlerSegment() {
         if (!actif || idx >= segments.length) {
           if (keepAlive) clearInterval(keepAlive)
-          setAiState('idle')
           definirAxisParle(false)
           setCartesActives([])
           return
@@ -534,6 +547,13 @@ export default function Experience() {
         seg.pitch = 0.82
         seg.rate = isIOS ? 0.88 : 0.92
         seg.volume = 1
+
+        const debutSeg = debutsSegments[idx]
+        const finSeg = debutSeg + segments[idx].length
+        seg.onstart = () => { if (actif) signalerPositionVoix(debutSeg, finSeg) }
+        seg.onboundary = (ev) => {
+          if (actif && ev.charIndex != null) signalerPositionVoix(debutSeg + ev.charIndex, finSeg)
+        }
 
         seg.onend = () => {
           if (!actif) return
@@ -552,7 +572,7 @@ export default function Experience() {
         window.speechSynthesis.speak(seg)
       }
 
-      setAiState('speaking')
+      definirAxisParle(true, textePropre)
       parlerSegment()
     }
 
@@ -564,6 +584,7 @@ export default function Experience() {
 
     return () => {
       actif = false
+      if (finTexteTimer) clearTimeout(finTexteTimer)
       // Ne PAS cancel ici — laisser la parole finir
     }
   }, [dernierMessage, modeVocal])
@@ -596,7 +617,6 @@ export default function Experience() {
           const texte = event.results[0][0].transcript.trim()
           if (texte) {
             derniereQuestionRef.current = texte
-            setAiState('thinking')
             envoyerMessageRef.current(texte)
           }
         }
@@ -651,20 +671,19 @@ export default function Experience() {
         recognitionRef.current.stop()
         recognitionRef.current = null
       }
+      utiliserStore.getState().definirAxisParle(false)
     }
   }, []) // [] = seulement au démontage du composant
 
   const soumettre = useCallback(() => {
     if (!inputCmd.trim()) return
     derniereQuestionRef.current = inputCmd.trim()
-    setAiState('thinking')
     envoyerMessage(inputCmd.trim())
     setInputCmd('')
   }, [inputCmd, envoyerMessage, setInputCmd])
 
   const envoyerCommande = (cmd) => {
     derniereQuestionRef.current = cmd
-    setAiState('thinking')
     envoyerMessageRef.current(cmd)
   }
 
@@ -727,7 +746,6 @@ export default function Experience() {
         const texte = event.results[0][0].transcript.trim()
         if (texte) {
           derniereQuestionRef.current = texte
-          setAiState('thinking')
           envoyerMessageRef.current(texte)
         }
       }

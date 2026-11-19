@@ -121,6 +121,8 @@ export function useAxis() {
         messageUtilisateur:    texteUtilisateur,
       })
 
+      // Groq a répondu : fin de la réflexion (la parole est gérée par Experience)
+      definirAxisCharge(false)
       ajouterMessage('assistant', reponse)
       definirMessageCourant(reponse)
 
@@ -149,8 +151,6 @@ export function useAxis() {
       // Navigation automatique selon le contenu de la réponse
       const sectionDetectee = detecterSection(reponse)
       if (sectionDetectee) definirSectionActive(sectionDetectee)
-
-      definirAxisParle(false)
 
     } catch (erreur) {
       console.error('Erreur AXIS :', erreur)
