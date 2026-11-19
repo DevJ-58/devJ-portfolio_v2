@@ -1,0 +1,72 @@
+/* Panneau de paramètres (mode + couleur d'accent) */
+.pp { font-family: 'Space Mono', ui-monospace, monospace; color: var(--pp-texte); }
+.pp *, .pp *::before, .pp *::after { box-sizing: border-box; }
+
+/* ── Bouton flottant ── */
+.pp--flottant { position: fixed; top: 20px; right: 20px; z-index: 110; }
+.pp-bouton {
+  position: relative; width: 46px; height: 46px; border-radius: 50%; padding: 0; cursor: pointer;
+  display: grid; place-items: center; color: var(--pp-a);
+  background: var(--pp-fond); border: 1px solid var(--pp-bord);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.45);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s;
+}
+.pp-bouton svg { transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
+.pp-bouton:hover { border-color: rgba(var(--pp-a-rgb), 0.5); }
+.pp-bouton:hover svg, .pp.est-ouvert .pp-bouton svg { transform: rotate(90deg); }
+.pp-bouton__anneau { position: absolute; inset: -4px; border-radius: 50%; border: 1px dashed rgba(var(--pp-a-rgb), 0.35); animation: pp-tourne 18s linear infinite; }
+.pp.est-ouvert .pp-bouton { border-color: var(--pp-a); }
+.pp-bouton:focus-visible { outline: 2px solid var(--pp-a); outline-offset: 4px; }
+@keyframes pp-tourne { to { transform: rotate(360deg); } }
+
+/* ── Fenêtre ── */
+.pp-fenetre {
+  position: absolute; top: calc(100% + 12px); right: 0; width: min(300px, calc(100vw - 32px));
+  padding: 18px; border-radius: 18px; border: 1px solid var(--pp-bord); background: var(--pp-fond);
+  backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+  box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.55);
+  transform-origin: top right; animation: pp-entree 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes pp-entree { from { opacity: 0; transform: translateY(-8px) scale(0.94); } }
+.pp-fenetre__tete { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--pp-bord); }
+.pp-fenetre__tete span { font: 700 1.05rem / 1 'Fraunces', Georgia, serif; letter-spacing: -0.01em; }
+.pp-fenetre__tete small { font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--pp-doux); }
+
+/* ── Contenu ── */
+.pp-contenu { display: grid; gap: 18px; }
+.pp-bloc { display: grid; gap: 10px; }
+.pp-titre { font-size: 0.66rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--pp-doux); }
+.pp-titre em { font-style: normal; color: var(--pp-a); margin-left: 6px; }
+.pp-mode { position: relative; display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 999px; background: var(--pp-case); border: 1px solid var(--pp-bord); }
+.pp-mode__indic { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 999px; background: var(--pp-a); transition: transform 0.55s cubic-bezier(0.76, 0, 0.24, 1); }
+.pp-mode__indic.est-clair { transform: translateX(100%); }
+.pp-mode button {
+  position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 40px; border: 0; background: none; cursor: pointer; color: var(--pp-doux);
+  font: 400 0.7rem / 1 'Space Mono', monospace; letter-spacing: 0.12em; text-transform: uppercase; transition: color 0.4s;
+}
+.pp-mode button.est-actif { color: #fff; font-weight: 700; }
+.pp:not(.est-clair) .pp-mode button.est-actif { color: #050505; }
+.pp-couleurs { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 10px; }
+.pp-couleurs button {
+  position: relative; aspect-ratio: 1; min-width: 40px; border-radius: 50%; cursor: pointer; padding: 0;
+  display: grid; place-items: center; color: #fff;
+  background: var(--c); border: 2px solid transparent; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
+}
+.pp-couleurs button:hover { transform: scale(1.12); }
+.pp-couleurs button.est-actif { box-shadow: 0 0 0 3px var(--pp-fond), 0 0 0 5px var(--c); }
+.pp-couleurs button svg { filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5)); }
+.pp-couleurs button:focus-visible { outline: 2px solid var(--pp-texte); outline-offset: 3px; }
+
+/* Variante intégrée (menu du portfolio) : sans cadre */
+.pp--integre .pp-couleurs { grid-template-columns: repeat(8, minmax(34px, 1fr)); }
+@media (max-width: 767px) {
+  .pp--flottant { top: 14px; right: 14px; }
+  .pp--integre .pp-couleurs { grid-template-columns: repeat(4, minmax(40px, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pp-bouton__anneau, .pp-fenetre { animation: none; }
+  .pp-mode__indic, .pp-bouton svg { transition: none; }
+}

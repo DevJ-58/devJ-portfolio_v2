@@ -2,15 +2,15 @@
 // remplacées par celles de Firebase quand elles existent (usePortfolioData).
 
 export const SECTIONS = [
-  { id: 'hero', label: 'Portrait', court: 'Intro' },
-  { id: 'about', label: 'À propos', court: 'About' },
-  { id: 'academic', label: 'Parcours', court: 'Academic' },
-  { id: 'skills', label: 'Compétences', court: 'Skills' },
-  { id: 'projects', label: 'Projets', court: 'Projects' },
-  { id: 'github', label: 'GitHub', court: 'GitHub' },
-  { id: 'services', label: 'Services', court: 'Services' },
-  { id: 'methodology', label: 'Méthode', court: 'Methodology' },
-  { id: 'contact', label: 'Contact', court: 'Contact' },
+  { id: 'hero', label: 'Portrait', court: 'Intro', desc: "Qui est Fréjus Kouadio, en un regard." },
+  { id: 'about', label: 'À propos', court: 'About', desc: 'Le manifeste : concevoir des interfaces qui se ressentent.' },
+  { id: 'academic', label: 'Parcours', court: 'Academic', desc: 'Trois chapitres, du BEPC au génie logiciel.' },
+  { id: 'skills', label: 'Compétences', court: 'Skills', desc: 'Le signal technique : front, back, IA et outils.' },
+  { id: 'projects', label: 'Projets', court: 'Projects', desc: 'La constellation de travaux livrés.' },
+  { id: 'github', label: 'GitHub', court: 'GitHub', desc: "Une année d'activité, jour après jour." },
+  { id: 'services', label: 'Services', court: 'Services', desc: 'Offres, tarifs et délais.' },
+  { id: 'methodology', label: 'Méthode', court: 'Methodology', desc: "Cinq étapes, de l'audit au déploiement." },
+  { id: 'contact', label: 'Contact', court: 'Contact', desc: 'Travaillons ensemble.' },
 ]
 
 export const parcoursData = [

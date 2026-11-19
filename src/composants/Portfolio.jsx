@@ -2,7 +2,6 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffec
 import { useNavigate } from 'react-router-dom'
 import utiliserTheme from '@/store/utiliserTheme'
 import usePortfolioData from '@/hooks/usePortfolioData'
-import PanneauParametres from '@/composants/ui/PanneauParametres'
 import { ScrollTrigger } from '@/composants/portfolio/moteur/gsap'
 import { ContextePortfolio, variablesTheme } from '@/composants/portfolio/moteur/contexte'
 import useDefilement from '@/composants/portfolio/moteur/useDefilement'
@@ -108,7 +107,7 @@ const Portfolio = forwardRef(function Portfolio({ accesDirecte = false, pret = t
     return () => clearTimeout(t)
   }, [scroller, projetsAffiches.length, competencesAffichees.length, github.donnees])
 
-  const contexte = useMemo(() => ({ wrapRef, contenuRef, lenisRef, allerA, naviguer, isMobile }), [lenisRef, allerA, naviguer, isMobile])
+  const contexte = useMemo(() => ({ wrapRef, contenuRef, lenisRef, allerA, naviguer, isMobile, accesDirecte }), [lenisRef, allerA, naviguer, isMobile, accesDirecte])
 
   return (
     <div
@@ -131,7 +130,8 @@ const Portfolio = forwardRef(function Portfolio({ accesDirecte = false, pret = t
               <Services />
               <Methode />
               <Contact>
-                {accesDirecte && (
+                {/* Bouton AXIS flottant : bureau seulement (sur mobile, il est dans le menu) */}
+                {accesDirecte && !isMobile && (
                   <AxisBouton isMobile={isMobile} a={eff.accent} aRgb={eff.accentRgb} navigate={navigate} eff={eff} />
                 )}
               </Contact>
@@ -141,10 +141,6 @@ const Portfolio = forwardRef(function Portfolio({ accesDirecte = false, pret = t
         {scroller && <Curseur />}
         <div className="pf-grain" aria-hidden="true" />
       </ContextePortfolio.Provider>
-
-      <div className="pf-parametres">
-        <PanneauParametres />
-      </div>
     </div>
   )
 })

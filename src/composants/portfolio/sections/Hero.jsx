@@ -82,7 +82,6 @@ export default function Hero({ pret }) {
         <div className="pf-hero__meta" data-meta>
           <span className="pf-hero__meta-gauche"><i className="pf-losange" />Vol. I · N°01</span>
           <span className="pf-hero__meta-centre">Côte d'Ivoire · {new Date().getFullYear()}</span>
-          <span className="pf-pastille"><i />Disponible</span>
         </div>
 
         <nav className="pf-hero__sommaire" data-sommaire aria-label="Sommaire">

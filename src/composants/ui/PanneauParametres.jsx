@@ -1,254 +1,114 @@
-import { useState } from 'react'
-import { X, Settings } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Settings, Sun, Moon, Check } from 'lucide-react'
 import utiliserTheme from '@/store/utiliserTheme'
 import themes from '@/donnees/themes'
+import './parametres.css'
 
-export default function PanneauParametres() {
+// Réglages d'interface : mode clair/sombre et couleur d'accent.
+//
+// variante="flottant" (défaut) : bouton rond fixé en haut à droite ; la
+//   fenêtre se ferme au clic à l'extérieur, avec Échap ou en recliquant.
+// variante="integre" : seulement le contenu (utilisé dans le menu du portfolio).
+export default function PanneauParametres({ variante = 'flottant' }) {
   const [ouvert, setOuvert] = useState(false)
+  const racineRef = useRef(null)
   const { theme, mode, setMode, changerTheme, getThemeEffectif } = utiliserTheme()
   const eff = getThemeEffectif ? getThemeEffectif() : theme
-  const a = eff.accent
   const isLight = mode === 'light'
 
+  // Fermeture au clic extérieur et à la touche Échap
+  useEffect(() => {
+    if (!ouvert) return
+    const dehors = (e) => { if (racineRef.current && !racineRef.current.contains(e.target)) setOuvert(false) }
+    const echap = (e) => { if (e.key === 'Escape') setOuvert(false) }
+    document.addEventListener('pointerdown', dehors, true)
+    document.addEventListener('keydown', echap)
+    return () => {
+      document.removeEventListener('pointerdown', dehors, true)
+      document.removeEventListener('keydown', echap)
+    }
+  }, [ouvert])
+
+  const vars = {
+    '--pp-a': eff.accent,
+    '--pp-a-rgb': eff.accentRgb,
+    '--pp-av': eff.accentVif || eff.accent,
+    '--pp-fond': isLight ? 'rgba(255,255,255,0.94)' : 'rgba(10,11,14,0.94)',
+    '--pp-texte': isLight ? '#0f172a' : '#f2f0ec',
+    '--pp-doux': isLight ? '#526075' : 'rgba(242,240,236,0.62)',
+    '--pp-bord': isLight ? 'rgba(15,23,42,0.1)' : 'rgba(242,240,236,0.1)',
+    '--pp-case': isLight ? 'rgba(15,23,42,0.04)' : 'rgba(242,240,236,0.04)',
+  }
+
+  const listeThemes = Object.values(themes).filter((t) => !(isLight && t.id === 'blanc'))
+
+  const contenu = (
+    <div className="pp-contenu">
+      <div className="pp-bloc">
+        <span className="pp-titre">Ambiance</span>
+        <div className="pp-mode" role="radiogroup" aria-label="Mode d'affichage">
+          <span className={`pp-mode__indic${isLight ? ' est-clair' : ''}`} aria-hidden="true" />
+          <button type="button" role="radio" aria-checked={!isLight} className={!isLight ? 'est-actif' : ''} onClick={() => setMode('dark')}>
+            <Moon size={14} aria-hidden="true" /> Sombre
+          </button>
+          <button type="button" role="radio" aria-checked={isLight} className={isLight ? 'est-actif' : ''} onClick={() => setMode('light')}>
+            <Sun size={14} aria-hidden="true" /> Clair
+          </button>
+        </div>
+      </div>
+
+      <div className="pp-bloc">
+        <span className="pp-titre">Couleur <em>{theme.nom || theme.label}</em></span>
+        <div className="pp-couleurs" role="radiogroup" aria-label="Couleur d'accent">
+          {listeThemes.map((t) => {
+            const actif = theme.id === t.id
+            const pastille = isLight ? (t.accentClair || t.accent) : t.accent
+            return (
+              <button
+                key={t.id}
+                type="button"
+                role="radio"
+                aria-checked={actif}
+                aria-label={t.nom}
+                title={t.nom}
+                className={actif ? 'est-actif' : ''}
+                style={{ '--c': pastille }}
+                onClick={() => changerTheme(t.id)}
+              >
+                {actif && <Check size={13} aria-hidden="true" />}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+
+  if (variante === 'integre') {
+    return <div className={`pp pp--integre${isLight ? ' est-clair' : ''}`} style={vars}>{contenu}</div>
+  }
+
   return (
-    <>
-      {/* Bouton icône paramètres — position fixed bas-droite */}
+    <div className={`pp pp--flottant${isLight ? ' est-clair' : ''}${ouvert ? ' est-ouvert' : ''}`} style={vars} ref={racineRef}>
       <button
-        onClick={() => setOuvert(o => !o)}
-        style={{
-          position: 'fixed',
-          top: 24,
-          right: 24,
-          zIndex: 110,
-          width: 36,
-          height: 36,
-          borderRadius: '8px',
-          background: `rgba(${eff.accentRgb},0.08)`,
-          border: `1px solid rgba(${eff.accentRgb},0.25)`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          transition: 'all 0.2s',
-          backdropFilter: 'blur(12px)',
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.background = `rgba(${eff.accentRgb},0.15)`
-          e.currentTarget.style.borderColor = a
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.background = `rgba(${eff.accentRgb},0.08)`
-          e.currentTarget.style.borderColor = `rgba(${eff.accentRgb},0.25)`
-        }}
+        type="button"
+        className="pp-bouton"
+        aria-label={ouvert ? 'Fermer les paramètres' : 'Ouvrir les paramètres'}
+        aria-expanded={ouvert}
+        onClick={() => setOuvert((o) => !o)}
       >
-        <Settings size={15} color={a} />
+        <span className="pp-bouton__anneau" aria-hidden="true" />
+        <Settings size={16} aria-hidden="true" />
       </button>
-
-      {/* Panneau latéral */}
       {ouvert && (
-        <div style={{
-          position: 'fixed',
-          top: 70,
-          right: 24,
-          zIndex: 110,
-          width: 220,
-          background: 'rgba(4,4,6,0.92)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          border: `1px solid rgba(${eff.accentRgb},0.18)`,
-          borderRadius: '14px',
-          overflow: 'hidden',
-          boxShadow: `0 8px 32px rgba(0,0,0,0.5)`,
-          animation: 'fadeInUp 0.25s cubic-bezier(0.16,1,0.3,1) forwards',
-        }}>
-
-          {/* Ligne lumineuse top */}
-          <div style={{
-            position: 'absolute', top: 0, left: 20, right: 20, height: 1,
-            background: `linear-gradient(90deg,transparent,rgba(${eff.accentRgb},0.35),transparent)`
-          }} />
-
-          {/* Header */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '12px 14px',
-            borderBottom: `1px solid rgba(${eff.accentRgb},0.08)`,
-          }}>
-            <div style={{
-              fontFamily: 'Space Mono, monospace',
-              fontSize: 8,
-              color: a,
-              letterSpacing: '0.25em',
-              textTransform: 'uppercase',
-            }}>// PARAMÈTRES</div>
-            <button
-              onClick={() => setOuvert(false)}
-              style={{
-                background: 'none', border: 'none',
-                cursor: 'pointer', padding: 0,
-                display: 'flex', alignItems: 'center',
-              }}
-            >
-              <X size={12} color={`rgba(${eff.accentRgb},0.5)`} />
-            </button>
+        <div className="pp-fenetre" role="dialog" aria-label="Paramètres d'affichage">
+          <div className="pp-fenetre__tete">
+            <span>Paramètres</span>
+            <small>Échap pour fermer</small>
           </div>
-
-          {/* Section thème */}
-          <div style={{ padding: '14px' }}>
-            <div style={{
-              fontFamily: 'Space Mono, monospace',
-              fontSize: 7,
-              color: `rgba(${eff.accentRgb},0.4)`,
-              letterSpacing: '0.25em',
-              textTransform: 'uppercase',
-              marginBottom: 10,
-            }}>INTERFACE</div>
-
-            {/* Label mode couleur */}
-            <div style={{
-              fontFamily: 'Space Mono, monospace',
-              fontSize: 8,
-              color: `rgba(255,255,255,0.3)`,
-              letterSpacing: '0.15em',
-              marginBottom: 8,
-            }}>MODE COULEUR</div>
-
-            {/* Toggle Light / Dark */}
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
-              <button
-                onClick={() => setMode('dark')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 44,
-                  height: 28,
-                  borderRadius: 10,
-                  cursor: 'pointer',
-                  border: isLight
-                    ? `1px solid ${eff.borderLight || 'rgba(15,23,42,0.06)'}`
-                    : `1px solid rgba(${eff.accentRgb},0.06)`,
-                  background: mode === 'dark'
-                    ? `rgba(${eff.accentRgb},0.15)`
-                    : (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.04)'),
-                  color: mode === 'dark' ? a : (isLight ? '#334155' : 'rgba(255,255,255,0.6)'),
-                  fontFamily: 'Space Mono, monospace',
-                  fontSize: 14,
-                  letterSpacing: '0.2em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                <span style={{ fontSize: 14, lineHeight: 1 }}>☽</span>
-              </button>
-
-              <button
-                onClick={() => setMode('light')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 44,
-                  height: 28,
-                  borderRadius: 10,
-                  cursor: 'pointer',
-                  border: isLight
-                    ? `1px solid ${eff.borderLight || 'rgba(15,23,42,0.06)'}`
-                    : `1px solid rgba(${eff.accentRgb},0.06)`,
-                  background: mode === 'light'
-                    ? `rgba(${eff.accentRgb},0.15)`
-                    : (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.04)'),
-                  color: mode === 'light' ? a : (isLight ? '#334155' : 'rgba(255,255,255,0.6)'),
-                  fontFamily: 'Space Mono, monospace',
-                  fontSize: 14,
-                  letterSpacing: '0.2em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                <span style={{ fontSize: 14, lineHeight: 1 }}>☀︎</span>
-              </button>
-            </div>
-
-            {/* Les 3 options de thème */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 6,
-            }}>
-              {Object.values(themes)
-                .filter(t => !(isLight && t.id === 'blanc'))
-                .map(t => {
-                const actif = theme.id === t.id
-                return (
-                  <button
-                    key={t.id}
-                    onClick={() => changerTheme(t.id)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      padding: '8px 10px',
-                      borderRadius: '8px',
-                      background: actif
-                        ? `rgba(${t.accentRgb},0.1)`
-                        : (isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.02)'),
-                      border: actif
-                        ? `1px solid rgba(${t.accentRgb},0.4)`
-                        : (isLight ? `1px solid ${eff.borderLight || 'rgba(15,23,42,0.06)'}` : '1px solid rgba(255,255,255,0.05)'),
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      width: '100%',
-                      textAlign: 'left',
-                    }}
-                  >
-                    {/* Pastille couleur */}
-                    <div style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: '50%',
-                      background: t.accent,
-                      flexShrink: 0,
-                      boxShadow: actif ? `0 0 8px ${t.accent}` : 'none',
-                    }} />
-                    <span style={{
-                      fontFamily: 'Space Mono, monospace',
-                      fontSize: 9,
-                      color: actif ? t.accent : 'rgba(255,255,255,0.3)',
-                      letterSpacing: '0.15em',
-                    }}>{t.label}</span>
-                    {actif && (
-                      <span style={{
-                        marginLeft: 'auto',
-                        fontSize: 8,
-                        color: t.accent,
-                        opacity: 0.7,
-                      }}>✓</span>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-
-            {/* Séparateur */}
-            <div style={{
-              height: 1,
-              background: `rgba(${eff.accentRgb},0.06)`,
-              margin: '12px 0',
-            }} />
-
-            {/* Placeholder futures options */}
-            <div style={{
-              fontFamily: 'Space Mono, monospace',
-              fontSize: 7,
-              color: 'rgba(255,255,255,0.12)',
-              letterSpacing: '0.15em',
-              textAlign: 'center',
-              padding: '4px 0',
-            }}>+ OPTIONS À VENIR</div>
-          </div>
+          {contenu}
         </div>
       )}
-    </>
+    </div>
   )
 }
