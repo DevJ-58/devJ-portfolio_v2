@@ -890,9 +890,9 @@ export default function Experience() {
         {blocRaccourcis}
       </aside>
 
-      <main className="xp-scene">
+      <main className={`xp-scene${reponseVisible ? ' a-reponse' : ''}`}>
         <span className="xp-scene__fond" aria-hidden="true">AXIS</span>
-        <div className="xp-avatar" data-xp-avatar>
+        <div className="xp-avatar" data-xp-avatar style={{ '--t': `${avatarTaille}px` }}>
           <span className={`xp-avatar__anneau est-${aiState}`} aria-hidden="true" />
           <AvatarStable etat={aiState} width={avatarTaille} height={avatarTaille} />
         </div>
@@ -901,7 +901,7 @@ export default function Experience() {
         {reponseVisible && (
           <div className="xp-bulle" aria-live="polite">
             <span className="pf-label"><b>AXIS</b> Réponse</span>
-            <p>{dernierMessage}</p>
+            {dernierMessage.split(/\n+/).filter(Boolean).map((ligne, i) => <p key={i}>{ligne}</p>)}
           </div>
         )}
       </main>
@@ -996,22 +996,6 @@ export default function Experience() {
             </button>
             <span className={`xp-etat est-${aiState}`}><i aria-hidden="true" />{libelleEtat}</span>
           </div>
-
-          {(modeChat || modeParler) && (
-            <div className="xp-pf-saisie">
-              {!modeParler ? (
-                <form className="xp-champ" onSubmit={(e) => { e.preventDefault(); soumettre() }}>
-                  <input value={inputCmd} onChange={(e) => setInputCmd(e.target.value)} placeholder="Posez une question à AXIS..." aria-label="Question pour AXIS" />
-                  <button type="submit" className="xp-champ__envoi" aria-label="Envoyer" disabled={!inputCmd.trim()}><Send size={16} aria-hidden="true" /></button>
-                </form>
-              ) : (
-                <div className={`xp-ecoute${ecoute ? ' est-ecoute' : ''}`}>
-                  <span className="xp-ecoute__barres" aria-hidden="true"><i /><i /><i /><i /><i /></span>
-                  <span>{ecoute ? 'Écoute en cours — parlez' : 'Micro prêt — en attente'}</span>
-                </div>
-              )}
-            </div>
-          )}
 
           <div className="xp-pf-ecrire">
             {inputPortfolioVisible && (

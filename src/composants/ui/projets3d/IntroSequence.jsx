@@ -36,7 +36,6 @@ export default function IntroSequence({ onComplete, isMobile }) {
 
     const raw = (state.clock.elapsedTime - startTime.current) / duration
     const progress = Math.min(Math.max(raw, 0), 1)
-    console.log('intro progression:', progress)
     const eased = easeOutCubic(progress)
 
     camera.position.lerpVectors(startPosition, targetPosition, eased)
@@ -45,7 +44,6 @@ export default function IntroSequence({ onComplete, isMobile }) {
     camera.lookAt(0, 0, 0)
 
     if (progress >= 1 && !hasCompleted.current) {
-      console.log('INTRO onComplete appelé')
       hasCompleted.current = true
       onComplete()
     }

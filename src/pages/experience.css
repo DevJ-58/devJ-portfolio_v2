@@ -48,7 +48,8 @@
 .xp-menu { display: none; }
 
 /* ── Panneaux latéraux ── */
-.xp-panneau { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 34px; padding: 30px var(--pad); scrollbar-width: thin; }
+.xp-panneau { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 34px; padding: 30px var(--pad); scrollbar-width: none; }
+.xp-panneau::-webkit-scrollbar, .xp-feuille::-webkit-scrollbar { display: none; }
 .xp-panneau--gauche { grid-area: gauche; border-right: 1px solid var(--bord-3); }
 .xp-panneau--droite { grid-area: droite; border-left: 1px solid var(--bord-3); }
 .xp-bloc { display: grid; gap: 14px; }
@@ -80,7 +81,7 @@
 .xp-switch.est-actif i { transform: translateX(16px); }
 
 /* ── Scène centrale ── */
-.xp-scene { grid-area: scene; position: relative; min-height: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 16px var(--pad); }
+.xp-scene { grid-area: scene; position: relative; min-height: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: 14px; padding: 16px var(--pad); }
 .xp-scene__fond {
   position: absolute; left: 50%; top: 46%; z-index: 0; transform: translate(-50%, -50%); pointer-events: none; user-select: none;
   font: 800 clamp(10rem, 22vw, 26rem) / 1 var(--serif); letter-spacing: -0.06em;
@@ -102,11 +103,18 @@
 .xp-etat.est-speaking { border-color: rgba(var(--a-rgb), 0.45); color: var(--a); }
 .xp-identite { position: relative; z-index: 1; font: italic 400 1rem / 1.3 var(--serif); color: var(--t3); text-align: center; }
 .xp-bulle {
-  position: relative; z-index: 2; display: grid; gap: 10px; width: min(580px, 100%); max-height: 24vh; overflow-y: auto;
-  padding: 18px 22px; border: 1px solid var(--bord); border-radius: 4px 20px 20px 20px; background: var(--fond);
-  animation: xp-apparait 0.6s var(--ease) both;
+  position: relative; z-index: 2; flex-shrink: 1; display: grid; align-content: start; gap: 10px; width: min(640px, 100%); min-height: 0; max-height: 100%; overflow-y: auto;
+  padding: 20px 26px; border: 1px solid var(--bord); border-radius: 4px 20px 20px 20px; background: var(--fond);
+  scrollbar-width: thin; animation: xp-apparait 0.6s var(--ease) both;
 }
-.xp-bulle p { font-size: 1rem; line-height: 1.65; color: var(--t1); }
+.xp-bulle p { margin: 0; font-size: 1.06rem; line-height: 1.7; color: var(--texte); }
+/* Pendant une réponse écrite, l'avatar se fait plus petit pour laisser lire */
+.xp-avatar { transition: margin 0.7s var(--ease); }
+.xp-avatar > * { transition: scale 0.7s var(--ease); }
+.xp-scene.a-reponse { justify-content: flex-start; }
+.xp-scene.a-reponse .xp-avatar { margin: calc(var(--t) * -0.225) 0; }
+.xp-scene.a-reponse .xp-avatar > * { scale: 0.55; }
+.xp-scene.a-reponse .xp-identite { display: none; }
 @keyframes xp-apparait { from { opacity: 0; transform: translateY(14px); } }
 
 /* ── Saisie ── */
@@ -118,6 +126,7 @@
 .xp-champ:focus-within { border-color: var(--a); }
 .xp-champ input { flex: 1; min-width: 0; padding: 12px 0; border: 0; outline: none; background: none; color: var(--texte); caret-color: var(--a); font: 400 1rem / 1.2 'Inter', sans-serif; }
 .xp-champ input::placeholder { color: var(--t4); }
+.xp-champ input:focus-visible { outline: none; }
 .xp-champ__micro, .xp-champ__envoi { flex-shrink: 0; width: 46px; height: 46px; display: grid; place-items: center; padding: 0; border-radius: 50%; }
 .xp-champ__micro { border: 1px solid var(--bord); background: none; color: var(--t2); transition: color 0.3s, border-color 0.3s; }
 .xp-champ__micro:hover { color: var(--a); border-color: var(--a); }
@@ -173,6 +182,7 @@
 .xp-voile { position: fixed; inset: 0; z-index: 60; background: rgba(0, 0, 0, 0.45); animation: xp-fondu 0.4s ease both; }
 @keyframes xp-fondu { from { opacity: 0; } }
 .xp-feuille {
+  scrollbar-width: none;
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 61; max-height: 84dvh; overflow-y: auto;
   display: grid; gap: 28px; padding: 12px 20px 30px;
   border-top: 1px solid var(--bord); border-radius: 24px 24px 0 0; background: var(--fond);
@@ -213,8 +223,8 @@
   .xp-menu { display: grid; place-items: center; margin-left: auto; width: 46px; height: 46px; padding: 0; border: 1px solid var(--bord); border-radius: 50%; background: var(--carte); color: var(--texte); }
   .xp-scene { gap: 10px; padding: 10px 16px; justify-content: center; }
   .xp-scene__fond { font-size: 46vw; top: 40%; }
-  .xp-bulle { max-height: 26dvh; padding: 14px 16px; }
-  .xp-bulle p { font-size: 0.95rem; }
+  .xp-bulle { padding: 14px 16px; }
+  .xp-bulle p { font-size: 1rem; }
   .xp-saisie { padding: 10px 12px 14px; gap: 6px; }
   .xp-champ { padding-left: 18px; }
   .xp-champ__micro, .xp-champ__envoi { width: 44px; height: 44px; }
@@ -230,11 +240,11 @@
   .xp-photo ul, .xp-carte__tete { display: none; }
   .xp-carte__image { height: 84px; }
   .xp:has(.xp-volants) .xp-scene { padding-top: 104px; }
-  .xp-pf-avatar { right: 12px; bottom: 86px; }
-  .xp-pf-avatar button { width: 72px; height: 72px; }
-  .xp-pf-avatar .xp-etat { display: none; }
+  .xp-pf-avatar { right: 12px; bottom: 16px; }
+  .xp-pf-avatar button { width: 76px; height: 76px; }
+  .xp-pf-avatar .xp-etat { padding: 5px 9px; font-size: 0.5rem; letter-spacing: 0.12em; }
   .xp-pf-saisie { bottom: 12px; width: calc(100vw - 24px); }
-  .xp-pf-ecrire { left: 12px; bottom: 92px; }
+  .xp-pf-ecrire { left: 12px; bottom: 30px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .xp *, .xp *::before, .xp *::after { animation: none !important; transition-duration: 0.01ms !important; }

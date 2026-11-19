@@ -130,10 +130,8 @@ const Portfolio = forwardRef(function Portfolio({ accesDirecte = false, pret = t
               <Services />
               <Methode />
               <Contact>
-                {/* Bouton AXIS flottant : bureau seulement (sur mobile, il est dans le menu) */}
-                {accesDirecte && !isMobile && (
-                  <AxisBouton isMobile={isMobile} a={eff.accent} aRgb={eff.accentRgb} navigate={navigate} eff={eff} />
-                )}
+                {/* Bouton AXIS flottant, sur bureau comme sur téléphone */}
+                {accesDirecte && <AxisBouton isMobile={isMobile} navigate={navigate} />}
               </Contact>
             </>
           )}

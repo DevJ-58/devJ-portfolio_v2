@@ -5,7 +5,6 @@ import utiliserTheme from '@/store/utiliserTheme'
 import usePortfolioData from '@/hooks/usePortfolioData'
 import ProjectsScene from '@/composants/ui/projets3d/ProjectsScene'
 import { genererPositions } from '@/composants/ui/projets3d/scenePositions'
-import ProjectsVerticalRail from '@/composants/ui/projets3d/ProjectsVerticalRail'
 import ProjectDetailOverlay from '@/composants/ui/projets3d/ProjectDetailOverlay'
 import { gsap, ScrollTrigger, EASE, MEDIA, useGSAP, mouvementReduit } from '@/composants/portfolio/moteur/gsap'
 import { animerAttributs, animerBandeau } from '@/composants/portfolio/moteur/animer'
@@ -75,8 +74,14 @@ export default function ProjetsFull() {
   const [filtre, setFiltre] = useState('TOUS')
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [projetSelectionne, setProjetSelectionne] = useState(null)
-  const [projetApercuIndex, setProjetApercuIndex] = useState(0)
   const [survol, setSurvol] = useState(null)
+  // Visite guidée : un projet après l'autre, sans empêcher la manipulation
+  const [focusIndex, setFocusIndex] = useState(0)
+  const [enPause, setEnPause] = useState(() => mouvementReduit())
+  const [manipule, setManipule] = useState(false)
+  const [sceneVisible, setSceneVisible] = useState(false)
+  const reprise = useRef(null)
+  const sceneRef = useRef(null)
 
   const { projets: projetsData } = usePortfolioData(PROJETS_PAR_DEFAUT, [])
   const projets = useMemo(() => projetsData.map((p, i) => ({
@@ -109,9 +114,29 @@ export default function ProjetsFull() {
   }, [])
 
   const projetsFiltres = filtre === 'TOUS' ? projets : projets.filter((p) => p.type === filtre)
-  const previewIndex = projetsFiltres.length > 0 ? Math.min(projetApercuIndex, projetsFiltres.length - 1) : 0
-  const positions = useMemo(() => genererPositions(projetsFiltres.length), [projetsFiltres.length])
-  const previewTarget = projetSelectionne ? null : positions[previewIndex] || null
+  const nb = projetsFiltres.length
+  const iFocus = nb > 0 ? Math.min(focusIndex, nb - 1) : 0
+  const projetFocus = projetsFiltres[iFocus]
+  const positions = useMemo(() => genererPositions(nb), [nb])
+  const enLecture = !enPause && !manipule && !projetSelectionne && sceneVisible && nb > 1
+  const aller = (i) => setFocusIndex(((i % nb) + nb) % nb)
+
+  // Après une manipulation, la visite reprend seule au bout de quelques secondes
+  const surManipulation = (actif) => {
+    clearTimeout(reprise.current)
+    if (actif) setManipule(true)
+    else reprise.current = setTimeout(() => setManipule(false), 5000)
+  }
+  useEffect(() => () => clearTimeout(reprise.current), [])
+
+  // La visite ne tourne que lorsque la scène est à l'écran
+  useEffect(() => {
+    const el = sceneRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(([e]) => setSceneVisible(e.isIntersecting), { threshold: 0.35 })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
 
   // Chorégraphie de la page
   useGSAP(() => {
@@ -198,36 +223,54 @@ export default function ProjetsFull() {
             aria-pressed={filtre === cle}
             className={filtre === cle ? 'est-actif' : ''}
             style={{ '--c': couleur }}
-            onClick={() => setFiltre(cle)}
+            onClick={() => { setFiltre(cle); setFocusIndex(0) }}
           >
             {cle !== 'TOUS' && <i aria-hidden="true" />}{label}
           </button>
         ))}
       </div>
 
-      <section className="pj-scene" data-scene aria-label="Exploration 3D des projets">
+      <section className="pj-scene" data-scene ref={sceneRef} aria-label="Exploration 3D des projets">
         <ProjectsScene
           projets={projetsFiltres}
           categories={CATEGORIES}
           filtreActif={filtre}
-          projetSelectionne={projetSelectionne}
+          focusIndex={iFocus}
+          enLecture={enLecture}
+          onFocus={aller}
           onSelectProjet={setProjetSelectionne}
+          onManipulation={surManipulation}
           isMobile={isMobile}
           positions={positions}
-          previewTarget={previewTarget}
         />
-        {previewTarget && projetsFiltres[previewIndex] && (
-          <p className="pj-scene__apercu" style={{ color: CATEGORIES[projetsFiltres[previewIndex]?.type]?.color || a }}>
-            {projetsFiltres[previewIndex].titre} · {CATEGORIES[projetsFiltres[previewIndex]?.type]?.label || ''} — en aperçu
-          </p>
+        <p className="pj-scene__aide" aria-hidden="true">{isMobile ? 'Glissez pour tourner · pincez pour zoomer' : 'Glissez pour tourner · molette pour zoomer'}</p>
+        {projetFocus && (
+          <aside className="pj-focus" style={{ '--c': CATEGORIES[projetFocus.type]?.color || a }} aria-live="polite">
+            <div className="pj-focus__tete">
+              <span className="pj-focus__num">{String(iFocus + 1).padStart(2, '0')} / {String(nb).padStart(2, '0')}</span>
+              <span className="pj-focus__cat"><i aria-hidden="true" />{CATEGORIES[projetFocus.type]?.label || projetFocus.categorie}</span>
+            </div>
+            <div className="pj-focus__corps" key={projetFocus.num}>
+              <h2 className="pj-focus__titre">{projetFocus.titre}</h2>
+              <p className="pj-focus__desc">{projetFocus.desc}</p>
+              <ul className="pj-focus__tags">{projetFocus.tags.slice(0, 4).map((t) => <li key={t}>{t}</li>)}</ul>
+            </div>
+            <div className="pj-focus__barre" aria-hidden="true">
+              <i key={`${filtre}-${iFocus}`} className={enLecture ? 'est-lecture' : ''} onAnimationEnd={() => aller(iFocus + 1)} />
+            </div>
+            <div className="pj-focus__actions">
+              <button type="button" className="pj-focus__rond" onClick={() => aller(iFocus - 1)} aria-label="Projet précédent">←</button>
+              <button type="button" className="pj-focus__rond" onClick={() => setEnPause((v) => !v)} aria-label={enPause ? 'Reprendre la visite' : 'Mettre la visite en pause'}>{enPause ? '▶' : 'II'}</button>
+              <button type="button" className="pj-focus__rond" onClick={() => aller(iFocus + 1)} aria-label="Projet suivant">→</button>
+              <button type="button" className="pf-btn pf-btn--a pj-focus__ouvrir" onClick={() => setProjetSelectionne(projetFocus)}><span>Voir le projet</span></button>
+            </div>
+            <ol className="pj-focus__points" aria-label="Choisir un projet">
+              {projetsFiltres.map((p, i) => (
+                <li key={p.num}><button type="button" className={i === iFocus ? 'est-actif' : ''} onClick={() => aller(i)} aria-label={p.titre} aria-current={i === iFocus} /></li>
+              ))}
+            </ol>
+          </aside>
         )}
-        <ProjectsVerticalRail
-          projets={projetsFiltres}
-          projetApercuIndex={projetApercuIndex}
-          onNaviguerApercu={setProjetApercuIndex}
-          categories={CATEGORIES}
-          isMobile={isMobile}
-        />
       </section>
 
       <section className="pj-index-section" aria-label="Index des projets">

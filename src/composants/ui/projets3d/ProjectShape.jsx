@@ -9,7 +9,8 @@ const easeOutBack = (t) => {
   return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2)
 }
 
-export default function ProjectShape({ projet, position, categoryColor, onSelect, isDimmed, isSelected, hasSelection, isMobile, idx, sceneStartTime }) {
+export default function ProjectShape({ projet, position, categoryColor, onSelect, isDimmed, isSelected, estEnRetrait = false, hasSelection, isMobile, idx, sceneStartTime }) {
+  const retraitRef = useRef(1)
   const groupRef = useRef()
   const orbitRef = useRef()
   const [hovered, setHovered] = useState(false)
@@ -31,7 +32,6 @@ export default function ProjectShape({ projet, position, categoryColor, onSelect
       (loadedTexture) => {
         if (!active) return
         loadedTexture.colorSpace = SRGBColorSpace
-        console.log('[ProjectShape] Texture chargée avec succès:', safeImageUrl)
         setTexture(loadedTexture)
       },
       undefined,
@@ -66,10 +66,13 @@ export default function ProjectShape({ projet, position, categoryColor, onSelect
     const bob = shouldAnimate ? Math.sin(state.clock.elapsedTime * 1.2 + pos[0] + pos[1]) * 0.15 : 0
     groupRef.current.position.y = pos[1] + bob
 
-    const targetScale = isSelected ? 1.35 : hovered ? 1.15 : 1
-    const scaleFallback = safeStartTime ? targetScale * introScale : targetScale
-    const finalScale = safeStartTime ? targetScale * introScale : scaleFallback
+    // Mise au point : le projet ciblé grandit, les autres passent en retrait
+    const targetScale = isSelected ? 1.45 : hovered ? 1.15 : estEnRetrait ? 0.9 : 1
+    const k = Math.min(delta * 3, 1)
+    const actuelle = groupRef.current.scale.x || 0.001
+    const finalScale = (safeStartTime ? introScale : 1) * (actuelle + (targetScale - actuelle) * k)
     groupRef.current.scale.set(finalScale, finalScale, finalScale)
+    retraitRef.current += ((estEnRetrait && !hovered ? 0.45 : 1) - retraitRef.current) * k
 
     const orbitSpeed = 0.7 + (idx % 5) * 0.05
     const speed = hovered ? orbitSpeed * 1.7 : orbitSpeed
@@ -90,7 +93,9 @@ export default function ProjectShape({ projet, position, categoryColor, onSelect
         if (child.material.transparent !== true) {
           child.material.transparent = true
         }
-        child.material.opacity = isDimmed ? 0.35 * introOpacity : introOpacity
+        // Chaque matériau garde sa propre opacité de base (halo discret, carte pleine)
+        if (child.material.userData.base === undefined) child.material.userData.base = child.material.opacity
+        child.material.opacity = child.material.userData.base * (isDimmed ? 0.35 : retraitRef.current) * introOpacity
       }
     }
   })
@@ -111,8 +116,9 @@ export default function ProjectShape({ projet, position, categoryColor, onSelect
     document.body.style.cursor = 'default'
   }
 
-  const handleClick = () => {
-    if (isDimmed) return
+  const handleClick = (e) => {
+    // Un glisser pour tourner la scène ne doit pas ouvrir le projet
+    if (isDimmed || e.delta > 6) return
     onSelect(projet)
   }
 

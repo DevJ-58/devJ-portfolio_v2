@@ -3,7 +3,6 @@ import { useFrame } from '@react-three/fiber'
 import { MathUtils } from 'three'
 
 export default function SceneParallaxGroup({ children, actif }) {
-  console.log('parallax actif:', actif)
   const groupRef = useRef()
   const mouseRef = useRef({ x: 0, y: 0 })
 
