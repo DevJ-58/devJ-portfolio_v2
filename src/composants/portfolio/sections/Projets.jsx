@@ -96,7 +96,7 @@ export default function Projets({ projets }) {
     const titre = fiche.querySelector('[data-titre]')
     // fromTo : un survol rapide interrompt l'animation précédente, les
     // valeurs d'arrivée doivent rester fixes
-    const split = SplitText.create(titre, { type: 'words,chars', mask: 'words' })
+    const split = SplitText.create(titre, { linesClass: 'pf-ligne', wordsClass: 'pf-mot', charsClass: 'pf-car', type: 'words,chars', mask: 'words' })
     const tl = gsap.timeline()
     tl.fromTo(split.chars, { yPercent: 105 }, { yPercent: 0, duration: 0.8, ease: EASE.sortie, stagger: 0.015 })
       .fromTo(fiche.querySelectorAll('[data-change]'), { y: 16, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.6, ease: EASE.doux, stagger: 0.05 }, 0.08)

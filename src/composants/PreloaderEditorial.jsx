@@ -1,304 +1,117 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import utiliserTheme from '@/store/utiliserTheme'
 import devjlogImg from '@/assets/devjlog.png'
+import { gsap, SplitText, useGSAP, EASE, mouvementReduit } from '@/composants/portfolio/moteur/gsap'
+import { variablesTheme } from '@/composants/portfolio/moteur/contexte'
+import '@/composants/portfolio/portfolio.css'
 
-const DUREE_TOTALE = 7000 // 30 secondes
-const DUREE_SORTIE = 1000
+// Ressources réellement attendues avant d'ouvrir le portfolio
+const RESSOURCES = ['/asset/2026010323251463.png', '/asset/2026010323253284.png', devjlogImg]
+const DUREE_MIN = 2400 // ms : le temps de lire l'écran, même si tout est en cache
+const DUREE_MAX = 6000 // ms : on ouvre quoi qu'il arrive
+const CHAPITRES = ['Portrait', 'Parcours', 'Projets', 'Contact']
+const ETAPES = ['Initialisation', 'Chargement des images', 'Composition typographique', 'Mise en page', 'Prêt']
 
-export default function PreloaderEditorial({ onTermine }) {
+// Préchargeur éditorial : « </DevJ> » se remplit au rythme du chargement
+// réel (polices + images du portfolio), puis deux volets s'ouvrent sur le
+// hero. onSortie : début de l'ouverture (l'intro du hero démarre) ;
+// onTermine : préchargeur retiré.
+export default function PreloaderEditorial({ onSortie, onTermine }) {
   const { theme, mode, getThemeEffectif } = utiliserTheme()
   const eff = getThemeEffectif ? getThemeEffectif() : theme
   const isLight = mode === 'light'
-  const a = eff.accent
-  const aRgb = eff.accentRgb
-  // Texte en accent semi-transparent : en mode clair, opacité relevée pour rester lisible
-  const ta = (o) => `rgba(${aRgb},${isLight ? Math.min(1, 0.72 + o * 0.28) : o})`
+  const ref = useRef(null)
 
-  const [sortie, setSortie] = useState(false)
-  const [pct, setPct] = useState(0)
-  const [motIdx, setMotIdx] = useState(0)
-  const [sectionsActives, setSectionsActives] = useState(Array(4).fill(false))
-  const [barres, setBarres] = useState(Array(24).fill(3))
-  const [isMobile, setIsMobile] = useState(false)
-  const fillRef = useRef(null)
-  const loaderRef = useRef(null)
-  const irisRef = useRef(null)
-  const debutRef = useRef(Date.now())
+  useGSAP(() => {
+    const q = gsap.utils.selector(ref)
+    const reduit = mouvementReduit()
+    const compteur = q('[data-compteur]')[0]
+    const remplissage = q('[data-remplissage]')[0]
+    const etape = q('[data-etape]')[0]
+    const chapitres = q('[data-chapitre]')
+    const barre = q('[data-barre]')[0]
 
-  const mots = [
-    'INITIALISATION', 'CONNEXION AU SERVEUR', 'CHARGEMENT DES ASSETS',
-    'COMPILATION', 'OPTIMISATION DES IMAGES', 'RENDU DES COMPOSANTS',
-    'VÉRIFICATION', 'MISE EN PAGE', 'FINALISATION', 'PRÊT'
-  ]
-  const caracteres = ['<', '/', 'D', 'e', 'v', 'J', '>']
-  const sections = ['PORTRAIT', 'PARCOURS', 'PROJETS', 'CONTACT']
+    // Progression réelle
+    let charges = 0
+    const total = RESSOURCES.length + 1
+    const plus = () => { charges = Math.min(total, charges + 1) }
+    RESSOURCES.forEach((src) => { const img = new Image(); img.onload = plus; img.onerror = plus; img.src = src })
+    ;(document.fonts?.ready ?? Promise.resolve()).then(plus)
 
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < 768)
-    onResize()
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [])
-
-  useEffect(() => {
-    const timers = []
-    const intervals = []
-    debutRef.current = Date.now()
-
-    sections.forEach((_, i) => {
-      timers.push(setTimeout(() => {
-        setSectionsActives(prev => {
-          const copy = [...prev]
-          copy[i] = true
-          return copy
-        })
-      }, (DUREE_TOTALE / 5) * (i + 1)))
-    })
-
-    const progressInterval = setInterval(() => {
-      const elapsed = Date.now() - debutRef.current
-      const pctLocal = Math.min(100, Math.round((elapsed / DUREE_TOTALE) * 100))
-      setPct(pctLocal)
-      if (fillRef.current) {
-        fillRef.current.style.clipPath = `inset(${100 - pctLocal}% 0 0 0)`
-      }
-      if (pctLocal >= 100) clearInterval(progressInterval)
-    }, 80)
-    intervals.push(progressInterval)
-
-    const motInterval = setInterval(() => {
-      setMotIdx(prev => (prev + 1) % mots.length)
-    }, DUREE_TOTALE / mots.length)
-    intervals.push(motInterval)
-
-    const barInterval = setInterval(() => {
-      setBarres(prev => prev.map(() => 3 + Math.random() * 13))
-    }, 160)
-    intervals.push(barInterval)
-
-    timers.push(setTimeout(() => {
-      clearInterval(progressInterval)
-      clearInterval(motInterval)
-      clearInterval(barInterval)
-    }, DUREE_TOTALE))
-
-    timers.push(setTimeout(() => {
-      setSortie(true)
-      if (loaderRef.current) {
-        loaderRef.current.style.transform = 'scale(1.08)'
-        loaderRef.current.style.opacity = '0'
-      }
-      if (irisRef.current) {
-        irisRef.current.style.clipPath = 'circle(0% at 50% 50%)'
-      }
-    }, DUREE_TOTALE))
-
-    timers.push(setTimeout(() => {
-      onTermine && onTermine()
-    }, DUREE_TOTALE + DUREE_SORTIE))
-
-    return () => {
-      timers.forEach(clearTimeout)
-      intervals.forEach(clearInterval)
+    const split = SplitText.create(q('[data-logo-plein]')[0], { linesClass: 'pf-ligne', wordsClass: 'pf-mot', charsClass: 'pf-car', type: 'chars' })
+    const splitVide = SplitText.create(q('[data-logo-vide]')[0], { linesClass: 'pf-ligne', wordsClass: 'pf-mot', charsClass: 'pf-car', type: 'chars' })
+    if (!reduit) {
+      gsap.timeline({ defaults: { ease: EASE.sortie } })
+        .from([splitVide.chars, split.chars], { yPercent: 110, duration: 1.2, stagger: 0.05 })
+        .from(q('[data-meta] > *, [data-pied] > *'), { autoAlpha: 0, y: 14, duration: 0.8, stagger: 0.06 }, 0.2)
     }
-  }, [])
+
+    const debut = performance.now()
+    const affiche = { v: 0 }
+    let fini = false
+
+    const sortir = () => {
+      fini = true
+      gsap.ticker.remove(tic)
+      onSortie?.()
+      if (reduit) { onTermine?.(); return }
+      gsap.timeline({ onComplete: () => onTermine?.() })
+        .to(split.chars, { yPercent: -110, duration: 0.7, ease: EASE.rideau, stagger: 0.03 })
+        .to(splitVide.chars, { yPercent: -110, duration: 0.7, ease: EASE.rideau, stagger: 0.03 }, 0)
+        .to(q('[data-meta], [data-pied], [data-sous-titre]'), { autoAlpha: 0, duration: 0.4 }, 0)
+        .to(q('[data-volet-haut]'), { yPercent: -100, duration: 1.15, ease: EASE.drame }, 0.35)
+        .to(q('[data-volet-bas]'), { yPercent: 100, duration: 1.15, ease: EASE.drame }, 0.35)
+    }
+
+    const tic = () => {
+      if (fini) return
+      const t = performance.now() - debut
+      // La progression affichée suit le chargement, jamais plus vite que DUREE_MIN
+      let cible = Math.min(charges / total, t / DUREE_MIN)
+      if (t > DUREE_MAX) cible = 1
+      affiche.v += (cible - affiche.v) * (reduit ? 1 : 0.09)
+      const p = Math.min(1, affiche.v)
+      const pct = Math.round(p * 100)
+      compteur.textContent = String(pct).padStart(3, '0')
+      remplissage.style.clipPath = `inset(${100 - p * 100}% 0 0 0)`
+      barre.style.transform = `scaleX(${p})`
+      etape.textContent = ETAPES[Math.min(ETAPES.length - 1, Math.floor(p * (ETAPES.length - 1)))]
+      chapitres.forEach((c, i) => c.classList.toggle('est-allume', p >= (i + 1) / (CHAPITRES.length + 0.5)))
+      if (p > 0.995) sortir()
+    }
+    gsap.ticker.add(tic)
+    return () => gsap.ticker.remove(tic)
+  }, { scope: ref })
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      zIndex: 9999,
-      pointerEvents: sortie ? 'none' : 'auto',
-    }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,800;1,9..144,500&family=Space+Mono:wght@400;700&display=swap');
-      `}</style>
+    <div className={`pf-pre ${isLight ? 'est-clair' : 'est-sombre'}`} ref={ref} style={variablesTheme(eff, isLight)} role="status" aria-label="Chargement du portfolio">
+      <div className="pf-pre__volet pf-pre__volet--haut" data-volet-haut />
+      <div className="pf-pre__volet pf-pre__volet--bas" data-volet-bas />
 
-      <div ref={loaderRef} style={{
-        position: 'absolute',
-        inset: 0,
-        zIndex: 10,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        padding: isMobile ? '20px 18px 24px' : '32px 40px',
-        boxSizing: 'border-box',
-        fontFamily: 'Space Mono, monospace',
-        transition: 'transform 0.9s cubic-bezier(.7,0,.3,1), opacity 0.7s ease 0.1s',
-      }}>
-
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          overflow: 'hidden',
-          zIndex: 0,
-        }}>
-          <img
-            src={devjlogImg}
-            alt=""
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center 30%',
-              filter: 'blur(4px) saturate(1.15)',
-              transform: 'scale(1.35)',
-              opacity: isLight ? 0.45 : 0.7,
-            }}
-          />
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            background: `radial-gradient(circle at 50% 50%, ${eff.fond} 0%, ${eff.fond} 25%, transparent 75%)`,
-          }} />
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            background: eff.fond,
-            opacity: isLight ? 0.25 : 0.35,
-          }} />
+      <div className="pf-pre__contenu">
+        <div className="pf-pre__meta" data-meta>
+          <span><i className="pf-losange" />Vol. I · N°01</span>
+          <span>Éd. <b data-compteur>000</b></span>
         </div>
 
-        <div style={{ position: 'absolute', inset: isMobile ? 20 : 32, pointerEvents: 'none', zIndex: 1 }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, width: isMobile ? 10 : 14, height: isMobile ? 10 : 14, borderTop: `1px solid rgba(${aRgb},0.5)`, borderLeft: `1px solid rgba(${aRgb},0.5)` }} />
-          <div style={{ position: 'absolute', top: 0, right: 0, width: isMobile ? 10 : 14, height: isMobile ? 10 : 14, borderTop: `1px solid rgba(${aRgb},0.5)`, borderRight: `1px solid rgba(${aRgb},0.5)` }} />
-          <div style={{ position: 'absolute', bottom: 0, left: 0, width: isMobile ? 10 : 14, height: isMobile ? 10 : 14, borderBottom: `1px solid rgba(${aRgb},0.5)`, borderLeft: `1px solid rgba(${aRgb},0.5)` }} />
-          <div style={{ position: 'absolute', bottom: 0, right: 0, width: isMobile ? 10 : 14, height: isMobile ? 10 : 14, borderBottom: `1px solid rgba(${aRgb},0.5)`, borderRight: `1px solid rgba(${aRgb},0.5)` }} />
-        </div>
-
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 8 : 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 10, height: 10, border: `1px solid ${a}`, transform: 'rotate(45deg)' }} />
-            <span style={{ fontSize: isMobile ? 8 : 11, letterSpacing: '0.35em', color: isLight ? 'rgba(20,20,20,0.76)' : 'rgba(242,240,236,0.4)' }}>
-              VOL. I · N°01
+        <div className="pf-pre__centre">
+          <div className="pf-pre__logo" aria-hidden="true">
+            <span className="pf-pre__logo-vide" data-logo-vide>&lt;/DevJ&gt;</span>
+            <span className="pf-pre__logo-plein" data-remplissage>
+              <span data-logo-plein>&lt;/DevJ&gt;</span>
             </span>
           </div>
-          <span style={{ fontSize: isMobile ? 8 : 11, letterSpacing: '0.2em', color: isLight ? 'rgba(20,20,20,0.72)' : 'rgba(242,240,236,0.3)' }}>
-            ÉD. {String(pct).padStart(3, '0')}
-          </span>
+          <p className="pf-pre__sous-titre" data-sous-titre>Développeur logiciel · UI/UX · IA</p>
         </div>
 
-        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
-          <div style={{
-            position: 'relative',
-            display: 'inline-block',
-            fontFamily: 'Fraunces, serif',
-            fontWeight: 800,
-            fontSize: isMobile ? 'clamp(44px, 16vw, 84px)' : 'clamp(72px, 13vw, 128px)',
-            letterSpacing: '-0.02em',
-            lineHeight: 1,
-          }}>
-            <div style={{ opacity: 1 }}>
-              {caracteres.map((c, i) => (
-                <span key={i} style={{
-                  color: (i === 0 || i === 6)
-                    ? (isLight ? 'rgba(20,20,20,0.14)' : 'rgba(242,240,236,0.14)')
-                    : `rgba(${aRgb},0.14)`,
-                }}>
-                  {c}
-                </span>
-              ))}
-            </div>
-
-            <div ref={fillRef} style={{
-              position: 'absolute',
-              inset: 0,
-              overflow: 'hidden',
-              clipPath: 'inset(100% 0 0 0)',
-            }}>
-              {caracteres.map((c, i) => (
-                <span key={i} style={{ color: (i === 0 || i === 6) ? eff.texte : a }}>
-                  {c}
-                </span>
-              ))}
-              <div style={{
-                position: 'absolute',
-                left: -4, right: -4, top: 0, height: 3,
-                background: `linear-gradient(90deg, transparent, rgba(${aRgb},0.9), transparent)`,
-                boxShadow: `0 0 8px 1px rgba(${aRgb},0.6)`,
-              }} />
-            </div>
-          </div>
-
-          <div style={{
-            marginTop: isMobile ? 10 : 14,
-            fontSize: isMobile ? 9 : 11,
-            letterSpacing: isMobile ? '0.3em' : '0.5em',
-            color: ta(0.65),
-          }}>
-            DÉVELOPPEUR LOGICIEL · UI/UX
-          </div>
-
-          <div style={{
-            marginTop: isMobile ? 18 : 28,
-            fontSize: isMobile ? 13 : 15,
-            letterSpacing: '0.25em',
-            color: ta(0.7),
-          }}>
-            {String(pct).padStart(2, '0')}%
-          </div>
-
-          <div style={{
-            marginTop: isMobile ? 16 : 24,
-            display: 'flex',
-            gap: isMobile ? 10 : 14,
-            justifyContent: 'center',
-            flexWrap: isMobile ? 'wrap' : 'nowrap',
-            fontSize: isMobile ? 8 : 9,
-            letterSpacing: '0.15em',
-          }}>
-            {sections.map((s, i) => (
-              <span key={s} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <span style={{
-                  color: sectionsActives[i]
-                    ? `rgba(${aRgb},0.75)`
-                    : (isLight ? 'rgba(20,20,20,0.2)' : 'rgba(242,240,236,0.2)'),
-                  transition: 'color 0.3s',
-                }}>
-                  {s}
-                </span>
-                {i < sections.length - 1 && (
-                  <span style={{ color: isLight ? 'rgba(20,20,20,0.66)' : 'rgba(242,240,236,0.15)' }}>·</span>
-                )}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'flex-end', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 8 : 0, marginBottom: isMobile ? 10 : 14 }}>
-            <span style={{ fontSize: isMobile ? 9 : 10, letterSpacing: '0.15em', color: isLight ? 'rgba(20,20,20,0.72)' : 'rgba(242,240,236,0.3)' }}>
-              CI · 2026
-            </span>
-            <span style={{ fontSize: isMobile ? 9 : 10, letterSpacing: '0.2em', color: isLight ? 'rgba(20,20,20,0.74)' : 'rgba(242,240,236,0.35)' }}>
-              {mots[motIdx]}
-            </span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: isMobile ? 2 : 3, justifyContent: 'center', height: isMobile ? 18 : 24 }}>
-            {barres.map((h, i) => (
-              <div key={i} style={{
-                width: isMobile ? 2 : 3,
-                height: h * (isMobile ? 1.2 : 1.5),
-                background: `rgba(${aRgb},${0.25 + (h / 16) * 0.5})`,
-                transition: 'height 0.15s ease',
-              }} />
-            ))}
-          </div>
+        <div className="pf-pre__pied" data-pied>
+          <ul>
+            {CHAPITRES.map((c, i) => <li key={c} data-chapitre><em>{String(i + 1).padStart(2, '0')}</em>{c}</li>)}
+          </ul>
+          <span className="pf-pre__etape" data-etape>{ETAPES[0]}</span>
+          <span className="pf-pre__barre"><i data-barre /></span>
         </div>
       </div>
-
-      <div ref={irisRef} style={{
-        position: 'absolute',
-        inset: 0,
-        zIndex: 1,
-        background: eff.fond,
-        clipPath: 'circle(150% at 50% 50%)',
-        transition: 'clip-path 1s cubic-bezier(.7,0,.3,1)',
-        pointerEvents: 'none',
-      }} />
     </div>
   )
 }
-

@@ -53,6 +53,14 @@ export default function Experience() {
   const [modeVocal, setModeVocal] = useState(true)
   const [modeChat, setModeChat] = useState(false)
   const [modePortfolio, setModePortfolio] = useState(false)
+  // Le portfolio reste affiché pendant son animation de fermeture (760 ms)
+  const [portfolioVisible, setPortfolioVisible] = useState(false)
+  if (modePortfolio && !portfolioVisible) setPortfolioVisible(true)
+  useEffect(() => {
+    if (modePortfolio || !portfolioVisible) return
+    const t = setTimeout(() => setPortfolioVisible(false), 760)
+    return () => clearTimeout(t)
+  }, [modePortfolio, portfolioVisible])
   const [modeParler, setModeParler] = useState(
     visiteur.microActif === true
   )
@@ -901,8 +909,8 @@ export default function Experience() {
           </div>
         </div>
 
-        {modePortfolio && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 50, overflow: 'hidden' }}>
+        {portfolioVisible && (
+          <div className={`pf-overlay${modePortfolio ? '' : ' est-sortie'}`} style={{ position: 'fixed', inset: 0, zIndex: 50, overflow: 'hidden' }}>
             <Portfolio ref={portfolioRef} onClose={() => { setModePortfolio(false); setInputPortfolioVisible(false) }} />
             {/* CORRECTION 2B — Bouton classeur + zone d'écriture dans le portfolio mobile */}
             <div style={{
@@ -1416,11 +1424,11 @@ export default function Experience() {
         </div>
       </div>
 
-      {modePortfolio && (
+      {portfolioVisible && (
         <>
-          <div style={{ 
-            position: 'absolute', 
-            inset: 0, 
+          <div className={`pf-overlay${modePortfolio ? '' : ' est-sortie'}`} style={{
+            position: 'absolute',
+            inset: 0,
             zIndex: 50,
             overflow: 'hidden'
           }}>

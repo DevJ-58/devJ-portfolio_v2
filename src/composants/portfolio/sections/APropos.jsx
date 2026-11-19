@@ -26,6 +26,7 @@ export default function APropos() {
     // redécoupé (polices, redimensionnement) sans toucher à l'épinglage.
     if (bureau) ScrollTrigger.create({ trigger: scene, start: 'top 12%', end: '+=130%', pin: true })
     SplitText.create(manifeste, {
+      linesClass: 'pf-ligne', wordsClass: 'pf-mot', charsClass: 'pf-car',
       type: 'words', autoSplit: true, aria: 'auto',
       onSplit: (self) => gsap.fromTo(self.words, { opacity: 0.12 }, {
         opacity: 1, ease: 'none', stagger: 0.12,

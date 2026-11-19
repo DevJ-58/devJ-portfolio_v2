@@ -40,7 +40,7 @@ export default function Methode() {
     if (premier.current) { premier.current = false; return }
     const p = panneauRef.current
     if (!p || mouvementReduit()) return
-    const split = SplitText.create(p.querySelector('[data-titre]'), { type: 'lines,words,chars', mask: 'lines' })
+    const split = SplitText.create(p.querySelector('[data-titre]'), { linesClass: 'pf-ligne', wordsClass: 'pf-mot', charsClass: 'pf-car', type: 'lines,words,chars', mask: 'lines' })
     const tl = gsap.timeline()
     tl.fromTo(split.chars, { yPercent: 110 }, { yPercent: 0, duration: 0.9, ease: EASE.sortie, stagger: 0.018 })
       .fromTo(p.querySelectorAll('[data-change]'), { y: 26, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.7, ease: EASE.doux, stagger: 0.06 }, 0.1)

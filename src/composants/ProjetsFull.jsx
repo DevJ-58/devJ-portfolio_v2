@@ -1,375 +1,291 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import Lenis from 'lenis'
 import utiliserTheme from '@/store/utiliserTheme'
 import usePortfolioData from '@/hooks/usePortfolioData'
 import ProjectsScene from '@/composants/ui/projets3d/ProjectsScene'
 import { genererPositions } from '@/composants/ui/projets3d/scenePositions'
 import ProjectsVerticalRail from '@/composants/ui/projets3d/ProjectsVerticalRail'
 import ProjectDetailOverlay from '@/composants/ui/projets3d/ProjectDetailOverlay'
+import { gsap, ScrollTrigger, EASE, MEDIA, useGSAP, mouvementReduit } from '@/composants/portfolio/moteur/gsap'
+import { animerAttributs, animerBandeau } from '@/composants/portfolio/moteur/animer'
+import { variablesTheme } from '@/composants/portfolio/moteur/contexte'
+import '@/composants/portfolio/portfolio.css'
 
 const PROJETS_PAR_DEFAUT = [
   {
-    num: '01', titre: 'Eliko Voyage',
-    categorie: 'Agence de voyage',
-    type: 'frontend',
+    num: '01', titre: 'Eliko Voyage', categorie: 'Agence de voyage', type: 'frontend',
     tags: ['HTML/CSS', 'JavaScript', 'React'],
     desc: "Interface moderne pour agence de voyage permettant la réservation en ligne et la gestion de séjours personnalisés.",
-    img: '/asset/eliko.PNG',
-    lien: 'https://devj-58.github.io/eliko_voyage/',
-    annee: '2024',
-    status: 'EN LIGNE',
+    img: '/asset/eliko.PNG', lien: 'https://devj-58.github.io/eliko_voyage/', annee: '2024', status: 'EN LIGNE',
   },
   {
-    num: '02', titre: 'SanteAI',
-    categorie: 'Télémédecine & IA',
-    type: 'ia',
+    num: '02', titre: 'SanteAI', categorie: 'Télémédecine & IA', type: 'ia',
     tags: ['React', 'Google AI', 'Python'],
     desc: "Plateforme de télémédecine avec IA intégrée, consultations vidéo et gestion de dossiers médicaux.",
-    img: '/asset/santeAI.jpg',
-    lien: 'https://devpost.com/software/santeai',
-    annee: '2024',
-    status: 'EN LIGNE',
+    img: '/asset/santeAI.jpg', lien: 'https://devpost.com/software/santeai', annee: '2024', status: 'EN LIGNE',
   },
   {
-    num: '03', titre: 'Bibliothèque UIYA',
-    categorie: 'Application éducative',
-    type: 'fullstack',
+    num: '03', titre: 'Bibliothèque UIYA', categorie: 'Application éducative', type: 'fullstack',
     tags: ['HTML', 'CSS', 'JavaScript'],
     desc: "Système complet de gestion de bibliothèque déployé pour l'Université Internationale de Yamoussoukro.",
-    img: '/asset/uiya.PNG',
-    lien: 'https://bibliotheque.igl-uiya.com/',
-    annee: '2024',
-    status: 'EN PRODUCTION',
+    img: '/asset/uiya.PNG', lien: 'https://bibliotheque.igl-uiya.com/', annee: '2024', status: 'EN PRODUCTION',
   },
   {
-    num: '04', titre: 'GSB — Gestion de Stock',
-    categorie: 'Application de gestion',
-    type: 'fullstack',
+    num: '04', titre: 'GSB — Gestion de Stock', categorie: 'Application de gestion', type: 'fullstack',
     tags: ['PHP', 'Laravel', 'MySQL'],
     desc: "Application full-stack de gestion d'inventaire avec alertes automatiques et rapports exportables.",
-    img: '/asset/GSB.jpg',
-    lien: null,
-    annee: '2023',
-    status: 'PRIVÉ',
+    img: '/asset/GSB.jpg', lien: null, annee: '2023', status: 'PRIVÉ',
   },
   {
-    num: '05', titre: 'ZikmuCI',
-    categorie: 'Culture ivoirienne',
-    type: 'impact',
+    num: '05', titre: 'ZikmuCI', categorie: 'Culture ivoirienne', type: 'impact',
     tags: ['HTML5', 'CSS3', 'JavaScript'],
     desc: "Plateforme musicale ivoirienne célébrant le Coupé-Décalé, Zouglou et l'Afrobeat.",
-    img: '/asset/zikmu.jpg',
-    lien: 'https://devj-58.github.io/ZikmuCi/index.html',
-    annee: '2023',
-    status: 'EN LIGNE',
+    img: '/asset/zikmu.jpg', lien: 'https://devj-58.github.io/ZikmuCi/index.html', annee: '2023', status: 'EN LIGNE',
   },
   {
-    num: '06', titre: 'Terasse',
-    categorie: 'Sensibilisation environnement',
-    type: 'impact',
+    num: '06', titre: 'Terasse', categorie: 'Sensibilisation environnement', type: 'impact',
     tags: ['HTML', 'CSS', 'JavaScript'],
     desc: "Site de sensibilisation au changement climatique en Côte d'Ivoire.",
-    img: '/asset/terasse.jpg',
-    lien: 'https://terasse-ivoire.vercel.app',
-    annee: '2023',
-    status: 'EN LIGNE',
+    img: '/asset/terasse.jpg', lien: 'https://terasse-ivoire.vercel.app', annee: '2023', status: 'EN LIGNE',
   },
 ]
 
 const CATEGORIES = {
-  frontend:  { label: 'Frontend',      icon: 'layout', color: '#5DCAA5', textDark: true },
-  fullstack: { label: 'Fullstack',     icon: 'server', color: '#378ADD', textDark: false },
-  ia:        { label: 'IA & Data',     icon: 'cpu',    color: '#D4537E', textDark: false },
-  impact:    { label: 'Impact social', icon: 'heart',  color: '#EF9F27', textDark: true },
+  frontend: { label: 'Frontend', icon: 'layout', color: '#5DCAA5', textDark: true },
+  fullstack: { label: 'Fullstack', icon: 'server', color: '#378ADD', textDark: false },
+  ia: { label: 'IA & Data', icon: 'cpu', color: '#D4537E', textDark: false },
+  impact: { label: 'Impact social', icon: 'heart', color: '#EF9F27', textDark: true },
 }
 
+// Galerie complète des projets : en-tête éditorial, filtres, scène 3D
+// (inchangée) et index en grandes lignes avec aperçu qui suit le curseur.
+// Page toujours sombre (galerie de nuit), accent du thème.
 export default function ProjetsFull() {
-  const { theme } = utiliserTheme()
-  const a = theme.accent
-  const aRgb = theme.accentRgb
+  const { theme, getThemeEffectif } = utiliserTheme()
+  const eff = getThemeEffectif ? getThemeEffectif() : theme
+  // La galerie est sombre : on garde les couleurs du mode sombre
+  const vars = { ...variablesTheme({ ...eff, accent: eff.accentVif || theme.accent, accentRgb: eff.accentVifRgb || theme.accentRgb, fond: '#050608', fondSecondaire: '#0a0c10', texte: '#f2f0ec', textHigh: 'rgba(255,255,255,0.88)', textMedium: 'rgba(255,255,255,0.74)', textMuted: 'rgba(255,255,255,0.62)', textFaint: 'rgba(255,255,255,0.5)', borderStrong: 'rgba(255,255,255,0.14)', borderMedium: 'rgba(255,255,255,0.09)', borderLight: 'rgba(255,255,255,0.06)', cardBg: 'rgba(255,255,255,0.03)', glassOverlay: 'rgba(8,10,14,0.85)', navOverlay: 'rgba(5,6,8,0.85)', shadow: 'rgba(0,0,0,0.5)' }, false) }
+  const a = vars['--a']
   const navigate = useNavigate()
+  const ref = useRef(null)
+  const filtresRef = useRef(null)
+  const indicRef = useRef(null)
+  const apercuRef = useRef(null)
   const [filtre, setFiltre] = useState('TOUS')
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [projetSelectionne, setProjetSelectionne] = useState(null)
   const [projetApercuIndex, setProjetApercuIndex] = useState(0)
+  const [survol, setSurvol] = useState(null)
 
-  // Remplacer les projets codés par le hook public avec fallback silencieux
   const { projets: projetsData } = usePortfolioData(PROJETS_PAR_DEFAUT, [])
+  const projets = useMemo(() => projetsData.map((p, i) => ({
+    ...p,
+    num: p.num || String(i + 1).padStart(2, '0'),
+    tags: Array.isArray(p.tags) ? p.tags : p.tags ? Object.values(p.tags) : [],
+  })), [projetsData])
 
   const fermerDetail = () => setProjetSelectionne(null)
 
   useEffect(() => {
     const h = () => setIsMobile(window.innerWidth < 768)
-    const handleEsc = (e) => {
-      if (e.key === 'Escape' && projetSelectionne) {
-        fermerDetail()
-      }
-    }
-
+    const echap = (e) => { if (e.key === 'Escape') setProjetSelectionne(null) }
     window.addEventListener('resize', h)
-    window.addEventListener('keydown', handleEsc)
-    return () => {
-      window.removeEventListener('resize', h)
-      window.removeEventListener('keydown', handleEsc)
-    }
-  }, [projetSelectionne])
+    window.addEventListener('keydown', echap)
+    return () => { window.removeEventListener('resize', h); window.removeEventListener('keydown', echap) }
+  }, [])
 
-  const projetsFiltres = filtre === 'TOUS'
-    ? projetsData
-    : projetsData.filter(p => p.type === filtre)
+  // Défilement fluide de la page (fenêtre)
+  useEffect(() => {
+    window.scrollTo(0, 0)
+    if (mouvementReduit()) return
+    ScrollTrigger.defaults({ scroller: window })
+    const lenis = new Lenis({ lerp: 0.09, smoothWheel: true })
+    lenis.on('scroll', ScrollTrigger.update)
+    const tic = (t) => lenis.raf(t * 1000)
+    gsap.ticker.add(tic)
+    gsap.ticker.lagSmoothing(0)
+    return () => { gsap.ticker.remove(tic); lenis.destroy() }
+  }, [])
 
-  const previewIndex = projetsFiltres.length > 0
-    ? Math.min(projetApercuIndex, projetsFiltres.length - 1)
-    : 0
-
+  const projetsFiltres = filtre === 'TOUS' ? projets : projets.filter((p) => p.type === filtre)
+  const previewIndex = projetsFiltres.length > 0 ? Math.min(projetApercuIndex, projetsFiltres.length - 1) : 0
   const positions = useMemo(() => genererPositions(projetsFiltres.length), [projetsFiltres.length])
   const previewTarget = projetSelectionne ? null : positions[previewIndex] || null
 
-  const handleSelectProjet = (projet) => {
-    setProjetSelectionne(projet)
-  }
+  // Chorégraphie de la page
+  useGSAP(() => {
+    const q = gsap.utils.selector(ref)
+    const mm = gsap.matchMedia()
+    mm.add({ anim: MEDIA.anim, bureau: MEDIA.bureau }, (c) => {
+      if (!c.conditions.anim) return
+      animerAttributs(ref.current)
+      const b = animerBandeau(q('[data-bandeau]')[0], { vitesse: 60, declencheurEl: q('[data-entete]')[0] })
+      gsap.fromTo(q('[data-scene]'),
+        { clipPath: 'inset(10% 8% 10% 8% round 40px)' },
+        { clipPath: 'inset(0% 0% 0% 0% round 20px)', ease: 'none', scrollTrigger: { trigger: q('[data-scene]')[0], start: 'top bottom', end: 'center center', scrub: true } })
+      gsap.fromTo(q('[data-ligne]'), { yPercent: 60, autoAlpha: 0 }, {
+        yPercent: 0, autoAlpha: 1, duration: 1, ease: EASE.sortie, stagger: 0.07,
+        scrollTrigger: { trigger: q('[data-index]')[0], start: 'top 80%', toggleActions: 'play none none reverse' },
+      })
+      gsap.fromTo(q('[data-monogramme]'), { yPercent: 50 }, { yPercent: 0, ease: 'none', scrollTrigger: { trigger: q('[data-pied]')[0], start: 'top bottom', end: 'bottom bottom', scrub: true } })
 
-  const handleNaviguerApercu = (index) => {
-    setProjetApercuIndex(index)
-  }
+      // Aperçu d'image qui suit le curseur au survol de l'index (bureau)
+      if (c.conditions.bureau && apercuRef.current) {
+        const ap = apercuRef.current
+        gsap.set(ap, { xPercent: -50, yPercent: -50, autoAlpha: 0, scale: 0.7 })
+        const ax = gsap.quickTo(ap, 'x', { duration: 0.6, ease: 'power3' })
+        const ay = gsap.quickTo(ap, 'y', { duration: 0.6, ease: 'power3' })
+        const index = q('[data-index]')[0]
+        const bouger = (e) => { ax(e.clientX); ay(e.clientY) }
+        const entrer = () => gsap.to(ap, { autoAlpha: 1, scale: 1, duration: 0.5, ease: EASE.sortie })
+        const sortir = () => gsap.to(ap, { autoAlpha: 0, scale: 0.7, duration: 0.4, ease: EASE.doux })
+        index.addEventListener('pointermove', bouger)
+        index.addEventListener('pointerenter', entrer)
+        index.addEventListener('pointerleave', sortir)
+        return () => {
+          b?.kill()
+          index.removeEventListener('pointermove', bouger)
+          index.removeEventListener('pointerenter', entrer)
+          index.removeEventListener('pointerleave', sortir)
+        }
+      }
+      return () => b?.kill()
+    })
+    return () => mm.revert()
+  }, { scope: ref, dependencies: [projets.length], revertOnUpdate: true })
+
+  // Indicateur des filtres qui glisse vers le filtre actif
+  useGSAP(() => {
+    const zone = filtresRef.current
+    const indic = indicRef.current
+    const actif = zone?.querySelector('[aria-pressed="true"]')
+    if (!actif || !indic) return
+    const couleur = filtre === 'TOUS' ? a : CATEGORIES[filtre]?.color || a
+    gsap.to(indic, { x: actif.offsetLeft, width: actif.offsetWidth, backgroundColor: couleur, duration: mouvementReduit() ? 0 : 0.6, ease: EASE.sortie })
+  }, { dependencies: [filtre, isMobile, projets.length] })
+
+  const filtres = [['TOUS', 'Tous', a], ...Object.entries(CATEGORIES).map(([k, c]) => [k, c.label, c.color])]
+  const apercu = projets[survol] || null
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#050505',
-      color: '#F5F5F0',
-      fontFamily: 'Inter, sans-serif',
-      overflowX: 'hidden',
-    }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,800;1,9..144,400&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
-        @keyframes fadeInUp {
-          from { opacity:0; transform:translateY(24px); }
-          to   { opacity:1; transform:translateY(0); }
-        }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-        .filtres-scroll::-webkit-scrollbar { display: none; }
-      `}</style>
-
-      {/* NAV */}
-      <nav style={{
-        position: 'sticky', top: 0, zIndex: 50,
-        background: 'rgba(5,5,5,0.9)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
-        padding: isMobile ? '14px 20px' : '16px 60px',
-        display: 'flex', alignItems: 'center',
-        justifyContent: 'space-between',
-      }}>
-        <button
-          onClick={() => navigate('/experience', { state: { skipGreeting: true } })}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            background: 'none', border: 'none',
-            color: 'rgba(255,255,255,0.4)',
-            fontFamily: 'Space Mono, monospace',
-            fontSize: 9, letterSpacing: '0.2em',
-            cursor: 'pointer', transition: 'color 0.2s',
-            padding: 0,
-          }}
-          onMouseEnter={e => e.currentTarget.style.color = a}
-          onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
-        >
-          ← RETOUR
-        </button>
-        <div style={{
-          fontFamily: 'Fraunces, serif', fontWeight: 800,
-          fontSize: 14, color: '#F5F5F0', letterSpacing: '0.06em',
-          display: 'flex', alignItems: 'center', gap: 8,
-        }}>
-          <img src="/asset/DEVJ.PNG" alt="DevJ" style={{ width: 26, height: 26, objectFit: 'contain', borderRadius: 6 }} />
-          &lt;<span style={{ color: a }}>/DevJ</span>&gt;
-        </div>
-        <div style={{
-          fontFamily: 'Space Mono, monospace', fontSize: 9,
-          color: `rgba(${aRgb},0.5)`, letterSpacing: '0.2em',
-        }}>
-          {projetsFiltres.length} PROJETS
-        </div>
+    <div className="pj-page est-sombre" ref={ref} style={vars}>
+      <nav className="pj-nav">
+        <button type="button" className="pf-lien" onClick={() => navigate('/experience', { state: { skipGreeting: true } })}>← Retour</button>
+        <span className="pj-nav__logo">&lt;<span>/DevJ</span>&gt;</span>
+        <span className="pf-entete__note">{String(projetsFiltres.length).padStart(2, '0')} projets</span>
       </nav>
 
-      {/* HEADER */}
-      <div style={{
-        padding: isMobile ? '40px 20px 28px' : '80px 60px 60px',
-        position: 'relative', overflow: 'hidden',
-      }}>
-        <div style={{
-          position: 'absolute', top: '50%', left: '50%',
-          transform: 'translate(-50%,-50%)',
-          fontFamily: 'Fraunces, serif',
-          fontSize: isMobile ? 80 : 200,
-          display: isMobile ? 'none' : 'block',
-          fontWeight: 800, color: 'rgba(255,255,255,0.012)',
-          letterSpacing: '-0.05em', whiteSpace: 'nowrap',
-          pointerEvents: 'none', userSelect: 'none',
-        }}>WORK</div>
-
-        <div style={{ position: 'relative', zIndex: 2 }}>
-          <div style={{
-            fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9,
-            color: `rgba(${aRgb},0.5)`, letterSpacing: isMobile ? '0.2em' : '0.35em',
-            marginBottom: isMobile ? 10 : 16,
-          }}>// PORTFOLIO COMPLET</div>
-
-          <h1 style={{
-            fontFamily: 'Fraunces, serif', fontWeight: 800,
-            fontSize: isMobile ? 36 : 72,
-            lineHeight: 1, margin: isMobile ? '0 0 14px' : '0 0 20px',
-            letterSpacing: '-0.03em',
-          }}>
-            Tous mes<br />
-            <span style={{ color: a }}>Projets</span>
-          </h1>
-
-          <p style={{
-            fontFamily: 'Inter, sans-serif', fontWeight: 300,
-            fontSize: isMobile ? 13 : 15, color: 'rgba(255,255,255,0.4)',
-            maxWidth: isMobile ? '100%' : 500, lineHeight: 1.8, margin: 0,
-          }}>
-            6 projets réalisés entre 2023 et 2024 — du frontend au fullstack, de la culture ivoirienne à la télémédecine.
-          </p>
+      <header className="pj-entete" data-entete>
+        <div className="pj-entete__bandeau" aria-hidden="true">
+          <div className="pf-bandeau__piste" data-bandeau>
+            {Array.from({ length: 4 }).map((_, i) => <span key={i}>Work · Travaux ·</span>)}
+          </div>
         </div>
+        <span className="pf-label" data-a="fondu"><b>04</b> Portfolio complet</span>
+        <h1 className="pf-titre-giga" data-a="chars">Tous mes <em className="pf-it">projets</em></h1>
+        <p className="pf-corps pf-corps--grand" data-a="lignes">
+          {projets.length} projets réalisés entre 2023 et 2024 — du frontend au fullstack, de la culture ivoirienne à la télémédecine.
+        </p>
+      </header>
+
+      <div className="pj-filtres" ref={filtresRef} role="group" aria-label="Filtrer par catégorie">
+        <span className="pj-filtres__indic" ref={indicRef} aria-hidden="true" />
+        {filtres.map(([cle, label, couleur]) => (
+          <button
+            key={cle}
+            type="button"
+            aria-pressed={filtre === cle}
+            className={filtre === cle ? 'est-actif' : ''}
+            style={{ '--c': couleur }}
+            onClick={() => setFiltre(cle)}
+          >
+            {cle !== 'TOUS' && <i aria-hidden="true" />}{label}
+          </button>
+        ))}
       </div>
 
-      {/* FILTRES — système par catégories visuelles */}
-      <div style={{ padding: isMobile ? '0 20px 28px' : '0 60px 48px' }}>
-        <div className="filtres-scroll" style={{ display: 'flex', gap: 10, overflowX: isMobile ? 'auto' : 'visible', paddingBottom: isMobile ? 6 : 0, WebkitOverflowScrolling: isMobile ? 'touch' : 'auto', msOverflowStyle: isMobile ? 'none' : undefined, scrollbarWidth: isMobile ? 'none' : undefined, flexWrap: isMobile ? 'nowrap' : 'wrap' }}>
-          <button onClick={() => setFiltre('TOUS')} style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: isMobile ? '6px 14px' : '8px 18px',
-            background: filtre === 'TOUS' ? a : 'rgba(255,255,255,0.04)',
-            border: filtre === 'TOUS' ? `1px solid ${a}` : '1px solid rgba(255,255,255,0.08)',
-            color: filtre === 'TOUS' ? '#050505' : 'rgba(255,255,255,0.5)',
-            fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9,
-            letterSpacing: '0.15em', borderRadius: isMobile ? 20 : 6,
-            cursor: 'pointer', fontWeight: filtre === 'TOUS' ? 700 : 400,
-            transition: 'all 0.2s', flexShrink: isMobile ? 0 : undefined,
-          }}>TOUS</button>
+      <section className="pj-scene" data-scene aria-label="Exploration 3D des projets">
+        <ProjectsScene
+          projets={projetsFiltres}
+          categories={CATEGORIES}
+          filtreActif={filtre}
+          projetSelectionne={projetSelectionne}
+          onSelectProjet={setProjetSelectionne}
+          isMobile={isMobile}
+          positions={positions}
+          previewTarget={previewTarget}
+        />
+        {previewTarget && projetsFiltres[previewIndex] && (
+          <p className="pj-scene__apercu" style={{ color: CATEGORIES[projetsFiltres[previewIndex]?.type]?.color || a }}>
+            {projetsFiltres[previewIndex].titre} · {CATEGORIES[projetsFiltres[previewIndex]?.type]?.label || ''} — en aperçu
+          </p>
+        )}
+        <ProjectsVerticalRail
+          projets={projetsFiltres}
+          projetApercuIndex={projetApercuIndex}
+          onNaviguerApercu={setProjetApercuIndex}
+          categories={CATEGORIES}
+          isMobile={isMobile}
+        />
+      </section>
 
-          {Object.entries(CATEGORIES).map(([key, cat]) => {
-            const active = filtre === key
+      <section className="pj-index-section" aria-label="Index des projets">
+        <header className="pf-entete">
+          <span className="pf-label" data-a="fondu"><b>Index</b> Toutes les réalisations</span>
+          <span className="pf-entete__note" data-a="fondu">Cliquez pour le détail</span>
+        </header>
+        <ol className="pj-index" data-index onPointerLeave={() => setSurvol(null)}>
+          {projetsFiltres.map((p) => {
+            const cat = CATEGORIES[p.type]
+            const i = projets.indexOf(p)
             return (
-              <button key={key} onClick={() => setFiltre(key)} style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: isMobile ? '6px 14px' : '8px 18px',
-                background: active ? cat.color : 'rgba(255,255,255,0.04)',
-                border: active ? `1px solid ${cat.color}` : '1px solid rgba(255,255,255,0.08)',
-                color: active ? (cat.textDark ? '#050505' : '#fff') : 'rgba(255,255,255,0.5)',
-                fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9,
-                letterSpacing: '0.15em', borderRadius: isMobile ? 20 : 6,
-                cursor: 'pointer', fontWeight: active ? 700 : 400,
-                transition: 'all 0.2s', flexShrink: isMobile ? 0 : undefined,
-              }}>
-                <span style={{ width: 10, height: 10, borderRadius: '50%', background: cat.color, boxShadow: active ? '0 0 0 1px rgba(255,255,255,0.12)' : 'none' }} />
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: active ? (cat.textDark ? '#050505' : '#fff') : 'rgba(255,255,255,0.75)' }}>
-                  {cat.label}
-                </span>
-              </button>
+              <li key={p.num} data-ligne>
+                <button
+                  type="button"
+                  onPointerEnter={() => setSurvol(i)}
+                  onFocus={() => setSurvol(i)}
+                  onClick={() => setProjetSelectionne(p)}
+                  data-curseur="Ouvrir"
+                  style={{ '--c': cat?.color || a }}
+                >
+                  <span className="pj-index__num">{p.num}</span>
+                  <span className="pj-index__titre">
+                    <span className="pf-roule"><span>{p.titre}</span><span aria-hidden="true">{p.titre}</span></span>
+                  </span>
+                  <span className="pj-index__cat"><i aria-hidden="true" />{cat?.label || p.categorie || 'Projet'}</span>
+                  <span className="pj-index__annee">{p.annee || '—'}</span>
+                  <span className="pj-index__fleche" aria-hidden="true">↗</span>
+                </button>
+              </li>
             )
           })}
-        </div>
+        </ol>
+      </section>
+
+      <div className="pj-apercu" ref={apercuRef} aria-hidden="true">
+        {apercu && <img key={apercu.img} src={apercu.img} alt="" />}
       </div>
 
-      {/* GRILLE PROJETS */}
-      <div style={{ padding: isMobile ? '0 20px 60px' : '0 60px 100px' }}>
-        <div style={{
-          height: isMobile ? '56vh' : '70vh',
-          width: '100%',
-          position: 'relative',
-          borderRadius: 20,
-          overflow: 'hidden',
-          border: '1px solid rgba(255,255,255,0.06)',
-          background: 'rgba(255,255,255,0.01)',
-        }}>
-          <ProjectsScene
-            projets={projetsFiltres}
-            categories={CATEGORIES}
-            filtreActif={filtre}
-            projetSelectionne={projetSelectionne}
-            onSelectProjet={handleSelectProjet}
-            isMobile={isMobile}
-            positions={positions}
-            previewTarget={previewTarget}
-          />
-          <div style={{
-            position: 'absolute',
-            left: 24,
-            bottom: isMobile ? 76 : 24,
-            right: isMobile ? 16 : 116,
-            zIndex: 15,
-            pointerEvents: 'none',
-          }}>
-            {previewTarget && (
-              <div style={{
-                fontFamily: 'Space Mono, monospace',
-                fontSize: 8,
-                letterSpacing: '0.24em',
-                color: CATEGORIES[projetsFiltres[previewIndex]?.type]?.color || a,
-                textTransform: 'uppercase',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}>
-                {projetsFiltres[previewIndex]?.titre} · {CATEGORIES[projetsFiltres[previewIndex]?.type]?.label || ''} — EN APERÇU
-              </div>
-            )}
-          </div>
-          <ProjectsVerticalRail
-            projets={projetsFiltres}
-            projetApercuIndex={projetApercuIndex}
-            onNaviguerApercu={handleNaviguerApercu}
-            categories={CATEGORIES}
-            isMobile={isMobile}
-          />
+      <footer className="pj-pied" data-pied>
+        <div className="pf-pied__haut">
+          <span className="pf-entete__note">{new Date().getFullYear()} · Fréjus Kouadio</span>
+          <button type="button" className="pf-btn pf-btn--a" data-magnetique onClick={() => navigate('/portfolio', { state: { skipGreeting: true } })}>
+            <span>← Retour au portfolio</span>
+          </button>
         </div>
-      </div>
+        <div className="pf-pied__monogramme" data-monogramme aria-hidden="true">&lt;/DevJ&gt;</div>
+      </footer>
 
       {projetSelectionne && (
-        <ProjectDetailOverlay
-          projet={projetSelectionne}
-          categoryColor={CATEGORIES[projetSelectionne.type]?.color || a}
-          onClose={fermerDetail}
-        />
-      )}
-
-      {/* FOOTER MINIMAL */}
-      <div style={{
-        borderTop: `1px solid rgba(${aRgb},0.08)`,
-        padding: isMobile ? '24px 20px' : '40px 60px',
-        display: 'flex', justifyContent: 'space-between',
-        flexDirection: isMobile ? 'column' : 'row',
-        alignItems: 'center', flexWrap: 'wrap', gap: isMobile ? 12 : 16,
-      }}>
-        <div style={{
-          fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9,
-          color: `rgba(${aRgb},0.35)`, letterSpacing: '0.2em',
-        }}>
-          {new Date().getFullYear()} · FRÉJUS KOUADIO
+        <div className="pj-detail">
+          <ProjectDetailOverlay
+            projet={projetSelectionne}
+            categoryColor={CATEGORIES[projetSelectionne.type]?.color || a}
+            onClose={fermerDetail}
+          />
         </div>
-        <button
-          onClick={() => navigate('/portfolio', { state: { skipGreeting: true } })}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            background: `rgba(${aRgb},0.08)`,
-            border: `1px solid rgba(${aRgb},0.2)`,
-            color: a, padding: isMobile ? '12px 20px' : '10px 24px',
-            fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9,
-            letterSpacing: '0.18em', borderRadius: 8,
-            cursor: 'pointer', transition: 'background 0.2s',
-            width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'center' : 'flex-start',
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = `rgba(${aRgb},0.15)`}
-          onMouseLeave={e => e.currentTarget.style.background = `rgba(${aRgb},0.08)`}
-        >
-          ← RETOUR AU PORTFOLIO
-        </button>
-      </div>
+      )}
     </div>
   )
 }

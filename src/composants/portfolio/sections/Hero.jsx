@@ -26,8 +26,8 @@ export default function Hero({ pret }) {
 
   useAnimations(ref, ({ bureau }) => {
     const q = gsap.utils.selector(ref)
-    const l1 = SplitText.create(q('[data-l1]'), { type: 'lines,chars', mask: 'lines' })
-    const l2 = SplitText.create(q('[data-l2]'), { type: 'lines,chars', mask: 'lines' })
+    const l1 = SplitText.create(q('[data-l1]'), { linesClass: 'pf-ligne', wordsClass: 'pf-mot', charsClass: 'pf-car', type: 'lines,chars', mask: 'lines' })
+    const l2 = SplitText.create(q('[data-l2]'), { linesClass: 'pf-ligne', wordsClass: 'pf-mot', charsClass: 'pf-car', type: 'lines,chars', mask: 'lines' })
     const bandeau = animerBandeau(q('[data-bandeau]')[0], { vitesse: 55, declencheurEl: ref.current })
 
     // Intro (jouée quand le préchargeur a fini)
@@ -61,7 +61,7 @@ export default function Hero({ pret }) {
       })
         .to(q('[data-l1]'), { xPercent: -22 }, 0)
         .to(q('[data-l2]'), { xPercent: 18 }, 0)
-        .to(q('[data-portrait]'), { scale: 0.84, yPercent: 6, filter: 'brightness(0.55)' }, 0)
+        .fromTo(q('[data-portrait]'), { scale: 1, yPercent: 0, filter: 'brightness(1)' }, { scale: 0.84, yPercent: 6, filter: 'brightness(0.55)' }, 0)
         .to(q('[data-bas], [data-sommaire], [data-meta]'), { autoAlpha: 0, y: -40 }, 0)
         .to(q('[data-scene]'), { scale: 0.94 }, 0)
     } else {

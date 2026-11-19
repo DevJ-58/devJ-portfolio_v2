@@ -39,6 +39,7 @@ export function animerAttributs(racine) {
     switch (type) {
       case 'chars':
         SplitText.create(el, {
+          linesClass: 'pf-ligne', wordsClass: 'pf-mot', charsClass: 'pf-car',
           type: 'lines,chars', mask: 'lines', autoSplit: true, aria: 'auto',
           onSplit: (self) => gsap.from(self.chars, {
             yPercent: 118, rotate: 5, duration: 1.2, ease: EASE.sortie,
@@ -48,6 +49,7 @@ export function animerAttributs(racine) {
         break
       case 'mots':
         SplitText.create(el, {
+          linesClass: 'pf-ligne', wordsClass: 'pf-mot', charsClass: 'pf-car',
           type: 'lines,words', mask: 'lines', autoSplit: true, aria: 'auto',
           onSplit: (self) => gsap.from(self.words, {
             yPercent: 110, duration: 1.05, ease: EASE.sortie, stagger: 0.035, delay, scrollTrigger,
@@ -56,6 +58,7 @@ export function animerAttributs(racine) {
         break
       case 'lignes':
         SplitText.create(el, {
+          linesClass: 'pf-ligne', wordsClass: 'pf-mot', charsClass: 'pf-car',
           type: 'lines', mask: 'lines', autoSplit: true, aria: 'auto',
           onSplit: (self) => gsap.from(self.lines, {
             yPercent: 105, duration: 1.1, ease: EASE.sortie, stagger: 0.09, delay, scrollTrigger,
