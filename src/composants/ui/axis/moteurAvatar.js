@@ -370,9 +370,16 @@ export function creerMoteurAvatar(canvas, { accent: accentInitial = '#10b981' } 
     scanMat.color.copy(accent); scanGlowMat.color.copy(accent)
   }
 
-  // ── Souris (sur toute la fenêtre, comme l'original)
-  let mx = 0, my = 0
-  const surPointeur = (e) => { mx = (e.clientX / window.innerWidth - 0.5) * 2; my = (e.clientY / window.innerHeight - 0.5) * 2 }
+  // ── Souris : position mesurée par rapport à l'avatar lui-même. Sans
+  // mouvement récent, l'attention retombe et la tête revient de face.
+  let px = 0, py = 0, mx = 0, my = 0, dernierMouvement = -10
+  const surPointeur = (e) => {
+    const r = canvas.getBoundingClientRect()
+    const cx = r.left + r.width / 2, cy = r.top + r.height * 0.42
+    px = Math.max(-1, Math.min(1, (e.clientX - cx) / (window.innerWidth * 0.45)))
+    py = Math.max(-1, Math.min(1, (e.clientY - cy) / (window.innerHeight * 0.45)))
+    dernierMouvement = performance.now() / 1000
+  }
   window.addEventListener('pointermove', surPointeur)
 
   // ── Boucle d'animation
@@ -385,14 +392,21 @@ export function creerMoteurAvatar(canvas, { accent: accentInitial = '#10b981' } 
     clock += dt
     const t = clock
     for (const k in T) T[k] = 0
+    // Attention : 1 tant que la souris bouge, retombe à 0 deux secondes après
+    const attention = 1 - Math.min(1, Math.max(0, (now - dernierMouvement - 2) / 1.2))
+    mx = lerp(mx, px * attention, Math.min(1, dt * 6))
+    my = lerp(my, py * attention, Math.min(1, dt * 6))
     if (etat === 'idle') {
-      T.smile = 0.12 + 0.35 * Math.pow(Math.max(0, Math.sin(t * 0.35)), 8)
-      pose.yaw.t = Math.sin(t * 0.31) * 0.05 + mx * 0.12
-      pose.pitch.t = Math.sin(t * 0.23) * 0.03 + my * 0.07
-      pose.roll.t = Math.sin(t * 0.19) * 0.02
-      if (t > nextSacc) {
-        gazeT = { x: mx * 0.35 + (Math.random() - 0.5) * 0.12, y: -my * 0.2 + (Math.random() - 0.5) * 0.08 }
-        nextSacc = t + 1 + Math.random() * 2.5
+      // Sourire permanent, qui s'accentue de temps en temps
+      T.smile = 1.6 + 0.3 * Math.pow(Math.max(0, Math.sin(t * 0.35)), 6)
+      // De face au repos, la tête suit franchement la souris
+      pose.yaw.t = mx * 0.42 + Math.sin(t * 0.31) * 0.01
+      pose.pitch.t = my * 0.24 - 0.05 * (1 - attention) + Math.sin(t * 0.23) * 0.008
+      pose.roll.t = -mx * 0.04
+      if (attention > 0.05) gazeT = { x: mx * 0.55, y: -my * 0.35 }
+      else if (t > nextSacc) {
+        gazeT = { x: (Math.random() - 0.5) * 0.06, y: 0.12 + (Math.random() - 0.5) * 0.04 }
+        nextSacc = t + 1.5 + Math.random() * 2.5
       }
     }
     if (etat === 'think') {
@@ -406,15 +420,15 @@ export function creerMoteurAvatar(canvas, { accent: accentInitial = '#10b981' } 
       updSpeech(t)
       const v = speech ? speech.v : {}
       for (const k in v) T[k] = v[k]
-      T.smile = Math.max(T.smile, 0.22 + smilePulse * 0.6)
+      T.smile = Math.max(T.smile, 0.9 + smilePulse * 0.5)
       T.browL += browPulse * 0.7; T.browR += browPulse * 0.8; T.browIn += browPulse * 0.15
-      pose.yaw.t = lerp(pose.yaw.t, mx * 0.08, 0.01)
-      pose.pitch.t = Math.sin(t * 1.1) * 0.02 + my * 0.04
+      pose.yaw.t = lerp(pose.yaw.t, mx * 0.25, 0.04)
+      pose.pitch.t = Math.sin(t * 1.1) * 0.02 + my * 0.12
       pose.roll.t = lerp(pose.roll.t, Math.sin(t * 0.7) * 0.03, 0.02)
     }
     browPulse = Math.max(0, browPulse - dt * 2.2)
     smilePulse = Math.max(0, smilePulse - dt * 1.1)
-    T.jaw = Math.max(T.jaw, T.smile * 0.12)
+    T.jaw = Math.max(T.jaw, etat === 'speak' ? T.smile * 0.12 : 0)
     if (t > nextBlink) { blinkNow(); nextBlink = t + 2.2 + Math.random() * 3.5 }
     let bl = 0
     if (blinkT >= 0) { blinkT += dt; const d = 0.17; bl = blinkT < d ? Math.sin(blinkT / d * Math.PI) : 0; if (blinkT >= d) blinkT = -1 }
