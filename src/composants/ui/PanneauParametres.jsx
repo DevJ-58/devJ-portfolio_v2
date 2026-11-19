@@ -7,7 +7,7 @@ export default function PanneauParametres() {
   const [ouvert, setOuvert] = useState(false)
   const { theme, mode, setMode, changerTheme, getThemeEffectif } = utiliserTheme()
   const eff = getThemeEffectif ? getThemeEffectif() : theme
-  const a = theme.accent
+  const a = eff.accent
   const isLight = mode === 'light'
 
   return (
@@ -23,8 +23,8 @@ export default function PanneauParametres() {
           width: 36,
           height: 36,
           borderRadius: '8px',
-          background: `rgba(${theme.accentRgb},0.08)`,
-          border: `1px solid rgba(${theme.accentRgb},0.25)`,
+          background: `rgba(${eff.accentRgb},0.08)`,
+          border: `1px solid rgba(${eff.accentRgb},0.25)`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -33,12 +33,12 @@ export default function PanneauParametres() {
           backdropFilter: 'blur(12px)',
         }}
         onMouseEnter={e => {
-          e.currentTarget.style.background = `rgba(${theme.accentRgb},0.15)`
+          e.currentTarget.style.background = `rgba(${eff.accentRgb},0.15)`
           e.currentTarget.style.borderColor = a
         }}
         onMouseLeave={e => {
-          e.currentTarget.style.background = `rgba(${theme.accentRgb},0.08)`
-          e.currentTarget.style.borderColor = `rgba(${theme.accentRgb},0.25)`
+          e.currentTarget.style.background = `rgba(${eff.accentRgb},0.08)`
+          e.currentTarget.style.borderColor = `rgba(${eff.accentRgb},0.25)`
         }}
       >
         <Settings size={15} color={a} />
@@ -55,7 +55,7 @@ export default function PanneauParametres() {
           background: 'rgba(4,4,6,0.92)',
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
-          border: `1px solid rgba(${theme.accentRgb},0.18)`,
+          border: `1px solid rgba(${eff.accentRgb},0.18)`,
           borderRadius: '14px',
           overflow: 'hidden',
           boxShadow: `0 8px 32px rgba(0,0,0,0.5)`,
@@ -65,7 +65,7 @@ export default function PanneauParametres() {
           {/* Ligne lumineuse top */}
           <div style={{
             position: 'absolute', top: 0, left: 20, right: 20, height: 1,
-            background: `linear-gradient(90deg,transparent,rgba(${theme.accentRgb},0.35),transparent)`
+            background: `linear-gradient(90deg,transparent,rgba(${eff.accentRgb},0.35),transparent)`
           }} />
 
           {/* Header */}
@@ -74,7 +74,7 @@ export default function PanneauParametres() {
             justifyContent: 'space-between',
             alignItems: 'center',
             padding: '12px 14px',
-            borderBottom: `1px solid rgba(${theme.accentRgb},0.08)`,
+            borderBottom: `1px solid rgba(${eff.accentRgb},0.08)`,
           }}>
             <div style={{
               fontFamily: 'Space Mono, monospace',
@@ -91,7 +91,7 @@ export default function PanneauParametres() {
                 display: 'flex', alignItems: 'center',
               }}
             >
-              <X size={12} color={`rgba(${theme.accentRgb},0.5)`} />
+              <X size={12} color={`rgba(${eff.accentRgb},0.5)`} />
             </button>
           </div>
 
@@ -100,7 +100,7 @@ export default function PanneauParametres() {
             <div style={{
               fontFamily: 'Space Mono, monospace',
               fontSize: 7,
-              color: `rgba(${theme.accentRgb},0.4)`,
+              color: `rgba(${eff.accentRgb},0.4)`,
               letterSpacing: '0.25em',
               textTransform: 'uppercase',
               marginBottom: 10,
@@ -129,11 +129,11 @@ export default function PanneauParametres() {
                   cursor: 'pointer',
                   border: isLight
                     ? `1px solid ${eff.borderLight || 'rgba(15,23,42,0.06)'}`
-                    : `1px solid rgba(${theme.accentRgb},0.06)`,
+                    : `1px solid rgba(${eff.accentRgb},0.06)`,
                   background: mode === 'dark'
-                    ? `rgba(${theme.accentRgb},0.15)`
+                    ? `rgba(${eff.accentRgb},0.15)`
                     : (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.04)'),
-                  color: mode === 'dark' ? theme.accent : (isLight ? '#334155' : 'rgba(255,255,255,0.6)'),
+                  color: mode === 'dark' ? a : (isLight ? '#334155' : 'rgba(255,255,255,0.6)'),
                   fontFamily: 'Space Mono, monospace',
                   fontSize: 14,
                   letterSpacing: '0.2em',
@@ -155,11 +155,11 @@ export default function PanneauParametres() {
                   cursor: 'pointer',
                   border: isLight
                     ? `1px solid ${eff.borderLight || 'rgba(15,23,42,0.06)'}`
-                    : `1px solid rgba(${theme.accentRgb},0.06)`,
+                    : `1px solid rgba(${eff.accentRgb},0.06)`,
                   background: mode === 'light'
-                    ? `rgba(${theme.accentRgb},0.15)`
+                    ? `rgba(${eff.accentRgb},0.15)`
                     : (isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.04)'),
-                  color: mode === 'light' ? theme.accent : (isLight ? '#334155' : 'rgba(255,255,255,0.6)'),
+                  color: mode === 'light' ? a : (isLight ? '#334155' : 'rgba(255,255,255,0.6)'),
                   fontFamily: 'Space Mono, monospace',
                   fontSize: 14,
                   letterSpacing: '0.2em',
@@ -233,7 +233,7 @@ export default function PanneauParametres() {
             {/* Séparateur */}
             <div style={{
               height: 1,
-              background: `rgba(${theme.accentRgb},0.06)`,
+              background: `rgba(${eff.accentRgb},0.06)`,
               margin: '12px 0',
             }} />
 

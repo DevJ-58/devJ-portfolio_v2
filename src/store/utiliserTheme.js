@@ -39,35 +39,46 @@ const utiliserTheme = create(
         const { theme, mode } = get()
         const isLight = mode === 'light'
 
+        // En mode clair, l'accent d'origine (pensé pour un fond sombre) est trop
+        // pâle pour du texte : on utilise sa variante foncée. Les thèmes
+        // sauvegardés avant l'ajout de cette variante la retrouvent via leur id.
+        const ref = themes[theme.id] || {}
+        const accentClair = theme.accentClair || ref.accentClair || theme.accent
+        const accentClairRgb = theme.accentClairRgb || ref.accentClairRgb || theme.accentRgb
+
         const effective = {
           id: theme.id,
           label: theme.label,
           nom: theme.nom,
-          accent: theme.accent,
+          accent: isLight ? accentClair : theme.accent,
           accentFonce: theme.accentFonce,
-          accentRgb: theme.accentRgb,
+          accentRgb: isLight ? accentClairRgb : theme.accentRgb,
+          // accent d'origine, pour les éléments décoratifs (lueurs, swatches)
+          accentVif: theme.accent,
+          accentVifRgb: theme.accentRgb,
           // fonds
-          fond: isLight ? '#d8dce5' : theme.fond,
-          fondPage: isLight ? '#cdd2dc' : theme.fondPage,
-          fondSecondaire: isLight ? '#cdd2dc' : theme.fondSecondaire,
+          fond: isLight ? '#f1f3f7' : theme.fond,
+          fondPage: isLight ? '#e9ecf2' : theme.fondPage,
+          fondSecondaire: isLight ? '#e9ecf2' : theme.fondSecondaire,
           // texte principal
           texte: isLight ? '#0f172a' : theme.texte,
           // grille (conserve le pattern du thème)
           grille: theme.grille,
-          // couleurs utilitaires pour les niveaux de texte en mode light
-          textHigh: isLight ? '#1e293b' : 'rgba(255,255,255,0.85)',
-          textMedium: isLight ? '#334155' : 'rgba(255,255,255,0.7)',
-          textMuted: isLight ? '#64748b' : 'rgba(255,255,255,0.5)',
-          textFaint: isLight ? '#94a3b8' : 'rgba(255,255,255,0.35)',
-          textUltraFaint: isLight ? '#cbd5e1' : 'rgba(255,255,255,0.15)',
+          // niveaux de texte ; en mode clair, tous lisibles sur le fond (≥ 4,5:1
+          // sauf textUltraFaint, réservé au décor)
+          textHigh: isLight ? '#0f172a' : 'rgba(255,255,255,0.85)',
+          textMedium: isLight ? '#1e293b' : 'rgba(255,255,255,0.7)',
+          textMuted: isLight ? '#334155' : 'rgba(255,255,255,0.5)',
+          textFaint: isLight ? '#526075' : 'rgba(255,255,255,0.35)',
+          textUltraFaint: isLight ? '#94a3b8' : 'rgba(255,255,255,0.15)',
           // borders
-          borderStrong: isLight ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.1)',
-          borderMedium: isLight ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.06)',
-          borderLight: isLight ? 'rgba(15,23,42,0.06)' : 'rgba(255,255,255,0.04)',
+          borderStrong: isLight ? 'rgba(15,23,42,0.16)' : 'rgba(255,255,255,0.1)',
+          borderMedium: isLight ? 'rgba(15,23,42,0.11)' : 'rgba(255,255,255,0.06)',
+          borderLight: isLight ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.04)',
           // cards / glass
-          cardBg: isLight ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.03)',
-          glassOverlay: isLight ? 'rgba(232,235,241,0.92)' : 'rgba(5,5,5,0.85)',
-          navOverlay: isLight ? 'rgba(228,231,238,0.95)' : 'rgba(5,5,5,0.85)',
+          cardBg: isLight ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.03)',
+          glassOverlay: isLight ? 'rgba(255,255,255,0.92)' : 'rgba(5,5,5,0.85)',
+          navOverlay: isLight ? 'rgba(248,249,251,0.95)' : 'rgba(5,5,5,0.85)',
           // shadows
           shadow: isLight ? 'rgba(15,23,42,0.15)' : 'rgba(0,0,0,0.5)',
         }

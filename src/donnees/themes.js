@@ -6,6 +6,9 @@ const themes = {
     accent: '#e2e8f0',
     accentFonce: '#cbd5e1',
     accentRgb: '226,232,240',
+    // Variante foncée de l'accent, lisible sur fond clair (mode light)
+    accentClair: '#334155',
+    accentClairRgb: '51,65,85',
     fond: '#050508',
     fondSecondaire: '#080810',
     texte: '#ffffff',
@@ -18,6 +21,9 @@ const themes = {
     accent: '#10b981',
     accentFonce: '#059669',
     accentRgb: '16,185,129',
+    // Variante foncée de l'accent, lisible sur fond clair (mode light)
+    accentClair: '#047857',
+    accentClairRgb: '4,120,87',
     fond: '#030303',
     fondSecondaire: '#050505',
     texte: '#ffffff',
@@ -30,6 +36,9 @@ const themes = {
     accent: '#ef4444',
     accentFonce: '#dc2626',
     accentRgb: '239,68,68',
+    // Variante foncée de l'accent, lisible sur fond clair (mode light)
+    accentClair: '#b91c1c',
+    accentClairRgb: '185,28,28',
     fond: '#030303',
     fondSecondaire: '#050505',
     texte: '#ffffff',
@@ -42,6 +51,9 @@ const themes = {
     accent: '#f97316',
     accentFonce: '#ea580c',
     accentRgb: '249,115,22',
+    // Variante foncée de l'accent, lisible sur fond clair (mode light)
+    accentClair: '#c2410c',
+    accentClairRgb: '194,65,12',
     fond: '#080400',
     fondSecondaire: '#120600',
     texte: '#ffffff',
@@ -54,6 +66,9 @@ const themes = {
     accent: '#a855f7',
     accentFonce: '#9333ea',
     accentRgb: '168,85,247',
+    // Variante foncée de l'accent, lisible sur fond clair (mode light)
+    accentClair: '#7e22ce',
+    accentClairRgb: '126,34,206',
     fond: '#050008',
     fondSecondaire: '#110016',
     texte: '#ffffff',
@@ -66,6 +81,9 @@ const themes = {
     accent: '#ec4899',
     accentFonce: '#db2777',
     accentRgb: '236,72,153',
+    // Variante foncée de l'accent, lisible sur fond clair (mode light)
+    accentClair: '#be185d',
+    accentClairRgb: '190,24,93',
     fond: '#080004',
     fondSecondaire: '#14000c',
     texte: '#ffffff',
@@ -78,6 +96,9 @@ const themes = {
     accent: '#3b82f6',
     accentFonce: '#2563eb',
     accentRgb: '59,130,246',
+    // Variante foncée de l'accent, lisible sur fond clair (mode light)
+    accentClair: '#1d4ed8',
+    accentClairRgb: '29,78,216',
     fond: '#020510',
     fondSecondaire: '#040820',
     texte: '#ffffff',
@@ -90,6 +111,9 @@ const themes = {
     accent: '#94a3b8',
     accentFonce: '#64748b',
     accentRgb: '148,163,184',
+    // Variante foncée de l'accent, lisible sur fond clair (mode light)
+    accentClair: '#0f172a',
+    accentClairRgb: '15,23,42',
     fond: '#000000',
     fondSecondaire: '#080808',
     texte: '#ffffff',

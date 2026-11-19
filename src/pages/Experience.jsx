@@ -30,8 +30,13 @@ export default function Experience() {
   const { theme, setTheme, mode, getThemeEffectif } = utiliserTheme()
   const eff = getThemeEffectif ? getThemeEffectif() : theme
   const isLight = mode === 'light'
-  const a = theme.accent
-  const aRgb = theme.accentRgb
+  const a = eff.accent
+  const aRgb = eff.accentRgb
+  // Texte en accent semi-transparent : en mode clair, opacité relevée pour rester lisible
+  const ta = (o) => `rgba(${aRgb},${isLight ? Math.min(1, 0.72 + o * 0.28) : o})`
+  // Accent d'origine, pour les surfaces qui restent sombres en mode clair (carte photo)
+  const av = eff.accentVif || a
+  const avRgb = eff.accentVifRgb || aRgb
   const overlayBg = isLight ? 'rgba(15,23,42,0.12)' : 'rgba(0,0,0,0.35)'
 
   useEffect(() => {
@@ -802,7 +807,7 @@ export default function Experience() {
           <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 16, color: a }}>{heure}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 8, color: a, letterSpacing: '0.18em' }}>● EN LIGNE</div>
-            <button onClick={() => naviguer('/')} style={{ width: 28, height: 28, border: '1px solid rgba(255,100,100,0.2)', background: 'rgba(255,100,100,0.05)', color: 'rgba(255,100,100,0.8)', borderRadius: 8, display: 'grid', placeItems: 'center', padding: 0 }}>
+            <button onClick={() => naviguer('/')} style={{ width: 28, height: 28, border: '1px solid rgba(255,100,100,0.2)', background: 'rgba(255,100,100,0.05)', color: isLight ? '#b91c1c' : 'rgba(255,100,100,0.8)', borderRadius: 8, display: 'grid', placeItems: 'center', padding: 0 }}>
               <RotateCcw size={14} />
             </button>
           </div>
@@ -812,7 +817,7 @@ export default function Experience() {
           <AvatarStable width={200} height={200} etat={aiState} />
           <div style={{ textAlign: 'center', fontFamily: 'Space Mono, monospace', color: isLight ? eff.texte : 'rgba(255,255,255,0.9)', fontSize: 9, lineHeight: 1.4, maxWidth: '88vw' }}>
             <div>// FRÉJUS KOUADIO</div>
-            <div style={{ color: aiState === 'idle' ? `rgba(${aRgb},0.4)` : a }}>
+            <div style={{ color: aiState === 'idle' ? ta(0.4) : a }}>
               {aiState === 'idle' ? '// EN ATTENTE' : aiState === 'thinking' ? '// TRAITEMENT...' : '// EN TRAIN DE PARLER'}
             </div>
           </div>
@@ -841,31 +846,31 @@ export default function Experience() {
             <button onClick={() => setDrawerSys(false)} style={{ background: 'transparent', border: 'none', color: isLight ? '#334155' : 'rgba(255,255,255,0.7)', fontSize: 14, cursor: 'pointer' }}>✕</button>
           </div>
           <div style={{ border: `1px solid rgba(${aRgb},0.14)`, background: `rgba(${aRgb},0.05)`, padding: '12px', marginBottom: 12, borderRadius: 14 }}>
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.22em', color: `rgba(${aRgb},0.55)`, marginBottom: 6 }}>VISITEUR</div>
+            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.22em', color: ta(0.55), marginBottom: 6 }}>VISITEUR</div>
             <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, fontWeight: 700, color: a }}>{visiteur.prenom || '—'}</div>
           </div>
           <div style={{ border: `1px solid rgba(${aRgb},0.14)`, background: `rgba(${aRgb},0.05)`, padding: '12px', marginBottom: 12, borderRadius: 14 }}>
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.22em', color: `rgba(${aRgb},0.55)`, marginBottom: 6 }}>PROFIL</div>
+            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.22em', color: ta(0.55), marginBottom: 6 }}>PROFIL</div>
             <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, fontWeight: 700, color: a }}>{({ recruiter:'RECRUTEUR', client:'CLIENT', collaborateur:'COLLABORATEUR', curieux:'CURIEUX' }[visiteur.profession] || visiteur.profession?.toUpperCase() || '—')}</div>
           </div>
           <div style={{ border: `1px solid rgba(${aRgb},0.14)`, background: `rgba(${aRgb},0.05)`, padding: '12px', marginBottom: 20, borderRadius: 14, display: 'flex', gap: 10, alignItems: 'center' }}>
             <div style={{ width: 8, height: 8, borderRadius: 9999, background: a, animation: 'pulse 1.4s infinite' }} />
             <div>
-              <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: `rgba(${aRgb},0.55)`, marginBottom: 4 }}>STATUT</div>
+              <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: ta(0.55), marginBottom: 4 }}>STATUT</div>
               <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, fontWeight: 700, color: a }}>● CONNECTÉ</div>
             </div>
           </div>
           <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.18em', color: eff.textMuted, marginBottom: 10 }}>NAVIGATION RAPIDE</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {['> voir le portfolio', '> mes projets', '> me contacter', '> mon parcours'].map((cmd) => (
-              <button key={cmd} onClick={() => { envoyerCommande(cmd); setDrawerSys(false) }} style={{ textAlign: 'left', border: `1px solid ${eff.borderLight}`, background: eff.cardBg, color: `rgba(${aRgb},0.75)`, padding: '10px 12px', fontFamily: 'Space Mono, monospace', fontSize: 9, borderRadius: 12, cursor: 'pointer' }}>
+              <button key={cmd} onClick={() => { envoyerCommande(cmd); setDrawerSys(false) }} style={{ textAlign: 'left', border: `1px solid ${eff.borderLight}`, background: eff.cardBg, color: ta(0.75), padding: '10px 12px', fontFamily: 'Space Mono, monospace', fontSize: 9, borderRadius: 12, cursor: 'pointer' }}>
                 {cmd.replace('>', '›')}
               </button>
             ))}
           </div>
           <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid rgba(${aRgb},0.08)` }}>
             <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: isLight ? '#475569' : 'rgba(255,255,255,0.45)', letterSpacing: '0.18em', marginBottom: 10 }}>AUDIO</div>
-            <button onClick={() => setModeVocal(prev => !prev)} style={{ width: '100%', background: modeVocal ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.04)', border: `1px solid ${modeVocal ? a : `rgba(${aRgb},0.25)`}`, color: modeVocal ? '#fff' : (isLight ? '#64748b' : `rgba(${aRgb},0.9)`), padding: '10px 0', borderRadius: 12, fontFamily: 'Space Mono, monospace', fontSize: 10, cursor: 'pointer' }}>
+            <button onClick={() => setModeVocal(prev => !prev)} style={{ width: '100%', background: modeVocal ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.04)', border: `1px solid ${modeVocal ? a : `rgba(${aRgb},0.25)`}`, color: modeVocal ? (isLight ? a : '#fff') : (isLight ? '#526075' : ta(0.9)), padding: '10px 0', borderRadius: 12, fontFamily: 'Space Mono, monospace', fontSize: 10, cursor: 'pointer' }}>
               {modeVocal ? 'VOCAL ON' : 'VOCAL OFF'}
             </button>
           </div>
@@ -876,9 +881,9 @@ export default function Experience() {
             <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: a, letterSpacing: '0.2em' }}>// MODES</div>
             <button onClick={() => setDrawerMod(false)} style={{ background: 'transparent', border: 'none', color: isLight ? '#334155' : 'rgba(255,255,255,0.7)', fontSize: 14, cursor: 'pointer' }}>✕</button>
           </div>
-          <button onClick={() => setModeVocal(prev => !prev)} style={{ width: '100%', border: `1px solid ${modeVocal ? a : 'rgba(255,255,255,0.12)'}`, background: modeVocal ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.04)', color: modeVocal ? '#fff' : (isLight ? '#64748b' : `rgba(${aRgb},0.9)`), padding: '12px', borderRadius: 14, fontFamily: 'Space Mono, monospace', fontSize: 10, marginBottom: 12, cursor: 'pointer' }}>VOCAL</button>
-          <button onClick={() => setModeChat(prev => !prev)} style={{ width: '100%', border: `1px solid ${modeChat ? a : 'rgba(255,255,255,0.12)'}`, background: modeChat ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.04)', color: modeChat ? '#fff' : (isLight ? '#64748b' : `rgba(${aRgb},0.9)`), padding: '12px', borderRadius: 14, fontFamily: 'Space Mono, monospace', fontSize: 10, marginBottom: 12, cursor: 'pointer' }}>CHAT</button>
-          <button onClick={toggleParler} style={{ width: '100%', border: `1px solid ${modeParler ? a : 'rgba(255,255,255,0.12)'}`, background: modeParler ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.04)', color: modeParler ? '#fff' : (isLight ? '#64748b' : `rgba(${aRgb},0.9)`), padding: '12px', borderRadius: 14, fontFamily: 'Space Mono, monospace', fontSize: 10, cursor: 'pointer' }}>PARLER</button>
+          <button onClick={() => setModeVocal(prev => !prev)} style={{ width: '100%', border: `1px solid ${modeVocal ? a : 'rgba(255,255,255,0.12)'}`, background: modeVocal ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.04)', color: modeVocal ? (isLight ? a : '#fff') : (isLight ? '#526075' : ta(0.9)), padding: '12px', borderRadius: 14, fontFamily: 'Space Mono, monospace', fontSize: 10, marginBottom: 12, cursor: 'pointer' }}>VOCAL</button>
+          <button onClick={() => setModeChat(prev => !prev)} style={{ width: '100%', border: `1px solid ${modeChat ? a : 'rgba(255,255,255,0.12)'}`, background: modeChat ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.04)', color: modeChat ? (isLight ? a : '#fff') : (isLight ? '#526075' : ta(0.9)), padding: '12px', borderRadius: 14, fontFamily: 'Space Mono, monospace', fontSize: 10, marginBottom: 12, cursor: 'pointer' }}>CHAT</button>
+          <button onClick={toggleParler} style={{ width: '100%', border: `1px solid ${modeParler ? a : 'rgba(255,255,255,0.12)'}`, background: modeParler ? `rgba(${aRgb},0.15)` : 'rgba(255,255,255,0.04)', color: modeParler ? (isLight ? a : '#fff') : (isLight ? '#526075' : ta(0.9)), padding: '12px', borderRadius: 14, fontFamily: 'Space Mono, monospace', fontSize: 10, cursor: 'pointer' }}>PARLER</button>
           <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid rgba(${aRgb},0.08)` }}>
             <button onClick={() => { setModePortfolio(true); setDrawerMod(false) }} style={{ width: '100%', background: `rgba(${aRgb},0.1)`, border: `1px solid rgba(${aRgb},0.3)`, color: a, padding: '12px', borderRadius: 14, fontFamily: 'Space Mono, monospace', fontSize: 10, textTransform: 'uppercase', cursor: 'pointer' }}>PORTFOLIO</button>
           </div>
@@ -886,7 +891,7 @@ export default function Experience() {
             <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: isLight ? '#475569' : 'rgba(255,255,255,0.45)', letterSpacing: '0.18em', marginBottom: 10 }}>SYS_STATUS</div>
             {[['MODÈLE','GROQ'],['SESSION','ACTIVE'],['VOIX','FR-FR']].map(([k,v]) => (
               <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: isLight ? '#334155' : 'rgba(255,255,255,0.75)', marginBottom: 8 }}>
-                <span style={{ color: isLight ? '#64748b' : 'rgba(255,255,255,0.3)' }}>{k}</span><span style={{ color: a }}>{v}</span>
+                <span style={{ color: isLight ? '#526075' : 'rgba(255,255,255,0.3)' }}>{k}</span><span style={{ color: a }}>{v}</span>
               </div>
             ))}
           </div>
@@ -915,12 +920,12 @@ export default function Experience() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 0,
-                  background: 'rgba(5,5,5,0.88)',
+                  background: isLight ? 'rgba(255,255,255,0.95)' : 'rgba(5,5,5,0.88)',
                   border: `1px solid rgba(${aRgb},0.25)`,
                   borderRadius: 14,
                   backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                  boxShadow: isLight ? '0 8px 28px rgba(15,23,42,0.14)' : '0 8px 32px rgba(0,0,0,0.4)',
                   overflow: 'hidden',
                   width: 'calc(100vw - 100px)',
                   maxWidth: 400,
@@ -932,7 +937,7 @@ export default function Experience() {
                       border: 'none',
                       borderRight: `1px solid rgba(${aRgb},0.12)`,
                       background: 'transparent',
-                      color: `rgba(${aRgb},0.5)`,
+                      color: ta(0.5),
                       cursor: 'pointer',
                       fontSize: 12,
                       flexShrink: 0,
@@ -958,7 +963,7 @@ export default function Experience() {
                       padding: '12px 14px',
                       fontFamily: 'Space Mono, monospace',
                       fontSize: 11,
-                      color: '#fff',
+                      color: isLight ? '#0f172a' : '#fff',
                       caretColor: a,
                     }}
                   />
@@ -993,7 +998,7 @@ export default function Experience() {
                   justifyContent: 'center',
                   width: 36,
                   height: 36,
-                  background: inputPortfolioVisible ? `rgba(${aRgb},0.2)` : 'rgba(5,5,5,0.65)',
+                  background: inputPortfolioVisible ? `rgba(${aRgb},0.2)` : (isLight ? 'rgba(255,255,255,0.9)' : 'rgba(5,5,5,0.65)'),
                   border: `1px solid rgba(${aRgb},${inputPortfolioVisible ? '0.55' : '0.18'})`,
                   borderRadius: '50%',
                   cursor: 'pointer',
@@ -1031,7 +1036,7 @@ export default function Experience() {
               <button
                 onClick={() => { setModePortfolio(false); setInputPortfolioVisible(false) }}
                 style={{
-                  background: 'rgba(0,0,0,0.7)',
+                  background: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.7)',
                   border: `1px solid rgba(${aRgb},0.3)`,
                   borderRadius: 20,
                   color: a,
@@ -1059,7 +1064,7 @@ export default function Experience() {
                   overflow: 'hidden',
                   width: 72,
                   height: 72,
-                  background: 'rgba(5,5,5,0.55)',
+                  background: isLight ? 'rgba(255,255,255,0.8)' : 'rgba(5,5,5,0.55)',
                   backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
                   border: `1px solid rgba(${aRgb},0.2)`,
@@ -1086,9 +1091,9 @@ export default function Experience() {
               <div style={{
                 fontFamily: 'Space Mono, monospace',
                 fontSize: 7,
-                color: aiState === 'idle' ? `rgba(${aRgb},0.35)` : a,
+                color: aiState === 'idle' ? ta(0.35) : a,
                 letterSpacing: '0.12em',
-                background: 'rgba(0,0,0,0.7)',
+                background: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.7)',
                 backdropFilter: 'blur(12px)',
                 padding: '3px 8px',
                 borderRadius: 20,
@@ -1142,25 +1147,25 @@ export default function Experience() {
             }, 400)
             setCartesActives([])
           }}>
-            <div style={{ border: `1px solid ${a}`, background: 'rgba(3,12,8,0.97)', boxShadow: `0 0 40px rgba(${aRgb},0.3), 0 0 80px rgba(${aRgb},0.1)`, backdropFilter: 'blur(16px)', position: 'relative', overflow: 'hidden', transition: 'box-shadow 0.2s', borderRadius: 16 }}>
+            <div style={{ border: `1px solid ${av}`, background: 'rgba(3,12,8,0.97)', boxShadow: `0 0 40px rgba(${avRgb},0.3), 0 0 80px rgba(${avRgb},0.1)`, backdropFilter: 'blur(16px)', position: 'relative', overflow: 'hidden', transition: 'box-shadow 0.2s', borderRadius: 16 }}>
               {[['top','left'],['top','right'],['bottom','left'],['bottom','right']].map(([v,h],i) => (
-                <div key={i} style={{ position:'absolute', [v]:0, [h]:0, width:14, height:14, [`border${v.charAt(0).toUpperCase()+v.slice(1)}`]:`2px solid ${a}`, [`border${h.charAt(0).toUpperCase()+h.slice(1)}`]:`2px solid ${a}`, zIndex:3 }} />
+                <div key={i} style={{ position:'absolute', [v]:0, [h]:0, width:14, height:14, [`border${v.charAt(0).toUpperCase()+v.slice(1)}`]:`2px solid ${av}`, [`border${h.charAt(0).toUpperCase()+h.slice(1)}`]:`2px solid ${av}`, zIndex:3 }} />
               ))}
-              <div style={{ padding: '8px 16px', borderBottom: `1px solid rgba(${aRgb},0.25)`, background: `rgba(${aRgb},0.07)`, fontFamily: 'Space Mono, monospace', fontSize: 8, color: a, letterSpacing: '0.25em', textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ padding: '8px 16px', borderBottom: `1px solid rgba(${avRgb},0.25)`, background: `rgba(${avRgb},0.07)`, fontFamily: 'Space Mono, monospace', fontSize: 8, color: av, letterSpacing: '0.25em', textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>{cartesActives[0].label}</span>
-                <span style={{ fontSize: 10, color: `rgba(${aRgb},0.5)` }}>→</span>
+                <span style={{ fontSize: 10, color: `rgba(${avRgb},0.5)` }}>→</span>
               </div>
               <div style={{ width: '100%', height: 200, position: 'relative', overflow: 'hidden', background: '#000' }}>
                 <img src={cartesActives[0].image} alt={cartesActives[0].titre} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', display: 'block' }} onError={(e) => { e.currentTarget.style.display = 'none' }} />
-                <div style={{ position:'absolute', left:0, right:0, height:2, background:`linear-gradient(90deg,transparent,rgba(${aRgb},0.7),transparent)`, animation:'scanAnim 2.5s linear infinite', zIndex:2 }} />
+                <div style={{ position:'absolute', left:0, right:0, height:2, background:`linear-gradient(90deg,transparent,rgba(${avRgb},0.7),transparent)`, animation:'scanAnim 2.5s linear infinite', zIndex:2 }} />
                 <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg,transparent 80%,rgba(3,12,8,0.5) 100%)', zIndex:1 }} />
-                <div style={{ position:'absolute', inset:0, zIndex:1, backgroundImage:`linear-gradient(rgba(${aRgb},0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(${aRgb},0.03) 1px,transparent 1px)`, backgroundSize:'40px 40px' }} />
+                <div style={{ position:'absolute', inset:0, zIndex:1, backgroundImage:`linear-gradient(rgba(${avRgb},0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(${avRgb},0.03) 1px,transparent 1px)`, backgroundSize:'40px 40px' }} />
               </div>
-              <div style={{ padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid rgba(${aRgb},0.15)` }}>
-                <div style={{ fontFamily:'Space Mono, monospace', fontSize:9, color:a, letterSpacing:'0.1em', fontWeight:'bold' }}>{cartesActives[0].titre.toUpperCase()}</div>
+              <div style={{ padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid rgba(${avRgb},0.15)` }}>
+                <div style={{ fontFamily:'Space Mono, monospace', fontSize:9, color:av, letterSpacing:'0.1em', fontWeight:'bold' }}>{cartesActives[0].titre.toUpperCase()}</div>
                 <div style={{ display:'flex', gap:16 }}>
                   {cartesActives[0].stats.map((s, si) => (
-                    <div key={si} style={{ fontFamily:'Space Mono, monospace', fontSize:8, color: si===0 ? `rgba(${aRgb},0.9)` : `rgba(${aRgb},0.5)`, letterSpacing:'0.1em' }}>{si===0 ? '▶ ' : ''}{s}</div>
+                    <div key={si} style={{ fontFamily:'Space Mono, monospace', fontSize:8, color: si===0 ? `rgba(${avRgb},0.9)` : `rgba(${avRgb},0.5)`, letterSpacing:'0.1em' }}>{si===0 ? '▶ ' : ''}{s}</div>
                   ))}
                 </div>
               </div>
@@ -1170,33 +1175,33 @@ export default function Experience() {
 
         {photoFrejusVisible && (
           <div style={{ position: 'fixed', top: 64, left: '50%', transform: 'translateX(-50%)', zIndex: 45, width: 200, opacity: 0, animation: 'fadeInDown 0.6s ease forwards' }}>
-            <div style={{ position: 'relative', background: 'rgba(4,6,5,0.92)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: `1px solid ${a}`, borderRadius: '14px', overflow: 'hidden', boxShadow: `0 0 40px rgba(${aRgb},0.25), 0 0 80px rgba(${aRgb},0.1), inset 0 1px 0 rgba(${aRgb},0.15)` }}>
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg,transparent,${a},transparent)`, zIndex: 3 }} />
+            <div style={{ position: 'relative', background: 'rgba(4,6,5,0.92)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: `1px solid ${av}`, borderRadius: '14px', overflow: 'hidden', boxShadow: `0 0 40px rgba(${avRgb},0.25), 0 0 80px rgba(${avRgb},0.1), inset 0 1px 0 rgba(${avRgb},0.15)` }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg,transparent,${av},transparent)`, zIndex: 3 }} />
               {[['top','left'],['top','right'],['bottom','left'],['bottom','right']].map(([v,h],i) => (
-                <div key={i} style={{ position:'absolute', [v]:6, [h]:6, width:12, height:12, [`border${v.charAt(0).toUpperCase()+v.slice(1)}`]:`2px solid ${a}`, [`border${h.charAt(0).toUpperCase()+h.slice(1)}`]:`2px solid ${a}`, zIndex:4 }} />
+                <div key={i} style={{ position:'absolute', [v]:6, [h]:6, width:12, height:12, [`border${v.charAt(0).toUpperCase()+v.slice(1)}`]:`2px solid ${av}`, [`border${h.charAt(0).toUpperCase()+h.slice(1)}`]:`2px solid ${av}`, zIndex:4 }} />
               ))}
-              <div style={{ padding: '8px 14px', borderBottom: `1px solid rgba(${aRgb},0.15)`, background: `rgba(${aRgb},0.06)`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 8, color: a, letterSpacing: '0.22em', textTransform: 'uppercase' }}>FRÉJUS KOUADIO</span>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: a, boxShadow: `0 0 6px ${a}`, animation: 'pulse 1.5s infinite' }} />
+              <div style={{ padding: '8px 14px', borderBottom: `1px solid rgba(${avRgb},0.15)`, background: `rgba(${avRgb},0.06)`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 8, color: av, letterSpacing: '0.22em', textTransform: 'uppercase' }}>FRÉJUS KOUADIO</span>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: av, boxShadow: `0 0 6px ${av}`, animation: 'pulse 1.5s infinite' }} />
               </div>
               <div style={{ width: '100%', height: 280, position: 'relative', overflow: 'hidden', background: '#000' }}>
                 <img src="/captures/frejus3.jpg" alt="Fréjus Kouadio" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', display: 'block', filter: 'contrast(1.05) brightness(1.02)' }} />
-                <div style={{ position: 'absolute', left: 0, right: 0, height: 2, background: `linear-gradient(90deg,transparent,rgba(${aRgb},0.6),transparent)`, animation: 'scanAnim 3s linear infinite', zIndex: 2 }} />
+                <div style={{ position: 'absolute', left: 0, right: 0, height: 2, background: `linear-gradient(90deg,transparent,rgba(${avRgb},0.6),transparent)`, animation: 'scanAnim 3s linear infinite', zIndex: 2 }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,transparent 55%,rgba(4,6,5,0.85) 100%)', zIndex: 1 }} />
-                <div style={{ position: 'absolute', inset: 0, zIndex: 1, backgroundImage: `linear-gradient(rgba(${aRgb},0.03) 1px,transparent 1px), linear-gradient(90deg,rgba(${aRgb},0.03) 1px,transparent 1px)`, backgroundSize: '30px 30px' }} />
+                <div style={{ position: 'absolute', inset: 0, zIndex: 1, backgroundImage: `linear-gradient(rgba(${avRgb},0.03) 1px,transparent 1px), linear-gradient(90deg,rgba(${avRgb},0.03) 1px,transparent 1px)`, backgroundSize: '30px 30px' }} />
                 <div style={{ position: 'absolute', bottom: 12, left: 12, right: 12, zIndex: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 11, fontWeight: 700, color: '#ffffff', letterSpacing: '0.08em', textShadow: '0 1px 8px rgba(0,0,0,0.8)' }}>Fréjus Kouadio</div>
-                  <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 8, color: a, letterSpacing: '0.18em', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>DEV FULLSTACK · IA</div>
+                  <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 8, color: av, letterSpacing: '0.18em', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>DEV FULLSTACK · IA</div>
                 </div>
               </div>
-              <div style={{ padding: '10px 14px', display: 'flex', justifyContent: 'space-between', borderTop: `1px solid rgba(${aRgb},0.1)` }}>
+              <div style={{ padding: '10px 14px', display: 'flex', justifyContent: 'space-between', borderTop: `1px solid rgba(${avRgb},0.1)` }}>
                 {[
                   { Icon: MapPin, label: 'Yamoussoukro' },
                   { Icon: Briefcase, label: 'Freelance' },
                   { Icon: Zap, label: 'IA · React' }
                 ].map(({ Icon, label }, i) => (
-                  <div key={i} style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: i === 0 ? a : `rgba(${aRgb},0.55)`, letterSpacing: '0.08em', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-                    <Icon size={11} color={i === 0 ? a : `rgba(${aRgb},0.55)`} />
+                  <div key={i} style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: i === 0 ? av : `rgba(${avRgb},0.55)`, letterSpacing: '0.08em', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                    <Icon size={11} color={i === 0 ? av : `rgba(${avRgb},0.55)`} />
                     <span>{label}</span>
                   </div>
                 ))}
@@ -1231,7 +1236,7 @@ export default function Experience() {
           0%, 100% { opacity: 1; }
           50%       { opacity: 0.35; }
         }
-        input::placeholder { color: ${isLight ? '#94a3b8' : 'rgba(255,255,255,0.3)'}; }
+        input::placeholder { color: ${isLight ? '#526075' : 'rgba(255,255,255,0.3)'}; }
       `}</style>
 
       <div style={{ position: 'absolute', inset: 0, zIndex: 0, backgroundImage: `linear-gradient(rgba(${aRgb},0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(${aRgb},0.03) 1px, transparent 1px)`, backgroundSize: '60px 60px' }} />
@@ -1252,9 +1257,9 @@ export default function Experience() {
         <path d="M28 0 L28 28 L0 28" fill="none" stroke={`rgba(${aRgb},0.4)`} strokeWidth="1"/>
       </svg>
 
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20, background: isLight ? 'rgba(216,220,229,0.92)' : 'rgba(0,0,0,0.75)', borderBottom: `1px solid rgba(${aRgb},0.12)` }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20, background: isLight ? 'rgba(248,249,251,0.92)' : 'rgba(0,0,0,0.75)', borderBottom: `1px solid rgba(${aRgb},0.12)` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 20px 4px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Space Mono, monospace', color: isLight ? 'rgba(15,23,42,0.55)' : 'rgba(255,255,255,0.25)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Space Mono, monospace', color: isLight ? 'rgba(15,23,42,0.82)' : 'rgba(255,255,255,0.25)' }}>
             <span>&lt;</span>
             <span style={{ color: a }}>/DevJ</span>
             <span>&gt;</span>
@@ -1263,11 +1268,11 @@ export default function Experience() {
               <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 9999, background: a, animation: 'pulse 1.4s infinite' }} />
               <span style={{ borderRadius: '20px', padding: '3px 8px' }}>EN LIGNE</span>
             </div>
-            <div style={{ marginLeft: 8, fontFamily: 'Space Mono, monospace', fontSize: 8, color: isLight ? 'rgba(15,23,42,0.38)' : 'rgba(255,255,255,0.15)' }}>{dateStr}</div>
+            <div style={{ marginLeft: 8, fontFamily: 'Space Mono, monospace', fontSize: 8, color: isLight ? 'rgba(15,23,42,0.75)' : 'rgba(255,255,255,0.15)' }}>{dateStr}</div>
           </div>
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <button onClick={() => setModeVocal((prev) => !prev)} style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1px solid', borderColor: modeVocal ? a : `rgba(${aRgb},0.25)`, background: modeVocal ? `rgba(${aRgb},0.15)` : isLight ? `rgba(${aRgb},0.06)` : 'transparent', color: modeVocal ? '#ffffff' : a, padding: '6px 14px', fontFamily: 'Space Mono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', borderRadius: '6px', transition: 'all .2s' }}>
+            <button onClick={() => setModeVocal((prev) => !prev)} style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1px solid', borderColor: modeVocal ? a : `rgba(${aRgb},0.25)`, background: modeVocal ? `rgba(${aRgb},0.15)` : isLight ? `rgba(${aRgb},0.06)` : 'transparent', color: modeVocal ? (isLight ? a : '#ffffff') : a, padding: '6px 14px', fontFamily: 'Space Mono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', borderRadius: '6px', transition: 'all .2s' }}>
               <Volume2 size={12} />
               <span>AUDIO</span>
             </button>
@@ -1275,7 +1280,7 @@ export default function Experience() {
             <div
               className={`mode-item ${modeParler ? 'actif' : ''}`}
               onClick={toggleParler}
-              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, border: '1px solid', borderColor: modeParler ? a : `rgba(${aRgb},0.25)`, background: modeParler ? `rgba(${aRgb},0.15)` : isLight ? `rgba(${aRgb},0.06)` : 'transparent', color: modeParler ? '#ffffff' : a, padding: '6px 14px', fontFamily: 'Space Mono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', borderRadius: '6px', transition: 'all .2s' }}
+              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, border: '1px solid', borderColor: modeParler ? a : `rgba(${aRgb},0.25)`, background: modeParler ? `rgba(${aRgb},0.15)` : isLight ? `rgba(${aRgb},0.06)` : 'transparent', color: modeParler ? (isLight ? a : '#ffffff') : a, padding: '6px 14px', fontFamily: 'Space Mono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', borderRadius: '6px', transition: 'all .2s' }}
             >
               <span className="mode-label">
                 {ecoute ? '⬤ ÉCOUTE' : 'PARLER'}
@@ -1284,7 +1289,7 @@ export default function Experience() {
                 {modeParler ? 'ON' : 'OFF'}
               </span>
             </div>
-            <button onClick={() => setModeChat((prev) => !prev)} style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1px solid', borderColor: modeChat ? a : `rgba(${aRgb},0.25)`, background: modeChat ? `rgba(${aRgb},0.15)` : isLight ? `rgba(${aRgb},0.06)` : 'transparent', color: modeChat ? (isLight ? '#0f172a' : '#ffffff') : (isLight ? '#64748b' : 'rgba(255,255,255,0.3)'), padding: '6px 14px', fontFamily: 'Space Mono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', borderRadius: '6px', transition: 'all .2s' }}>
+            <button onClick={() => setModeChat((prev) => !prev)} style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1px solid', borderColor: modeChat ? a : `rgba(${aRgb},0.25)`, background: modeChat ? `rgba(${aRgb},0.15)` : isLight ? `rgba(${aRgb},0.06)` : 'transparent', color: modeChat ? (isLight ? '#0f172a' : '#ffffff') : (isLight ? '#526075' : 'rgba(255,255,255,0.3)'), padding: '6px 14px', fontFamily: 'Space Mono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', borderRadius: '6px', transition: 'all .2s' }}>
               <span>TEXTE</span>
             </button>
             <div style={{ width: 1, height: 20, background: isLight ? '#cbd5e1' : '#2d2d2d' }} />
@@ -1292,7 +1297,7 @@ export default function Experience() {
               <Layout size={12} />
               <span>PORTFOLIO</span>
             </button>
-            <button onClick={() => naviguer('/')} style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1px solid rgba(255,100,100,0.08)', background: 'rgba(255,100,100,0.05)', color: 'rgba(255,100,100,0.35)', padding: '6px 14px', fontFamily: 'Space Mono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', borderRadius: '6px', transition: 'all .2s' }}>
+            <button onClick={() => naviguer('/')} style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1px solid rgba(255,100,100,0.08)', background: 'rgba(255,100,100,0.05)', color: isLight ? '#b91c1c' : 'rgba(255,100,100,0.35)', padding: '6px 14px', fontFamily: 'Space Mono, monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', borderRadius: '6px', transition: 'all .2s' }}>
               <RotateCcw size={12} />
               <span>RESET</span>
             </button>
@@ -1305,22 +1310,22 @@ export default function Experience() {
 <div style={{ position:'absolute', left:200, top:'50%', transform:'translateY(-50%)', zIndex:8, display:'flex', alignItems:'center', gap:8, pointerEvents:'none' }}>
           <div style={{width:3,height:3,borderRadius:'50%', background:`rgba(${aRgb},0.4)`}}/>
           <div style={{width:40,height:1, background:`linear-gradient(90deg,rgba(${aRgb},0.25),transparent)`, opacity:0.7}}/>
-          <div style={{fontSize:7,color:`rgba(${aRgb},0.4)`, letterSpacing:'0.15em'}}>NEURAL_LINK</div>
+          <div style={{fontSize:7,color:ta(0.4), letterSpacing:'0.15em'}}>NEURAL_LINK</div>
         </div>
         <div style={{ position:'absolute', right:200, top:'50%', transform:'translateY(-50%)', zIndex:8, display:'flex', alignItems:'center', gap:8, flexDirection:'row-reverse', pointerEvents:'none' }}>
           <div style={{width:3,height:3,borderRadius:'50%', background:`rgba(${aRgb},0.4)`}}/>
           <div style={{width:40,height:1, background:`linear-gradient(270deg,rgba(${aRgb},0.25),transparent)`, opacity:0.7}}/>
-          <div style={{fontSize:7,color:`rgba(${aRgb},0.4)`, letterSpacing:'0.15em'}}>SYNC_OK</div>
+          <div style={{fontSize:7,color:ta(0.4), letterSpacing:'0.15em'}}>SYNC_OK</div>
         </div>
         <div style={{ position: 'absolute', left: '50%', top: 90, bottom: 90, transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
         <AvatarStable etat={aiState} />
 
-        <div style={{ marginTop: 16, fontFamily: 'Space Mono, monospace', fontSize: 9, color: `rgba(${aRgb},0.5)`, letterSpacing: '0.22em', textAlign: 'center' }}>
+        <div style={{ marginTop: 16, fontFamily: 'Space Mono, monospace', fontSize: 9, color: ta(0.5), letterSpacing: '0.22em', textAlign: 'center' }}>
           <div>// FRÉJUS KOUADIO</div>
           <div>DEV FULLSTACK · IA</div>
         </div>
 
-        <div style={{ marginTop: 10, fontFamily: 'Space Mono, monospace', fontSize: 9, color: aiState === 'idle' ? `rgba(${aRgb},0.4)` : a, textAlign: 'center' }}>
+        <div style={{ marginTop: 10, fontFamily: 'Space Mono, monospace', fontSize: 9, color: aiState === 'idle' ? ta(0.4) : a, textAlign: 'center' }}>
           <span>
             {aiState === 'idle' ? '// EN ATTENTE' : 
              aiState === 'thinking' ? '// TRAITEMENT...' : 
@@ -1331,7 +1336,7 @@ export default function Experience() {
 
       {bulleVisible && (modeChat || !modeVocal) && (
         <div style={{ position: 'absolute', top: 90, left: '50%', transform: 'translateX(-50%)', width: 380, zIndex: 25, opacity: bulleVisible ? 1 : 0, transition: 'opacity 0.4s' }}>
-          <div style={{ position: 'relative', background: isLight ? '#e8eaef' : 'rgba(3,3,3,0.82)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderRadius: '14px', border: `1px solid rgba(${aRgb},0.1)`, padding: '16px 20px', fontFamily: 'Syne, sans-serif', color: eff.texte }}>
+          <div style={{ position: 'relative', background: isLight ? '#ffffff' : 'rgba(3,3,3,0.82)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderRadius: '14px', border: `1px solid rgba(${aRgb},0.1)`, padding: '16px 20px', fontFamily: 'Syne, sans-serif', color: eff.texte }}>
             <div style={{ position:'absolute',top:0,left:20,right:20,height:1, background:`linear-gradient(90deg,transparent,rgba(${aRgb},0.22),transparent)` }} />
             <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, color: a, letterSpacing: '0.25em', marginBottom: 8 }}>AXIS // TRANSMISSION</div>
             <div style={{ fontSize: 14, color: eff.texte, lineHeight: 1.7 }}>{dernierMessage}</div>
@@ -1340,15 +1345,15 @@ export default function Experience() {
       )}
 
       <div style={{ position: 'absolute', left: 16, top: 90, zIndex: 10, width: 150, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, letterSpacing: '0.3em', textTransform: 'uppercase', paddingBottom: 8, borderBottom: `1px solid rgba(${aRgb},0.08)`, marginBottom: 10 }}>// SYSTÈME</div>
+        <div style={{ fontSize: 7, color: ta(0.45), letterSpacing: '0.3em', textTransform: 'uppercase', paddingBottom: 8, borderBottom: `1px solid rgba(${aRgb},0.08)`, marginBottom: 10 }}>// SYSTÈME</div>
         <div style={{ border: `1px solid rgba(${aRgb},0.14)`, background: `rgba(${aRgb},0.05)`, padding: '10px 12px', marginBottom: '6px', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position:'absolute',top:0,left:0,right:0,height:1, background:`linear-gradient(90deg,transparent,rgba(${aRgb},0.18),transparent)` }} />
-          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.25em', color: `rgba(${aRgb},0.55)`, marginBottom: 6 }}>VISITEUR</div>
+          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.25em', color: ta(0.55), marginBottom: 6 }}>VISITEUR</div>
           <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, fontWeight: 700, color: a }}>{visiteur.prenom || '—'}</div>
         </div>
         <div style={{ border: `1px solid rgba(${aRgb},0.14)`, background: `rgba(${aRgb},0.05)`, padding: '10px 12px', marginBottom: '6px', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position:'absolute',top:0,left:0,right:0,height:1, background:`linear-gradient(90deg,transparent,rgba(${aRgb},0.18),transparent)` }} />
-          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.25em', color: `rgba(${aRgb},0.55)`, marginBottom: 6 }}>PROFIL</div>
+          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.25em', color: ta(0.55), marginBottom: 6 }}>PROFIL</div>
           <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, fontWeight: 700, color: a }}>{(() => {
             const map = {
               recruiter: 'RECRUTEUR',
@@ -1363,7 +1368,7 @@ export default function Experience() {
           <div style={{ position:'absolute',top:0,left:0,right:0,height:1, background:`linear-gradient(90deg,transparent,rgba(${aRgb},0.18),transparent)` }} />
           <div style={{ width: 8, height: 8, borderRadius: 9999, background: a, animation: 'pulse 1.4s infinite', position:'relative', zIndex:1 }} />
           <div style={{ position:'relative', zIndex:1 }}>
-            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.25em', color: `rgba(${aRgb},0.55)`, marginBottom: 4 }}>STATUT</div>
+            <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.25em', color: ta(0.55), marginBottom: 4 }}>STATUT</div>
             <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 12, fontWeight: 700, color: a }}>● CONNECTÉ</div>
           </div>
         </div>
@@ -1372,7 +1377,7 @@ export default function Experience() {
           <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.25em', color: isLight ? '#475569' : 'rgba(255,255,255,0.22)', textTransform: 'uppercase', marginBottom: 6 }}>NAVIGATION RAPIDE</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {['> voir le portfolio', '> mes projets', '> me contacter', '> mon parcours'].map((cmd) => (
-              <div key={cmd} onClick={() => envoyerCommande(cmd)} style={{ display: 'flex', gap: 6, borderBottom: isLight ? '1px solid rgba(15,23,42,0.06)' : '1px solid rgba(255,255,255,0.03)', padding: '5px 0', fontFamily: 'Space Mono, monospace', fontSize: 8, color: `rgba(${aRgb},0.55)`, cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.color = a} onMouseLeave={(e) => e.currentTarget.style.color = `rgba(${aRgb},0.55)`}>
+              <div key={cmd} onClick={() => envoyerCommande(cmd)} style={{ display: 'flex', gap: 6, borderBottom: isLight ? '1px solid rgba(15,23,42,0.06)' : '1px solid rgba(255,255,255,0.03)', padding: '5px 0', fontFamily: 'Space Mono, monospace', fontSize: 8, color: ta(0.55), cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.color = a} onMouseLeave={(e) => e.currentTarget.style.color = ta(0.55)}>
                 {cmd.replace('>', '›')}
               </div>
             ))}
@@ -1381,31 +1386,31 @@ export default function Experience() {
       </div>
 
       <div style={{ position: 'absolute', right: 16, top: 90, zIndex: 10, width: 150, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div style={{ fontSize: 7, color: `rgba(${aRgb},0.45)`, letterSpacing: '0.3em', textTransform: 'uppercase', paddingBottom: 8, borderBottom: `1px solid rgba(${aRgb},0.08)`, marginBottom: 10 }}>// MODES</div>
-        <button onClick={() => setModeVocal((prev) => !prev)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid', borderColor: modeVocal ? `rgba(${aRgb},0.4)` : isLight ? 'rgba(15,23,42,0.15)' : 'rgba(255,255,255,0.08)', background: modeVocal ? `rgba(${aRgb},0.07)` : isLight ? 'rgba(15,23,42,0.04)' : 'rgba(255,255,255,0.015)', color: modeVocal ? a : isLight ? '#64748b' : 'rgba(255,255,255,0.35)', padding: '6px 8px', fontFamily: 'Space Mono, monospace', fontSize: 9, cursor: 'pointer', borderRadius: '8px' }}>
+        <div style={{ fontSize: 7, color: ta(0.45), letterSpacing: '0.3em', textTransform: 'uppercase', paddingBottom: 8, borderBottom: `1px solid rgba(${aRgb},0.08)`, marginBottom: 10 }}>// MODES</div>
+        <button onClick={() => setModeVocal((prev) => !prev)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid', borderColor: modeVocal ? `rgba(${aRgb},0.4)` : isLight ? 'rgba(15,23,42,0.15)' : 'rgba(255,255,255,0.08)', background: modeVocal ? `rgba(${aRgb},0.07)` : isLight ? 'rgba(15,23,42,0.04)' : 'rgba(255,255,255,0.015)', color: modeVocal ? a : isLight ? '#526075' : 'rgba(255,255,255,0.35)', padding: '6px 8px', fontFamily: 'Space Mono, monospace', fontSize: 9, cursor: 'pointer', borderRadius: '8px' }}>
           <span>VOCAL</span>
           <span style={{ width: 20, height: 10, border: `1px solid ${a}`, position: 'relative' }}>
             <span style={{ position: 'absolute', top: 1, left: modeVocal ? 10 : 2, width: 6, height: 6, background: modeVocal ? a : `rgba(${aRgb},0.3)`, transition: 'left 0.2s' }} />
           </span>
         </button>
-        <button onClick={() => setModeChat((prev) => !prev)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid', borderColor: modeChat ? `rgba(${aRgb},0.4)` : isLight ? 'rgba(15,23,42,0.15)' : 'rgba(255,255,255,0.08)', background: modeChat ? `rgba(${aRgb},0.07)` : isLight ? 'rgba(15,23,42,0.04)' : 'rgba(255,255,255,0.015)', color: modeChat ? a : isLight ? '#64748b' : 'rgba(255,255,255,0.35)', padding: '6px 8px', fontFamily: 'Space Mono, monospace', fontSize: 9, cursor: 'pointer', borderRadius: '8px' }}>
+        <button onClick={() => setModeChat((prev) => !prev)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid', borderColor: modeChat ? `rgba(${aRgb},0.4)` : isLight ? 'rgba(15,23,42,0.15)' : 'rgba(255,255,255,0.08)', background: modeChat ? `rgba(${aRgb},0.07)` : isLight ? 'rgba(15,23,42,0.04)' : 'rgba(255,255,255,0.015)', color: modeChat ? a : isLight ? '#526075' : 'rgba(255,255,255,0.35)', padding: '6px 8px', fontFamily: 'Space Mono, monospace', fontSize: 9, cursor: 'pointer', borderRadius: '8px' }}>
           <span>CHAT</span>
           <span style={{ width: 20, height: 10, border: `1px solid ${a}`, position: 'relative' }}>
             <span style={{ position: 'absolute', top: 1, left: modeChat ? 10 : 2, width: 6, height: 6, background: modeChat ? a : `rgba(${aRgb},0.3)`, transition: 'left 0.2s' }} />
           </span>
         </button>
-        <button onClick={() => setModePortfolio(true)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid', borderColor: modePortfolio ? `rgba(${aRgb},0.4)` : isLight ? 'rgba(15,23,42,0.15)' : 'rgba(255,255,255,0.08)', background: modePortfolio ? `rgba(${aRgb},0.07)` : isLight ? 'rgba(15,23,42,0.04)' : 'rgba(255,255,255,0.015)', color: modePortfolio ? a : isLight ? '#64748b' : 'rgba(255,255,255,0.35)', padding: '6px 8px', fontFamily: 'Space Mono, monospace', fontSize: 9, cursor: 'pointer', borderRadius: '8px' }}>
+        <button onClick={() => setModePortfolio(true)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid', borderColor: modePortfolio ? `rgba(${aRgb},0.4)` : isLight ? 'rgba(15,23,42,0.15)' : 'rgba(255,255,255,0.08)', background: modePortfolio ? `rgba(${aRgb},0.07)` : isLight ? 'rgba(15,23,42,0.04)' : 'rgba(255,255,255,0.015)', color: modePortfolio ? a : isLight ? '#526075' : 'rgba(255,255,255,0.35)', padding: '6px 8px', fontFamily: 'Space Mono, monospace', fontSize: 9, cursor: 'pointer', borderRadius: '8px' }}>
           <span>PORTFOLIO</span>
           <span style={{ width: 20, height: 10, border: `1px solid ${a}`, position: 'relative' }}>
             <span style={{ position: 'absolute', top: 1, left: 2, width: 6, height: 6, background: `rgba(${aRgb},0.3)` }} />
           </span>
         </button>
         <div style={{ marginTop: 16, padding: '10px 12px', borderRadius: 8, background: isLight ? `rgba(${aRgb},0.05)` : `rgba(${aRgb},0.02)`, border: isLight ? `1px solid rgba(${aRgb},0.18)` : `1px solid rgba(${aRgb},0.07)` }}>
-          <div style={{fontSize:7,color:`rgba(${aRgb},0.3)`, letterSpacing:'0.25em',marginBottom:8}}>SYS_STATUS</div>
+          <div style={{fontSize:7,color:ta(0.3), letterSpacing:'0.25em',marginBottom:8}}>SYS_STATUS</div>
           {[['MODÈLE','GROQ'],['SESSION','ACTIVE'],['VOIX','FR-FR']].map(([k,v])=>(
             <div key={k} style={{display:'flex',justifyContent:'space-between', fontSize:7,marginBottom:4}}>
-              <span style={{color:isLight ? '#64748b' : 'rgba(255,255,255,0.3)'}}>{k}</span>
-              <span style={{color:`rgba(${aRgb},0.85)`}}>{v}</span>
+              <span style={{color:isLight ? '#526075' : 'rgba(255,255,255,0.3)'}}>{k}</span>
+              <span style={{color:ta(0.85)}}>{v}</span>
             </div>
           ))}
         </div>
@@ -1444,11 +1449,11 @@ export default function Experience() {
                 overflow: 'hidden',
                 width: 120,
                 height: 120,
-                background: 'rgba(5,5,5,0.45)',
+                background: isLight ? 'rgba(255,255,255,0.8)' : 'rgba(5,5,5,0.45)',
                 backdropFilter: 'blur(20px)',
                 WebkitBackdropFilter: 'blur(20px)',
                 border: 'none',
-                boxShadow: `0 8px 32px rgba(0,0,0,0.4)`,
+                boxShadow: isLight ? '0 8px 28px rgba(15,23,42,0.14)' : `0 8px 32px rgba(0,0,0,0.4)`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -1482,10 +1487,10 @@ export default function Experience() {
               marginTop: 8,
               fontFamily: 'Space Mono, monospace',
               fontSize: 8,
-              color: aiState === 'idle' ? `rgba(${aRgb},0.35)` : a,
+              color: aiState === 'idle' ? ta(0.35) : a,
               letterSpacing: '0.15em',
               textAlign: 'center',
-              background: 'rgba(0,0,0,0.6)',
+              background: isLight ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.6)',
               backdropFilter: 'blur(12px)',
               padding: '4px 10px',
               borderRadius: 20,
@@ -1508,14 +1513,14 @@ export default function Experience() {
             width: isMobile ? '100%' : 480,
             zIndex: 53,
             padding: isMobile ? '12px 16px' : 0,
-            background: isMobile ? 'rgba(0,0,0,0.9)' : 'transparent',
+            background: isMobile ? (isLight ? 'rgba(248,249,251,0.95)' : 'rgba(0,0,0,0.9)') : 'transparent',
             borderTop: isMobile ? `1px solid rgba(${aRgb},0.1)` : 'none',
           }}>
             {!modeParler ? (
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                background: 'rgba(5,5,5,0.85)',
+                background: isLight ? 'rgba(255,255,255,0.92)' : 'rgba(5,5,5,0.85)',
                 border: `1px solid rgba(${aRgb},0.2)`,
                 borderRadius: isMobile ? 14 : 16,
                 backdropFilter: 'blur(20px)',
@@ -1577,12 +1582,12 @@ export default function Experience() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 10,
-                background: 'rgba(5,5,5,0.85)',
+                background: isLight ? 'rgba(255,255,255,0.92)' : 'rgba(5,5,5,0.85)',
                 border: `1px solid rgba(${aRgb},0.2)`,
                 borderRadius: isMobile ? 14 : 16,
                 backdropFilter: 'blur(20px)',
                 WebkitBackdropFilter: 'blur(20px)',
-                boxShadow: `0 8px 32px rgba(0,0,0,0.5)`,
+                boxShadow: isLight ? '0 8px 28px rgba(15,23,42,0.12)' : `0 8px 32px rgba(0,0,0,0.5)`,
                 padding: isMobile ? '14px 20px' : '14px 28px',
               }}>
                 <div style={{
@@ -1595,7 +1600,7 @@ export default function Experience() {
                 <span style={{
                   fontFamily: 'Space Mono, monospace',
                   fontSize: isMobile ? 9 : 10,
-                  color: ecoute ? a : `rgba(${aRgb},0.55)`,
+                  color: ecoute ? a : ta(0.55),
                   letterSpacing: '0.18em',
                 }}>
                   {ecoute ? 'ÉCOUTE EN COURS — PARLEZ' : 'MICRO PRÊT — EN ATTENTE'}
@@ -1620,12 +1625,12 @@ export default function Experience() {
               display: 'flex',
               alignItems: 'center',
               gap: 0,
-              background: 'rgba(5,5,5,0.88)',
+              background: isLight ? 'rgba(255,255,255,0.95)' : 'rgba(5,5,5,0.88)',
               border: `1px solid rgba(${aRgb},0.25)`,
               borderRadius: 14,
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+              boxShadow: isLight ? '0 8px 28px rgba(15,23,42,0.14)' : '0 8px 32px rgba(0,0,0,0.4)',
               overflow: 'hidden',
               width: 360,
             }}>
@@ -1636,7 +1641,7 @@ export default function Experience() {
                   border: 'none',
                   borderRight: `1px solid rgba(${aRgb},0.12)`,
                   background: 'transparent',
-                  color: `rgba(${aRgb},0.5)`,
+                  color: ta(0.5),
                   cursor: 'pointer',
                   fontSize: 12,
                   flexShrink: 0,
@@ -1662,7 +1667,7 @@ export default function Experience() {
                   padding: '12px 14px',
                   fontFamily: 'Space Mono, monospace',
                   fontSize: 11,
-                  color: '#fff',
+                  color: isLight ? '#0f172a' : '#fff',
                   caretColor: a,
                 }}
               />
@@ -1697,7 +1702,7 @@ export default function Experience() {
               justifyContent: 'center',
               width: 36,
               height: 36,
-              background: inputPortfolioVisible ? `rgba(${aRgb},0.2)` : 'rgba(5,5,5,0.65)',
+              background: inputPortfolioVisible ? `rgba(${aRgb},0.2)` : (isLight ? 'rgba(255,255,255,0.9)' : 'rgba(5,5,5,0.65)'),
               border: `1px solid rgba(${aRgb},${inputPortfolioVisible ? '0.55' : '0.18'})`,
               borderRadius: '50%',
               cursor: 'pointer',
@@ -1727,13 +1732,13 @@ export default function Experience() {
       <div style={{ position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)', width: 480, zIndex: 20 }}>
         <div style={{
           fontFamily: 'Space Mono, monospace', fontSize: 8,
-          color: `rgba(${aRgb},0.38)`, letterSpacing: '0.2em',
+          color: ta(0.38), letterSpacing: '0.2em',
           marginBottom: 4, textAlign: 'center'
         }}>
           ENTRÉE_DIRECTE // {estEnChargement ? 'TRAITEMENT...' : 'EN_ATTENTE...'}
         </div>
 
-        <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.25em', color: `rgba(${aRgb},0.22)`, marginBottom: 6 }}>ENTRÉE DE COMMANDE</div>
+        <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.25em', color: ta(0.22), marginBottom: 6 }}>ENTRÉE DE COMMANDE</div>
         <div style={{
           display: modeParler ? 'none' : 'flex', alignItems: 'center',
           border: `1px solid rgba(${aRgb},0.15)`,
@@ -1768,7 +1773,7 @@ export default function Experience() {
         {modeParler && (
           <div style={{
             textAlign: 'center',
-            color: `rgba(${aRgb},0.7)`,
+            color: ta(0.7),
             fontSize: '11px',
             letterSpacing: '2px',
             padding: '12px'
@@ -1813,23 +1818,23 @@ export default function Experience() {
         }}
         >
           <div style={{
-            border: `1px solid ${a}`,
+            border: `1px solid ${av}`,
             background: 'rgba(3,12,8,0.97)',
-            boxShadow: `0 0 40px rgba(${aRgb},0.3), 0 0 80px rgba(${aRgb},0.1)`,
+            boxShadow: `0 0 40px rgba(${avRgb},0.3), 0 0 80px rgba(${avRgb},0.1)`,
             backdropFilter: 'blur(16px)',
             position: 'relative',
             overflow: 'hidden',
             transition: 'box-shadow 0.2s',
           }}
-          onMouseEnter={e => e.currentTarget.style.boxShadow=`0 0 60px rgba(${aRgb},0.5), 0 0 100px rgba(${aRgb},0.2)`}
-          onMouseLeave={e => e.currentTarget.style.boxShadow=`0 0 40px rgba(${aRgb},0.3), 0 0 80px rgba(${aRgb},0.1)`}
+          onMouseEnter={e => e.currentTarget.style.boxShadow=`0 0 60px rgba(${avRgb},0.5), 0 0 100px rgba(${avRgb},0.2)`}
+          onMouseLeave={e => e.currentTarget.style.boxShadow=`0 0 40px rgba(${avRgb},0.3), 0 0 80px rgba(${avRgb},0.1)`}
           >
             {/* Coins HUD */}
             {[['top','left'],['top','right'],['bottom','left'],['bottom','right']].map(([v,h],i) => (
               <div key={i} style={{
                 position:'absolute', [v]:0, [h]:0, width:14, height:14,
-                [`border${v.charAt(0).toUpperCase()+v.slice(1)}`]:`2px solid ${a}`,
-                [`border${h.charAt(0).toUpperCase()+h.slice(1)}`]:`2px solid ${a}`,
+                [`border${v.charAt(0).toUpperCase()+v.slice(1)}`]:`2px solid ${av}`,
+                [`border${h.charAt(0).toUpperCase()+h.slice(1)}`]:`2px solid ${av}`,
                 zIndex:3,
               }} />
             ))}
@@ -1837,15 +1842,15 @@ export default function Experience() {
             {/* Header */}
             <div style={{
               padding: '8px 16px',
-              borderBottom: `1px solid rgba(${aRgb},0.25)`,
-              background: `rgba(${aRgb},0.07)`,
+              borderBottom: `1px solid rgba(${avRgb},0.25)`,
+              background: `rgba(${avRgb},0.07)`,
               fontFamily: 'Space Mono, monospace',
-              fontSize: 8, color: a,
+              fontSize: 8, color: av,
               letterSpacing: '0.25em', textTransform: 'uppercase',
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             }}>
               <span>{cartesActives[0].label}</span>
-              <span style={{ fontSize: 10, color: `rgba(${aRgb},0.5)` }}>→</span>
+              <span style={{ fontSize: 10, color: `rgba(${avRgb},0.5)` }}>→</span>
             </div>
 
             {/* Image pleine largeur */}
@@ -1870,7 +1875,7 @@ export default function Experience() {
               {/* Scan line animée */}
               <div style={{
                 position:'absolute', left:0, right:0, height:2,
-                background:`linear-gradient(90deg,transparent,rgba(${aRgb},0.7),transparent)`,
+                background:`linear-gradient(90deg,transparent,rgba(${avRgb},0.7),transparent)`,
                 animation:'scanAnim 2.5s linear infinite',
                 zIndex:2,
               }} />
@@ -1883,7 +1888,7 @@ export default function Experience() {
               {/* Overlay grille très légère */}
               <div style={{
                 position:'absolute', inset:0, zIndex:1,
-                backgroundImage:`linear-gradient(rgba(${aRgb},0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(${aRgb},0.03) 1px,transparent 1px)`,
+                backgroundImage:`linear-gradient(rgba(${avRgb},0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(${avRgb},0.03) 1px,transparent 1px)`,
                 backgroundSize:'40px 40px',
               }} />
             </div>
@@ -1892,11 +1897,11 @@ export default function Experience() {
             <div style={{
               padding: '12px 14px',
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              borderTop: `1px solid rgba(${aRgb},0.15)`,
+              borderTop: `1px solid rgba(${avRgb},0.15)`,
             }}>
               <div style={{
                 fontFamily:'Space Mono, monospace',
-                fontSize:9, color:a,
+                fontSize:9, color:av,
                 letterSpacing:'0.1em', fontWeight:'bold',
               }}>
                 {cartesActives[0].titre.toUpperCase()}
@@ -1905,7 +1910,7 @@ export default function Experience() {
                 {cartesActives[0].stats.map((s, si) => (
                   <div key={si} style={{
                     fontFamily:'Space Mono, monospace', fontSize:8,
-                    color: si===0 ? `rgba(${aRgb},0.9)` : `rgba(${aRgb},0.5)`,
+                    color: si===0 ? `rgba(${avRgb},0.9)` : `rgba(${avRgb},0.5)`,
                     letterSpacing:'0.1em',
                   }}>
                     {si===0 ? '▶ ' : ''}{s}
@@ -1934,43 +1939,43 @@ export default function Experience() {
             background: 'rgba(4,6,5,0.92)',
             backdropFilter: 'blur(24px)',
             WebkitBackdropFilter: 'blur(24px)',
-            border: `1px solid ${theme.accent}`,
+            border: `1px solid ${av}`,
             borderRadius: '14px',
             overflow: 'hidden',
-            boxShadow: `0 0 40px rgba(${theme.accentRgb},0.25), 
-                  0 0 80px rgba(${theme.accentRgb},0.1),
-                  inset 0 1px 0 rgba(${theme.accentRgb},0.15)`,
+            boxShadow: `0 0 40px rgba(${avRgb},0.25), 
+                  0 0 80px rgba(${avRgb},0.1),
+                  inset 0 1px 0 rgba(${avRgb},0.15)`,
           }}>
             <div style={{
               position: 'absolute', top: 0, left: 0, right: 0, height: 1,
-              background: `linear-gradient(90deg,transparent,${theme.accent},transparent)`,
+              background: `linear-gradient(90deg,transparent,${av},transparent)`,
               zIndex: 3,
             }} />
             {[['top','left'],['top','right'],['bottom','left'],['bottom','right']].map(([v,h],i) => (
               <div key={i} style={{
                 position:'absolute', [v]:6, [h]:6, width:12, height:12,
-                [`border${v.charAt(0).toUpperCase()+v.slice(1)}`]:`2px solid ${theme.accent}`,
-                [`border${h.charAt(0).toUpperCase()+h.slice(1)}`]:`2px solid ${theme.accent}`,
+                [`border${v.charAt(0).toUpperCase()+v.slice(1)}`]:`2px solid ${av}`,
+                [`border${h.charAt(0).toUpperCase()+h.slice(1)}`]:`2px solid ${av}`,
                 zIndex:4,
               }} />
             ))}
             <div style={{
               padding: '8px 14px',
-              borderBottom: `1px solid rgba(${theme.accentRgb},0.15)`,
-              background: `rgba(${theme.accentRgb},0.06)`,
+              borderBottom: `1px solid rgba(${avRgb},0.15)`,
+              background: `rgba(${avRgb},0.06)`,
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
             }}>
               <span style={{
                 fontFamily: 'Space Mono, monospace',
-                fontSize: 8, color: theme.accent,
+                fontSize: 8, color: av,
                 letterSpacing: '0.22em', textTransform: 'uppercase',
               }}>FRÉJUS KOUADIO</span>
               <div style={{
                 width: 6, height: 6, borderRadius: '50%',
-                background: theme.accent,
-                boxShadow: `0 0 6px ${theme.accent}`,
+                background: av,
+                boxShadow: `0 0 6px ${av}`,
                 animation: 'pulse 1.5s infinite',
               }} />
             </div>
@@ -1995,7 +2000,7 @@ export default function Experience() {
               />
               <div style={{
                 position: 'absolute', left: 0, right: 0, height: 2,
-                background: `linear-gradient(90deg,transparent,rgba(${theme.accentRgb},0.6),transparent)`,
+                background: `linear-gradient(90deg,transparent,rgba(${avRgb},0.6),transparent)`,
                 animation: 'scanAnim 3s linear infinite',
                 zIndex: 2,
               }} />
@@ -2006,8 +2011,8 @@ export default function Experience() {
               }} />
               <div style={{
                 position: 'absolute', inset: 0, zIndex: 1,
-                backgroundImage: `linear-gradient(rgba(${theme.accentRgb},0.03) 1px,transparent 1px),
-                  linear-gradient(90deg,rgba(${theme.accentRgb},0.03) 1px,transparent 1px)`,
+                backgroundImage: `linear-gradient(rgba(${avRgb},0.03) 1px,transparent 1px),
+                  linear-gradient(90deg,rgba(${avRgb},0.03) 1px,transparent 1px)`,
                 backgroundSize: '30px 30px',
               }} />
               <div style={{
@@ -2024,7 +2029,7 @@ export default function Experience() {
                 }}>Fréjus Kouadio</div>
                 <div style={{
                   fontFamily: 'Space Mono, monospace',
-                  fontSize: 8, color: theme.accent,
+                  fontSize: 8, color: av,
                   letterSpacing: '0.18em',
                   textShadow: '0 1px 4px rgba(0,0,0,0.8)',
                 }}>DEV FULLSTACK · IA</div>
@@ -2034,7 +2039,7 @@ export default function Experience() {
               padding: '10px 14px',
               display: 'flex',
               justifyContent: 'space-between',
-              borderTop: `1px solid rgba(${theme.accentRgb},0.1)`,
+              borderTop: `1px solid rgba(${avRgb},0.1)`,
             }}>
               {[
                 { Icon: MapPin, label: 'Yamoussoukro' },
@@ -2044,12 +2049,12 @@ export default function Experience() {
                 <div key={i} style={{
                   fontFamily: 'Space Mono, monospace',
                   fontSize: 7,
-                  color: i === 0 ? theme.accent : `rgba(${theme.accentRgb},0.55)`,
+                  color: i === 0 ? av : `rgba(${avRgb},0.55)`,
                   letterSpacing: '0.08em',
                   display: 'flex', flexDirection: 'column',
                   alignItems: 'center', gap: 3,
                 }}>
-                  <Icon size={12} color={i === 0 ? theme.accent : `rgba(${theme.accentRgb},0.55)`} />
+                  <Icon size={12} color={i === 0 ? av : `rgba(${avRgb},0.55)`} />
                   <span>{label}</span>
                 </div>
               ))}
@@ -2061,7 +2066,7 @@ export default function Experience() {
             left: -50,
             width: 50,
             height: 1,
-            background: `linear-gradient(270deg,rgba(${theme.accentRgb},0.4),transparent)`,
+            background: `linear-gradient(270deg,rgba(${avRgb},0.4),transparent)`,
             transform: 'translateY(-50%)',
           }} />
         </div>

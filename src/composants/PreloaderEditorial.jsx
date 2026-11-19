@@ -9,8 +9,10 @@ export default function PreloaderEditorial({ onTermine }) {
   const { theme, mode, getThemeEffectif } = utiliserTheme()
   const eff = getThemeEffectif ? getThemeEffectif() : theme
   const isLight = mode === 'light'
-  const a = theme.accent
-  const aRgb = theme.accentRgb
+  const a = eff.accent
+  const aRgb = eff.accentRgb
+  // Texte en accent semi-transparent : en mode clair, opacité relevée pour rester lisible
+  const ta = (o) => `rgba(${aRgb},${isLight ? Math.min(1, 0.72 + o * 0.28) : o})`
 
   const [sortie, setSortie] = useState(false)
   const [pct, setPct] = useState(0)
@@ -169,11 +171,11 @@ export default function PreloaderEditorial({ onTermine }) {
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 8 : 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 10, height: 10, border: `1px solid ${a}`, transform: 'rotate(45deg)' }} />
-            <span style={{ fontSize: isMobile ? 8 : 11, letterSpacing: '0.35em', color: isLight ? 'rgba(20,20,20,0.4)' : 'rgba(242,240,236,0.4)' }}>
+            <span style={{ fontSize: isMobile ? 8 : 11, letterSpacing: '0.35em', color: isLight ? 'rgba(20,20,20,0.76)' : 'rgba(242,240,236,0.4)' }}>
               VOL. I · N°01
             </span>
           </div>
-          <span style={{ fontSize: isMobile ? 8 : 11, letterSpacing: '0.2em', color: isLight ? 'rgba(20,20,20,0.3)' : 'rgba(242,240,236,0.3)' }}>
+          <span style={{ fontSize: isMobile ? 8 : 11, letterSpacing: '0.2em', color: isLight ? 'rgba(20,20,20,0.72)' : 'rgba(242,240,236,0.3)' }}>
             ÉD. {String(pct).padStart(3, '0')}
           </span>
         </div>
@@ -224,7 +226,7 @@ export default function PreloaderEditorial({ onTermine }) {
             marginTop: isMobile ? 10 : 14,
             fontSize: isMobile ? 9 : 11,
             letterSpacing: isMobile ? '0.3em' : '0.5em',
-            color: `rgba(${aRgb},0.65)`,
+            color: ta(0.65),
           }}>
             DÉVELOPPEUR LOGICIEL · UI/UX
           </div>
@@ -233,7 +235,7 @@ export default function PreloaderEditorial({ onTermine }) {
             marginTop: isMobile ? 18 : 28,
             fontSize: isMobile ? 13 : 15,
             letterSpacing: '0.25em',
-            color: `rgba(${aRgb},0.7)`,
+            color: ta(0.7),
           }}>
             {String(pct).padStart(2, '0')}%
           </div>
@@ -258,7 +260,7 @@ export default function PreloaderEditorial({ onTermine }) {
                   {s}
                 </span>
                 {i < sections.length - 1 && (
-                  <span style={{ color: isLight ? 'rgba(20,20,20,0.15)' : 'rgba(242,240,236,0.15)' }}>·</span>
+                  <span style={{ color: isLight ? 'rgba(20,20,20,0.66)' : 'rgba(242,240,236,0.15)' }}>·</span>
                 )}
               </span>
             ))}
@@ -267,10 +269,10 @@ export default function PreloaderEditorial({ onTermine }) {
 
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'flex-end', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 8 : 0, marginBottom: isMobile ? 10 : 14 }}>
-            <span style={{ fontSize: isMobile ? 9 : 10, letterSpacing: '0.15em', color: isLight ? 'rgba(20,20,20,0.3)' : 'rgba(242,240,236,0.3)' }}>
+            <span style={{ fontSize: isMobile ? 9 : 10, letterSpacing: '0.15em', color: isLight ? 'rgba(20,20,20,0.72)' : 'rgba(242,240,236,0.3)' }}>
               CI · 2026
             </span>
-            <span style={{ fontSize: isMobile ? 9 : 10, letterSpacing: '0.2em', color: isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.35)' }}>
+            <span style={{ fontSize: isMobile ? 9 : 10, letterSpacing: '0.2em', color: isLight ? 'rgba(20,20,20,0.74)' : 'rgba(242,240,236,0.35)' }}>
               {mots[motIdx]}
             </span>
           </div>

@@ -8,6 +8,9 @@ import RevealOnScroll from '@/composants/RevealOnScroll'
 // Petit composant de secours pour éviter une erreur si `AxisBouton` manque.
 function AxisBouton({ isMobile, a, aRgb, navigate, eff }) {
   const [survol, setSurvol] = useState(false)
+  const isLight = utiliserTheme((s) => s.mode) === 'light'
+  // Texte en accent semi-transparent : en mode clair, opacité relevée pour rester lisible
+  const ta = (o) => `rgba(${aRgb},${isLight ? Math.min(1, 0.72 + o * 0.28) : o})`
 
   return (
     <div style={{
@@ -64,7 +67,7 @@ function AxisBouton({ isMobile, a, aRgb, navigate, eff }) {
           <div style={{
             fontFamily: 'Space Mono, monospace',
             fontSize: 8,
-            color: `rgba(${aRgb},0.5)`,
+            color: ta(0.5),
             letterSpacing: '0.2em',
             marginBottom: 5,
           }}>AXIS // IA</div>
@@ -186,7 +189,7 @@ function AxisBouton({ isMobile, a, aRgb, navigate, eff }) {
             <div style={{
               fontFamily: 'Space Mono, monospace',
               fontSize: 7,
-              color: `rgba(${aRgb},0.45)`,
+              color: ta(0.45),
               letterSpacing: '0.22em',
             }}>AXIS // IA</div>
             <div style={{
@@ -233,8 +236,10 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
   const { theme, mode, getThemeEffectif } = utiliserTheme()
   const eff = getThemeEffectif ? getThemeEffectif() : theme
   const isLight = mode === 'light'
-  const a = theme.accent
-  const aRgb = theme.accentRgb
+  const a = eff.accent
+  const aRgb = eff.accentRgb
+  // Texte en accent semi-transparent : en mode clair, opacité relevée pour rester lisible
+  const ta = (o) => `rgba(${aRgb},${isLight ? Math.min(1, 0.72 + o * 0.28) : o})`
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -476,7 +481,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
     logo: { color: eff.texte, fontSize: 15, fontWeight: 700, letterSpacing: '0.06em', fontFamily: 'Fraunces, serif' },
     closeBtn: { background: eff.cardBg, border: `1px solid ${eff.borderStrong}`, color: eff.textMuted, padding: '8px 16px', cursor: 'pointer', fontSize: 9, letterSpacing: '0.2em', borderRadius: 6, fontFamily: 'Space Mono, monospace' },
     section: { padding: '100px 80px', borderBottom: `1px solid ${eff.borderLight}` },
-    secNum: { color: `rgba(${aRgb},0.35)`, fontSize: 10, letterSpacing: '0.35em', fontFamily: 'Space Mono, monospace' },
+    secNum: { color: ta(0.35), fontSize: 10, letterSpacing: '0.35em', fontFamily: 'Space Mono, monospace' },
     secTitle: { fontSize: 36, fontWeight: 700, color: eff.texte, margin: '0 0 56px', fontFamily: 'Fraunces, serif' },
     accent: { color: a },
     tag: { background: `rgba(${aRgb},0.08)`, border: `1px solid rgba(${aRgb},0.2)`, color: a, padding: '6px 16px', fontSize: 9, letterSpacing: '0.2em', borderRadius: 3, display: 'inline-block' },
@@ -567,7 +572,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
         #pf-wrap .pf-skill-pill:hover { border-color: rgba(${aRgb},0.3); background: rgba(${aRgb},0.05); }
         #pf-wrap nav span { color: ${navSpanColor}; cursor: pointer; }
         #pf-wrap nav span:hover { color: ${a}; transition: color 200ms; }
-        #pf-wrap a.pf-btn:hover { background: ${a}; color: #050505; }
+        #pf-wrap a.pf-btn:hover { background: ${a}; color: ${isLight ? '#ffffff' : '#050505'}; }
         #pf-wrap a.pf-ghost:hover { background: rgba(${aRgb},0.08); }
         #pf-github .github-scroll::-webkit-scrollbar { display: none; }
       `}</style>
@@ -667,7 +672,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               fontFamily: 'Space Mono, monospace',
               fontSize: '8px',
               letterSpacing: '0.35em',
-              color: isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.35)',
+              color: isLight ? 'rgba(20,20,20,0.74)' : 'rgba(242,240,236,0.35)',
               textTransform: 'uppercase',
             }}>
               VOL. I · N°01
@@ -679,7 +684,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               fontFamily: 'Space Mono, monospace',
               fontSize: '8px',
               letterSpacing: '0.3em',
-              color: isLight ? 'rgba(20,20,20,0.25)' : 'rgba(242,240,236,0.25)',
+              color: isLight ? 'rgba(20,20,20,0.7)' : 'rgba(242,240,236,0.25)',
               textTransform: 'uppercase',
             }}>
               CI · 2026
@@ -746,14 +751,14 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                   <div style={{
                     fontFamily: 'Fraunces, serif',
                     fontSize: '10px',
-                    color: isLight ? 'rgba(20,20,20,0.3)' : 'rgba(242,240,236,0.3)',
+                    color: isLight ? 'rgba(20,20,20,0.72)' : 'rgba(242,240,236,0.3)',
                   }}>
                     {num}
                   </div>
                   <div style={{
                     fontFamily: 'Space Mono, monospace',
                     fontSize: '8px',
-                    color: isLight ? 'rgba(20,20,20,0.45)' : 'rgba(242,240,236,0.45)',
+                    color: isLight ? 'rgba(20,20,20,0.78)' : 'rgba(242,240,236,0.45)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
                   }}>
@@ -816,7 +821,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                     fontWeight: 500,
                     fontStyle: 'italic',
                     lineHeight: 0.88,
-                    color: isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.4)',
+                    color: isLight ? 'rgba(20,20,20,0.74)' : 'rgba(242,240,236,0.4)',
                     letterSpacing: '-0.025em',
                     marginLeft: isMobile ? '20px' : '48px',
                     marginTop: '-4px',
@@ -859,7 +864,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                         fontFamily: 'Space Mono, monospace',
                         fontSize: '8px',
                         letterSpacing: '0.18em',
-                        color: isLight ? 'rgba(20,20,20,0.4)' : 'rgba(242,240,236,0.4)',
+                        color: isLight ? 'rgba(20,20,20,0.76)' : 'rgba(242,240,236,0.4)',
                         textTransform: 'uppercase',
                       }}>
                         <span>{tag}</span>
@@ -898,7 +903,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                       justifyContent: 'center',
                       padding: '12px 24px',
                       background: 'transparent',
-                      color: isLight ? 'rgba(20,20,20,0.5)' : 'rgba(242,240,236,0.5)',
+                      color: isLight ? 'rgba(20,20,20,0.8)' : 'rgba(242,240,236,0.5)',
                       fontFamily: 'Space Mono, monospace',
                       fontSize: '9px',
                       fontWeight: '700',
@@ -929,7 +934,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                   <div style={{
                     fontFamily: 'Space Mono, monospace',
                     fontSize: '7px',
-                    color: isLight ? 'rgba(20,20,20,0.3)' : 'rgba(242,240,236,0.3)',
+                    color: isLight ? 'rgba(20,20,20,0.72)' : 'rgba(242,240,236,0.3)',
                     textTransform: 'uppercase',
                     letterSpacing: '0.1em',
                   }}>
@@ -951,7 +956,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                       <div style={{
                         fontFamily: 'Space Mono, monospace',
                         fontSize: '7px',
-                        color: isLight ? 'rgba(20,20,20,0.4)' : 'rgba(242,240,236,0.4)',
+                        color: isLight ? 'rgba(20,20,20,0.76)' : 'rgba(242,240,236,0.4)',
                         letterSpacing: '0.08em',
                         textTransform: 'uppercase',
                       }}>
@@ -1010,7 +1015,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               fontFamily: 'Space Mono, monospace',
               fontSize: '7px',
               letterSpacing: '0.15em',
-              color: isLight ? 'rgba(20,20,20,0.3)' : 'rgba(242,240,236,0.3)',
+              color: isLight ? 'rgba(20,20,20,0.72)' : 'rgba(242,240,236,0.3)',
               textTransform: 'uppercase',
               cursor: 'pointer',
             }}
@@ -1042,7 +1047,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
               fontFamily: 'Space Mono, monospace',
               fontSize: '7px',
               letterSpacing: '0.1em',
-              color: isLight ? 'rgba(20,20,20,0.3)' : 'rgba(242,240,236,0.3)',
+              color: isLight ? 'rgba(20,20,20,0.72)' : 'rgba(242,240,236,0.3)',
               textTransform: 'uppercase',
             }}>
               PROFIL VÉRIFIÉ
@@ -1268,7 +1273,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                       {e.chap}
                     </span>
                     <div style={{ position: 'relative' }}>
-                      <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.15em', color: e.active ? a : (isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.35)'), marginBottom: 6, textTransform: 'uppercase' }}>
+                      <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.15em', color: e.active ? a : (isLight ? 'rgba(20,20,20,0.74)' : 'rgba(242,240,236,0.35)'), marginBottom: 6, textTransform: 'uppercase' }}>
                         CH. {e.chap} · {e.periode}
                       </div>
                       <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, fontSize: 19, color: eff.texte, marginBottom: 6 }}>
@@ -1289,11 +1294,11 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {parcoursData.map((e, i) => (
               <RevealOnScroll key={e.chap} as="div" direction={i % 2 === 0 ? 'left' : 'right'} delay={i * 150} style={{ display: 'flex', gap: 16, padding: '20px 0', borderBottom: i < parcoursData.length - 1 ? `1px solid ${isLight ? 'rgba(20,20,20,0.08)' : 'rgba(242,240,236,0.08)'}` : 'none' }}>
-                <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: 32, color: e.active ? a : (isLight ? 'rgba(20,20,20,0.2)' : 'rgba(242,240,236,0.2)'), lineHeight: 1, flexShrink: 0, width: 40 }}>
+                <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: 32, color: e.active ? a : (isLight ? 'rgba(20,20,20,0.68)' : 'rgba(242,240,236,0.2)'), lineHeight: 1, flexShrink: 0, width: 40 }}>
                   {e.chap}
                 </div>
                 <div>
-                  <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.15em', color: e.active ? a : (isLight ? 'rgba(20,20,20,0.35)' : 'rgba(242,240,236,0.35)'), marginBottom: 6, textTransform: 'uppercase' }}>
+                  <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 7, letterSpacing: '0.15em', color: e.active ? a : (isLight ? 'rgba(20,20,20,0.74)' : 'rgba(242,240,236,0.35)'), marginBottom: 6, textTransform: 'uppercase' }}>
                     {e.periode}
                   </div>
                   <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, fontSize: 17, color: eff.texte, marginBottom: 6 }}>
@@ -1893,7 +1898,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           <div style={{
             padding: '40px 0',
             fontFamily: 'Space Mono, monospace', fontSize: 10,
-            color: `rgba(${aRgb},0.4)`, letterSpacing: '0.2em',
+            color: ta(0.4), letterSpacing: '0.2em',
             animation: 'pulse 1.5s infinite',
           }}>
             // CONNEXION AU RÉSEAU GITHUB...
@@ -1904,7 +1909,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
           <div style={{
             padding: '40px 0',
             fontFamily: 'Space Mono, monospace', fontSize: 10,
-            color: `rgba(${aRgb},0.5)`, letterSpacing: '0.15em',
+            color: ta(0.5), letterSpacing: '0.15em',
           }}>
             // ERREUR DE CONNEXION — DONNÉES INDISPONIBLES
           </div>
@@ -2171,7 +2176,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                 }}>
                   <span style={{
                     fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9,
-                    letterSpacing: '0.15em', color: `rgba(${aRgb},0.5)`,
+                    letterSpacing: '0.15em', color: ta(0.5),
                   }}>
                     {String(i + 1).padStart(2, '0')}
                   </span>
@@ -2198,7 +2203,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                   {currency && (
                     <span style={{
                       fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 10 : 12,
-                      color: `rgba(${aRgb},0.55)`, letterSpacing: '0.05em',
+                      color: ta(0.55), letterSpacing: '0.05em',
                     }}>
                       {currency}
                     </span>
@@ -2228,7 +2233,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                     {featuresRestantes.map(f => (
                       <span key={f} style={{
                         fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9,
-                        letterSpacing: '0.06em', color: `rgba(${aRgb},0.5)`,
+                        letterSpacing: '0.06em', color: ta(0.5),
                       }}>
                         ✓ {f.toUpperCase()}
                       </span>
@@ -2532,7 +2537,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                 alignItems: 'center',
                 gap: 10,
                 background: a,
-                color: '#050505',
+                color: isLight ? '#ffffff' : '#050505',
                 border: 'none',
                 borderRadius: 8,
                 padding: isMobile ? '10px 18px' : '12px 24px',
@@ -2655,7 +2660,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
-                  <span style={{ fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9, color: `rgba(${aRgb},0.5)`, letterSpacing: '0.15em' }}>
+                  <span style={{ fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 8 : 9, color: ta(0.5), letterSpacing: '0.15em' }}>
                     {String(ci + 1).padStart(2, '0')}
                   </span>
                   <span style={{ fontFamily: 'Fraunces, serif', fontWeight: 800, fontSize: isMobile ? 26 : 40, color: eff.texte, letterSpacing: '-0.02em' }}>
@@ -2678,7 +2683,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             <a href="mailto:devfred58@gmail.com"
               style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: isMobile ? 'center' : undefined, gap: 12,
-                background: a, color: '#050505',
+                background: a, color: isLight ? '#ffffff' : '#050505',
                 padding: isMobile ? '16px 20px' : '18px 44px',
                 fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 11 : 12,
                 letterSpacing: '0.2em', fontWeight: 700,
@@ -2692,7 +2697,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             >
               DÉMARRER UN PROJET →
             </a>
-            <p style={{ marginTop: 16, fontFamily: 'Space Mono, monospace', fontSize: 9, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.15em' }}>
+            <p style={{ marginTop: 16, fontFamily: 'Space Mono, monospace', fontSize: 9, color: ta(0.4), letterSpacing: '0.15em' }}>
               Ou envoyez un message sur WhatsApp pour une réponse rapide
             </p>
           </RevealOnScroll>
@@ -2716,7 +2721,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             &lt;<span style={{ color: a }}>/DevJ</span>&gt;
           </div>
           <div style={{ width: 1, height: 20, background: eff.borderStrong }} />
-          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: `rgba(${aRgb},0.45)`, letterSpacing: '0.15em', display: isMobile ? 'none' : 'block' }}>
+          <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: ta(0.45), letterSpacing: '0.15em', display: isMobile ? 'none' : 'block' }}>
             FRÉJUS KOUADIO · DÉVELOPPEUR LOGICIEL 
           </div>
         </div>
@@ -2726,15 +2731,15 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             const hrefs = ['https://github.com/devj-58', 'https://www.linkedin.com/in/frejus-kouadio-316238329', 'https://wa.me/2250767998373']
             return (
               <a key={item} href={hrefs[i]} target="_blank" rel="noopener"
-                style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: `rgba(${aRgb},0.4)`, letterSpacing: '0.12em', textDecoration: 'none', transition: 'color 0.2s' }}
+                style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: ta(0.4), letterSpacing: '0.12em', textDecoration: 'none', transition: 'color 0.2s' }}
                 onMouseEnter={e => e.currentTarget.style.color = a}
-                onMouseLeave={e => e.currentTarget.style.color = `rgba(${aRgb},0.4)`}
+                onMouseLeave={e => e.currentTarget.style.color = ta(0.4)}
               >{item}</a>
             )
           })}
         </div>
 
-        <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: `rgba(${aRgb},0.3)`, letterSpacing: '0.12em' }}>
+        <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: ta(0.3), letterSpacing: '0.12em' }}>
           © {new Date().getFullYear()} · YAMOUSSOUKRO, CI
         </div>
       </footer>
@@ -2791,7 +2796,7 @@ const Portfolio = forwardRef(function Portfolio({ onClose, accesDirecte = false 
             {/* Date */}
             <div style={{
               fontFamily: 'Space Mono, monospace', fontSize: isMobile ? 6 : 7,
-              color: `rgba(${aRgb},0.4)`, letterSpacing: '0.2em',
+              color: ta(0.4), letterSpacing: '0.2em',
               marginBottom: 8,
             }}>
               {new Date(tooltipInfo.date).toLocaleDateString('fr-FR', {
