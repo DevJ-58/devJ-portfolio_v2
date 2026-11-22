@@ -15,7 +15,7 @@ import { signalerPositionVoix } from '@/composants/ui/axis/canalParole'
 import AvatarAxis from '@/composants/ui/AvatarAxis'
 import PanneauParametres from '@/composants/ui/PanneauParametres'
 import { televerserImage, verifierFichier } from '@/services/televersement'
-import { PROJETS } from '@/donnees/projets'
+import { PROJETS, VERSION_PROJETS } from '@/donnees/projets'
 import { Volume2, Mic, Send, X, Menu, Plus, Upload, Trash2, ArrowUpRight, LogOut, Pencil } from 'lucide-react'
 
 const PROJETS_DEFAUT_A_IMPORTER = PROJETS.map(({ num, ...p }) => p) // eslint-disable-line no-unused-vars
@@ -421,7 +421,9 @@ export default function AdminDashboard({ onFermer }) {
   }, [onglet])
 
   // Handlers CRUD portfolio
-  async function sauvegarderProjet(donnees) {
+  async function sauvegarderProjet(saisie) {
+    // La version courante marque ce projet comme réglé depuis l'admin
+    const { num, ...donnees } = { ...saisie, version: VERSION_PROJETS } // eslint-disable-line no-unused-vars
     const estNouveau = !donnees.id
     const resultat = estNouveau
       ? await creerProjet(donnees)
