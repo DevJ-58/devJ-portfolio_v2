@@ -3,6 +3,7 @@
 import * as THREE from 'three'
 import { construireTete, sstep, lerp, lin } from './construireTete'
 import { construireTimeline } from './visemes'
+import { creerLunettes } from './lunettes'
 
 // L'avatar d'origine (three r128, sans gestion des couleurs) interprétait les
 // couleurs hors palette de peau comme déjà linéaires. On garde ce rendu.
@@ -181,6 +182,9 @@ export function creerMoteurAvatar(canvas, { accent: accentInitial = '#10b981' } 
     con.position.set(skull + sgn * wx * 0.62, yc - 0.01, 0); con.rotation.copy(ear.rotation)
     headG.add(con)
   }
+
+  // ── Lunettes (verres bleus sans monture, pont et branches dorés)
+  headG.add(creerLunettes(T0))
 
   // ── Bouche : dents, langue, cavité
   const toothMat = new THREE.MeshPhysicalMaterial({ color: lin('#efe8df'), roughness: 0.25, clearcoat: 0.6 })
