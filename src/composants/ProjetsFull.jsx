@@ -1,11 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Lenis from 'lenis'
 import utiliserTheme from '@/store/utiliserTheme'
 import usePortfolioData from '@/hooks/usePortfolioData'
 import ProjectDetailOverlay from '@/composants/ui/projets3d/ProjectDetailOverlay'
-import { gsap, ScrollTrigger, EASE, MEDIA, useGSAP, mouvementReduit } from '@/composants/portfolio/moteur/gsap'
-import { animerAttributs, animerBandeau } from '@/composants/portfolio/moteur/animer'
+import { gsap, EASE, MEDIA, useGSAP, mouvementReduit } from '@/composants/portfolio/moteur/gsap'
 import { variablesTheme } from '@/composants/portfolio/moteur/contexte'
 import '@/composants/portfolio/portfolio.css'
 
@@ -15,10 +13,26 @@ const CATEGORIES = {
   ia: { label: 'IA & Data', color: '#D4537E' },
   impact: { label: 'Impact social', color: '#EF9F27' },
 }
+const ESPACE = 14 // écart entre les tuiles (px)
 
-// Galerie éditoriale de tous les projets (lus dans la base) :
-// grandes cartes alternées gauche/droite, capture découverte par un rideau
-// au défilement, texte en cascade. Page toujours sombre, accent du thème.
+// Calcule le nombre de colonnes et la largeur des tuiles (format 16/10)
+// pour que tous les projets tiennent dans la zone, sans défilement.
+function calculerGrille(n, largeur, hauteur) {
+  let meilleur = { colonnes: 1, l: 0 }
+  for (let colonnes = 1; colonnes <= Math.max(1, n); colonnes += 1) {
+    const lignes = Math.ceil(n / colonnes)
+    const parLargeur = (largeur - ESPACE * (colonnes - 1)) / colonnes
+    const parHauteur = ((hauteur - ESPACE * (lignes - 1)) / lignes) * 1.6
+    const l = Math.min(parLargeur, parHauteur)
+    if (l > meilleur.l) meilleur = { colonnes, l }
+  }
+  return meilleur
+}
+
+// /projets : tous les projets d'un coup d'œil, sur un mur incliné en 3D qui
+// suit la souris. Survol (ou toucher) : la tuile avance et la fiche s'affiche.
+// Clic : fiche complète. Les filtres estompent les autres projets sans les
+// déplacer. Les projets sont lus dans la base.
 export default function ProjetsFull() {
   const { theme, getThemeEffectif } = utiliserTheme()
   const eff = getThemeEffectif ? getThemeEffectif() : theme
@@ -27,169 +41,187 @@ export default function ProjetsFull() {
   const a = vars['--a']
   const navigate = useNavigate()
   const ref = useRef(null)
+  const sceneRef = useRef(null)
+  const planRef = useRef(null)
+  const murRef = useRef(null)
   const filtresRef = useRef(null)
   const indicRef = useRef(null)
   const [filtre, setFiltre] = useState('TOUS')
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const [actif, setActif] = useState(0)
+  const [survol, setSurvol] = useState(false)
+  const [grille, setGrille] = useState({ colonnes: 5, l: 200 })
   const [projetSelectionne, setProjetSelectionne] = useState(null)
+  const typePointeur = useRef('mouse')
 
   const { projets: projetsData, chargement } = usePortfolioData([])
   const projets = useMemo(() => projetsData.map((p, i) => ({
     ...p,
-    num: p.num || String(i + 1).padStart(2, '0'),
+    num: String(i + 1).padStart(2, '0'),
     tags: Array.isArray(p.tags) ? p.tags : p.tags ? Object.values(p.tags) : [],
   })), [projetsData])
+  const n = projets.length
+  const courant = projets[Math.min(actif, Math.max(0, n - 1))]
+  const visible = (p) => filtre === 'TOUS' || p.type === filtre
+  const nbVisibles = projets.filter(visible).length
 
-  useEffect(() => {
-    const h = () => setIsMobile(window.innerWidth < 768)
-    const echap = (e) => { if (e.key === 'Escape') setProjetSelectionne(null) }
-    window.addEventListener('resize', h)
-    window.addEventListener('keydown', echap)
-    return () => { window.removeEventListener('resize', h); window.removeEventListener('keydown', echap) }
-  }, [])
-
-  // Défilement fluide de la page (fenêtre)
   useEffect(() => {
     window.scrollTo(0, 0)
-    if (mouvementReduit()) return
-    ScrollTrigger.defaults({ scroller: window })
-    const lenis = new Lenis({ lerp: 0.09, smoothWheel: true })
-    lenis.on('scroll', ScrollTrigger.update)
-    const tic = (t) => lenis.raf(t * 1000)
-    gsap.ticker.add(tic)
-    gsap.ticker.lagSmoothing(0)
-    return () => { gsap.ticker.remove(tic); lenis.destroy() }
+    const echap = (e) => { if (e.key === 'Escape') setProjetSelectionne(null) }
+    window.addEventListener('keydown', echap)
+    return () => window.removeEventListener('keydown', echap)
   }, [])
 
-  const projetsFiltres = filtre === 'TOUS' ? projets : projets.filter((p) => p.type === filtre)
-  const annees = projets.map((p) => Number(p.annee)).filter(Boolean)
-  const periode = annees.length ? `entre ${Math.min(...annees)} et ${Math.max(...annees)}` : ''
+  // Taille des tuiles : tout le mur tient dans la scène
+  useLayoutEffect(() => {
+    const zone = murRef.current
+    if (!zone || !n) return
+    const majGrille = () => {
+      // Zone du mur (la fiche a sa propre place) ; marge pour l'inclinaison 3D
+      const r = zone.getBoundingClientRect()
+      setGrille(calculerGrille(n, r.width * 0.86, r.height * 0.84))
+    }
+    majGrille()
+    const ro = new ResizeObserver(majGrille)
+    ro.observe(zone)
+    return () => ro.disconnect()
+  }, [n])
 
-  // En-tête, bandeau et pied
+  // Arrivée des tuiles depuis la profondeur, puis le mur suit la souris
   useGSAP(() => {
+    if (!n || mouvementReduit()) return
     const q = gsap.utils.selector(ref)
+    gsap.fromTo(q('[data-tuile]'), { z: -700, autoAlpha: 0, rotationX: -25 }, { z: 0, autoAlpha: 1, rotationX: 0, duration: 1.4, ease: EASE.sortie, stagger: { each: 0.035, from: 'center', grid: 'auto' }, clearProps: 'transform,opacity,visibility' })
+    gsap.fromTo(q('[data-entete] > *'), { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 1, ease: EASE.sortie, stagger: 0.08 })
     const mm = gsap.matchMedia()
-    mm.add({ anim: MEDIA.anim }, (c) => {
-      if (!c.conditions.anim) return
-      animerAttributs(ref.current)
-      const b = animerBandeau(q('[data-bandeau]')[0], { vitesse: 60, declencheurEl: q('[data-entete]')[0] })
-      gsap.fromTo(q('[data-monogramme]'), { yPercent: 50 }, { yPercent: 0, ease: 'none', scrollTrigger: { trigger: q('[data-pied]')[0], start: 'top bottom', end: 'bottom bottom', scrub: true } })
-      return () => b?.kill()
+    mm.add(MEDIA.bureau, () => {
+      const plan = planRef.current
+      const scene = sceneRef.current
+      gsap.set(plan, { rotationX: 12, rotationY: -8 })
+      const rx = gsap.quickTo(plan, 'rotationX', { duration: 1.2, ease: 'power3' })
+      const ry = gsap.quickTo(plan, 'rotationY', { duration: 1.2, ease: 'power3' })
+      const bouger = (e) => {
+        const r = scene.getBoundingClientRect()
+        const mx = (e.clientX - r.left) / r.width - 0.5
+        const my = (e.clientY - r.top) / r.height - 0.5
+        rx(12 - my * 10)
+        ry(-8 + mx * 14)
+      }
+      const repos = () => { rx(12); ry(-8) }
+      scene.addEventListener('pointermove', bouger)
+      scene.addEventListener('pointerleave', repos)
+      return () => { scene.removeEventListener('pointermove', bouger); scene.removeEventListener('pointerleave', repos) }
     })
     return () => mm.revert()
-  }, { scope: ref, dependencies: [projets.length > 0], revertOnUpdate: true })
-
-  // Cartes : rideau sur la capture, léger zoom arrière, texte en cascade,
-  // et la capture glisse un peu plus lentement que la page (parallaxe)
-  useGSAP(() => {
-    const q = gsap.utils.selector(ref)
-    const mm = gsap.matchMedia()
-    mm.add({ anim: MEDIA.anim, bureau: MEDIA.bureau }, (c) => {
-      if (!c.conditions.anim) return
-      q('[data-carte]').forEach((carte) => {
-        const cadre = carte.querySelector('[data-cadre]')
-        const img = carte.querySelector('[data-cadre] img')
-        const textes = carte.querySelectorAll('[data-texte] > *')
-        const tl = gsap.timeline({ scrollTrigger: { trigger: carte, start: 'top 82%', once: true } })
-        tl.fromTo(cadre, { clipPath: 'inset(100% 0% 0% 0% round 22px)' }, { clipPath: 'inset(0% 0% 0% 0% round 22px)', duration: 1.3, ease: EASE.rideau })
-          .fromTo(img, { scale: 1.25 }, { scale: 1, duration: 1.8, ease: EASE.sortie }, 0)
-          .fromTo(textes, { y: 46, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 1, ease: EASE.sortie, stagger: 0.07 }, 0.25)
-        if (c.conditions.bureau && img) {
-          gsap.fromTo(img, { yPercent: -6 }, { yPercent: 6, ease: 'none', scrollTrigger: { trigger: carte, start: 'top bottom', end: 'bottom top', scrub: true } })
-        }
-      })
-      ScrollTrigger.refresh()
-    })
-    return () => mm.revert()
-  }, { scope: ref, dependencies: [filtre, projetsFiltres.length], revertOnUpdate: true })
+  }, { scope: ref, dependencies: [n], revertOnUpdate: true })
 
   // Indicateur des filtres qui glisse vers le filtre actif
   useGSAP(() => {
     const zone = filtresRef.current
     const indic = indicRef.current
-    const actif = zone?.querySelector('[aria-pressed="true"]')
-    if (!actif || !indic) return
+    const bouton = zone?.querySelector('[aria-pressed="true"]')
+    if (!bouton || !indic) return
     const couleur = filtre === 'TOUS' ? a : CATEGORIES[filtre]?.color || a
-    gsap.to(indic, { x: actif.offsetLeft, width: actif.offsetWidth, backgroundColor: couleur, duration: mouvementReduit() ? 0 : 0.6, ease: EASE.sortie })
-  }, { dependencies: [filtre, isMobile, projets.length] })
+    gsap.to(indic, { x: bouton.offsetLeft, width: bouton.offsetWidth, backgroundColor: couleur, duration: mouvementReduit() ? 0 : 0.6, ease: EASE.sortie })
+  }, { dependencies: [filtre, n] })
+
+  // Un filtre change : la fiche montre le premier projet visible
+  const choisirFiltre = (cle) => {
+    setFiltre(cle)
+    const i = projets.findIndex((p) => cle === 'TOUS' || p.type === cle)
+    if (i >= 0) setActif(i)
+  }
 
   const filtres = [['TOUS', 'Tous', a], ...Object.entries(CATEGORIES).map(([k, c]) => [k, c.label, c.color])]
+  const catCourant = courant ? CATEGORIES[courant.type] : null
+  const enLigne = courant && (courant.status === 'EN LIGNE' || courant.status === 'EN PRODUCTION')
 
   return (
     <div className="pj-page est-sombre" ref={ref} style={vars}>
-      <nav className="pj-nav">
-        <button type="button" className="pf-lien" onClick={() => navigate('/experience', { state: { skipGreeting: true } })}>← Retour</button>
-        <span className="pj-nav__logo">&lt;<span>/DevJ</span>&gt;</span>
-        <span className="pf-entete__note">{String(projetsFiltres.length).padStart(2, '0')} projets</span>
-      </nav>
+      <div className="pj-ecran">
+        <nav className="pj-nav">
+          <button type="button" className="pf-lien" onClick={() => navigate('/experience', { state: { skipGreeting: true } })}>← Retour</button>
+          <span className="pj-nav__logo">&lt;<span>/DevJ</span>&gt;</span>
+          <button type="button" className="pf-lien" onClick={() => navigate('/portfolio', { state: { skipGreeting: true } })}>Portfolio →</button>
+        </nav>
 
-      <header className="pj-entete" data-entete>
-        <div className="pj-entete__bandeau" aria-hidden="true">
-          <div className="pf-bandeau__piste" data-bandeau>
-            {Array.from({ length: 4 }).map((_, i) => <span key={i}>Work · Travaux ·</span>)}
+        <header className="pj-tete" data-entete>
+          <div className="pj-tete__titre">
+            <span className="pf-label"><b>{String(nbVisibles).padStart(2, '0')}</b> projets</span>
+            <h1>Tous mes <em className="pf-it">projets</em></h1>
           </div>
-        </div>
-        <span className="pf-label" data-a="fondu"><b>04</b> Portfolio complet</span>
-        <h1 className="pf-titre-giga" data-a="chars">Tous mes <em className="pf-it">projets</em></h1>
-        {/* Clé liée aux données : le paragraphe découpé par l'animation est remplacé, pas modifié */}
-        <p key={`${projets.length}-${periode}`} className="pf-corps pf-corps--grand" data-a="lignes">
-          {projets.length} projets réalisés {periode} — sites, plateformes, outils et expériences 3D, de Yamoussoukro au reste du monde.
-        </p>
-      </header>
-
-      <div className="pj-filtres" ref={filtresRef} role="group" aria-label="Filtrer par catégorie">
-        <span className="pj-filtres__indic" ref={indicRef} aria-hidden="true" />
-        {filtres.map(([cle, label, couleur]) => (
-          <button key={cle} type="button" aria-pressed={filtre === cle} className={filtre === cle ? 'est-actif' : ''} style={{ '--c': couleur }} onClick={() => setFiltre(cle)}>
-            {cle !== 'TOUS' && <i aria-hidden="true" />}{label}
-          </button>
-        ))}
-      </div>
-
-      <section className="pj-galerie" aria-label="Projets">
-        {chargement && projets.length === 0 && <p className="pj-galerie__vide">Chargement des projets…</p>}
-        {!chargement && projetsFiltres.length === 0 && <p className="pj-galerie__vide">Aucun projet dans cette catégorie pour l’instant.</p>}
-        {projetsFiltres.map((p, i) => {
-          const cat = CATEGORIES[p.type]
-          const enLigne = p.status === 'EN LIGNE' || p.status === 'EN PRODUCTION'
-          return (
-            <article key={p.id || p.titre} className={`pj-carte${i % 2 ? ' est-inverse' : ''}`} style={{ '--c': cat?.color || a }} data-carte>
-              <button type="button" className="pj-carte__cadre" data-cadre onClick={() => setProjetSelectionne(p)} data-curseur="Ouvrir" aria-label={`Détails de ${p.titre}`}>
-                {p.img ? <img src={p.img} alt="" loading="lazy" /> : <span className="pj-carte__sans-image">{p.titre}</span>}
-                {enLigne && <span className="pj-carte__badge"><i aria-hidden="true" />En ligne</span>}
+          <div className="pj-filtres" ref={filtresRef} role="group" aria-label="Filtrer par catégorie">
+            <span className="pj-filtres__indic" ref={indicRef} aria-hidden="true" />
+            {filtres.map(([cle, label, couleur]) => (
+              <button key={cle} type="button" aria-pressed={filtre === cle} className={filtre === cle ? 'est-actif' : ''} style={{ '--c': couleur }} onClick={() => choisirFiltre(cle)}>
+                {cle !== 'TOUS' && <i aria-hidden="true" />}{label}
               </button>
-              <div className="pj-carte__texte" data-texte>
-                <span className="pj-carte__num">{String(i + 1).padStart(2, '0')} <em>/ {String(projetsFiltres.length).padStart(2, '0')}</em></span>
-                <span className="pj-carte__cat"><i aria-hidden="true" />{cat?.label || 'Projet'} · {p.categorie}</span>
-                <h2 className="pj-carte__titre">{p.titre}</h2>
-                <p className="pj-carte__desc">{p.desc}</p>
-                <ul className="pj-carte__tags">{p.tags.slice(0, 5).map((t) => <li key={t}>{t}</li>)}</ul>
-                <div className="pj-carte__pied">
-                  <span className="pj-carte__meta">{p.annee || '—'} · {p.status || '—'}</span>
-                  <div className="pj-carte__actions">
-                    <button type="button" className="pf-lien" onClick={() => setProjetSelectionne(p)}>Détails</button>
-                    {p.lien && (
-                      <a className="pf-btn pf-btn--a" href={p.lien} target="_blank" rel="noopener noreferrer" data-magnetique>
-                        <span>{enLigne ? 'Voir le site' : 'Voir le code'} ↗</span>
-                      </a>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </article>
-          )
-        })}
-      </section>
+            ))}
+          </div>
+        </header>
 
-      <footer className="pj-pied" data-pied>
-        <div className="pf-pied__haut">
-          <span className="pf-entete__note">{new Date().getFullYear()} · Fréjus Kouadio</span>
-          <button type="button" className="pf-btn pf-btn--a" data-magnetique onClick={() => navigate('/portfolio', { state: { skipGreeting: true } })}>
-            <span>← Retour au portfolio</span>
-          </button>
-        </div>
-        <div className="pf-pied__monogramme" data-monogramme aria-hidden="true">&lt;/DevJ&gt;</div>
-      </footer>
+        <section className="pj-scene3d" ref={sceneRef} aria-label="Mur des projets">
+          {chargement && n === 0 && <p className="pj-scene3d__vide">Chargement des projets…</p>}
+          {!chargement && n === 0 && <p className="pj-scene3d__vide">Aucun projet pour l’instant.</p>}
+
+          <div className="pj-mur" ref={murRef}>
+            <div className="pj-mur__plan" ref={planRef} style={{ gridTemplateColumns: `repeat(${grille.colonnes}, ${grille.l}px)`, gap: ESPACE }}>
+              {projets.map((p, i) => {
+                const cat = CATEGORIES[p.type]
+                const estVisible = visible(p)
+                return (
+                  <button
+                    key={p.id || p.titre}
+                    type="button"
+                    data-tuile
+                    className={`pj-tuile${i === actif ? ' est-actif' : ''}${survol && i !== actif ? ' est-retrait' : ''}${estVisible ? '' : ' est-masque'}`}
+                    style={{ width: grille.l, '--c': cat?.color || a }}
+                    tabIndex={estVisible ? 0 : -1}
+                    aria-hidden={!estVisible}
+                    aria-label={`${p.titre} — ${cat?.label || 'Projet'}`}
+                    onPointerEnter={(e) => { if (e.pointerType === 'mouse') { setActif(i); setSurvol(true) } }}
+                    onPointerLeave={(e) => { if (e.pointerType === 'mouse') setSurvol(false) }}
+                    onFocus={() => { if (typePointeur.current !== 'touch') setActif(i) }}
+                    onPointerDown={(e) => { typePointeur.current = e.pointerType }}
+                    onKeyDown={() => { typePointeur.current = 'clavier' }}
+                    onClick={() => {
+                      // Toucher : un premier toucher choisit, le second ouvre
+                      if (typePointeur.current === 'touch' && i !== actif) { setActif(i); return }
+                      setProjetSelectionne(p)
+                    }}
+                  >
+                    {p.img ? <img src={p.img} alt="" loading="lazy" draggable="false" /> : <span className="pj-tuile__sans-image">{p.titre}</span>}
+                    <span className="pj-tuile__legende"><i aria-hidden="true" />{p.titre}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {courant && (
+            <aside className="pj-fiche" style={{ '--c': catCourant?.color || a }} aria-live="polite">
+              <div className="pj-fiche__tete">
+                <span className="pj-fiche__num">{courant.num} <em>/ {String(n).padStart(2, '0')}</em></span>
+                {enLigne && <span className="pj-fiche__ligne"><i aria-hidden="true" />En ligne</span>}
+              </div>
+              <div className="pj-fiche__corps" key={courant.num}>
+                <span className="pj-fiche__cat"><i aria-hidden="true" />{catCourant?.label || 'Projet'} · {courant.categorie}</span>
+                <h2 className="pj-fiche__titre">{courant.titre}</h2>
+                <p className="pj-fiche__desc">{courant.desc}</p>
+                <ul className="pj-fiche__tags">{courant.tags.slice(0, 4).map((t) => <li key={t}>{t}</li>)}</ul>
+              </div>
+              <div className="pj-fiche__actions">
+                <button type="button" className="pf-lien" onClick={() => setProjetSelectionne(courant)}>Détails</button>
+                {courant.lien && (
+                  <a className="pf-btn pf-btn--a" href={courant.lien} target="_blank" rel="noopener noreferrer">
+                    <span>{enLigne ? 'Voir le site' : 'Voir le code'} ↗</span>
+                  </a>
+                )}
+              </div>
+            </aside>
+          )}
+          <p className="pj-scene3d__aide" aria-hidden="true">Survolez une carte · cliquez pour ouvrir</p>
+        </section>
+      </div>
 
       {projetSelectionne && (
         <div className="pj-detail">
