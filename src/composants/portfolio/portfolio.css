@@ -773,97 +773,54 @@
 .pj-filtres button i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); transition: background 0.4s; }
 .pj-filtres button.est-actif { color: #050505; font-weight: 700; }
 .pj-filtres button.est-actif i { background: #050505; }
-.pj-scene {
-  position: relative; height: 76vh; margin: 0 var(--pad); overflow: hidden; border: 1px solid var(--bord-2); border-radius: 20px;
-  background: var(--nuit);
+/* Galerie éditoriale : grandes cartes alternées */
+.pj-galerie { display: grid; gap: clamp(90px, 16vh, 180px); padding: clamp(40px, 8vh, 90px) var(--pad) clamp(100px, 16vh, 180px); }
+.pj-galerie__vide { padding: 12vh 0; text-align: center; font: italic 400 1.3rem / 1.5 var(--serif); color: var(--t3); }
+.pj-carte { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); grid-template-areas: 'cadre texte'; align-items: center; gap: clamp(32px, 5vw, 88px); }
+.pj-carte.est-inverse { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); grid-template-areas: 'texte cadre'; }
+.pj-carte__cadre {
+  grid-area: cadre; position: relative; display: block; aspect-ratio: 16 / 10; width: 100%; padding: 0; overflow: hidden; cursor: pointer;
+  border: 1px solid var(--bord-2); border-radius: 22px; background: var(--fond-2);
 }
-.pj-scene__aide {
-  position: absolute; right: 24px; top: 22px; z-index: 15; margin: 0; pointer-events: none;
-  font: 400 0.62rem / 1 var(--mono); letter-spacing: 0.18em; text-transform: uppercase; color: var(--t3);
+.pj-carte__cadre img { width: 100%; height: 112%; margin-top: -6%; object-fit: cover; object-position: top; display: block; transition: filter 0.6s; }
+.pj-carte__cadre::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--c); opacity: 0; transition: opacity 0.4s; pointer-events: none; }
+.pj-carte__cadre:hover::after, .pj-carte__cadre:focus-visible::after { opacity: 1; }
+.pj-carte__cadre:hover img { filter: brightness(1.08); }
+.pj-carte__sans-image { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; font: 800 clamp(2rem, 4vw, 3.6rem) / 1 var(--serif); letter-spacing: -0.04em; color: var(--c); }
+.pj-carte__badge {
+  position: absolute; top: 18px; left: 18px; display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px;
+  background: var(--fond); font: 700 0.58rem / 1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--texte);
 }
-/* Panneau de mise au point : présente le projet ciblé par la visite guidée */
-.pj-focus {
-  position: absolute; left: 24px; bottom: 24px; z-index: 16; width: min(400px, calc(100% - 48px));
-  display: grid; gap: 18px; padding: 24px; border: 1px solid var(--bord-2); border-radius: 18px; background: var(--fond);
-}
-.pj-focus__tete { display: flex; justify-content: space-between; align-items: center; gap: 12px; font: 400 0.64rem / 1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase; }
-.pj-focus__num { color: var(--texte); }
-.pj-focus__cat { display: inline-flex; align-items: center; gap: 8px; color: var(--c); }
-.pj-focus__cat i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
-.pj-focus__corps { display: grid; gap: 10px; animation: pj-focus-entree 0.7s var(--ease) both; }
-@keyframes pj-focus-entree { from { opacity: 0; transform: translateY(14px); } }
-.pj-focus__titre { margin: 0; font: 800 clamp(1.7rem, 2.6vw, 2.4rem) / 1 var(--serif); letter-spacing: -0.035em; color: var(--texte); }
-.pj-focus__desc { margin: 0; font-size: 0.92rem; line-height: 1.6; color: var(--t2); }
-.pj-focus__tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 0; padding: 0; list-style: none; }
-.pj-focus__tags li { padding: 5px 10px; border: 1px solid var(--bord-2); border-radius: 999px; font: 400 0.6rem / 1 var(--mono); letter-spacing: 0.08em; color: var(--t2); }
-.pj-focus__barre { height: 2px; overflow: hidden; background: var(--bord-2); }
-.pj-focus__barre i { display: block; height: 100%; background: var(--c); transform: scaleX(0); transform-origin: left; animation: pj-focus-temps 7s linear forwards; animation-play-state: paused; }
-.pj-focus__barre i.est-lecture { animation-play-state: running; }
-@keyframes pj-focus-temps { to { transform: scaleX(1); } }
-.pj-focus__actions { display: flex; align-items: center; gap: 8px; }
-.pj-focus__rond {
-  width: 42px; height: 42px; display: grid; place-items: center; padding: 0; border: 1px solid var(--bord); border-radius: 50%;
-  background: none; color: var(--texte); font: 700 0.8rem / 1 var(--mono); transition: border-color 0.3s, color 0.3s;
-}
-.pj-focus__rond:hover, .pj-focus__rond:focus-visible { border-color: var(--c); color: var(--c); }
-.pj-focus__ouvrir { margin-left: auto; white-space: nowrap; }
-.pj-focus__points { display: flex; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.pj-focus__points button { display: block; width: 22px; height: 4px; padding: 0; border: 0; border-radius: 4px; background: var(--bord); transition: width 0.5s var(--ease), background 0.3s; }
-.pj-focus__points button.est-actif { width: 40px; background: var(--c); }
-.pj-index-section { padding: clamp(100px, 14vh, 170px) var(--pad) 60px; }
-.pj-index { margin: 6vh 0 0; padding: 0; list-style: none; border-top: 1px solid var(--bord); }
-.pj-index li { overflow: hidden; border-bottom: 1px solid var(--bord); }
-.pj-index button {
-  position: relative; isolation: isolate; width: 100%; padding: clamp(22px, 3.6vh, 40px) 0; border: 0; background: none; text-align: left;
-  display: grid; grid-template-columns: 70px minmax(0, 1fr) 220px 80px 40px; align-items: center; gap: 20px;
-}
-.pj-index button::before {
-  content: ''; position: absolute; top: 0; bottom: 0; left: calc(-1 * var(--pad)); right: calc(-1 * var(--pad)); z-index: -1;
-  background: color-mix(in srgb, var(--c) 10%, transparent);
-  transform: scaleY(0); transform-origin: bottom; transition: transform 0.6s var(--ease-drame);
-}
-.pj-index button:hover::before, .pj-index button:focus-visible::before { transform: scaleY(1); }
-.pj-index__num { font: 400 0.72rem / 1 var(--mono); letter-spacing: 0.12em; color: var(--c); }
-.pj-index__titre { font: 800 clamp(2rem, 5vw, 5.4rem) / 1 var(--serif); letter-spacing: -0.04em; }
-.pj-index .pf-roule span:last-child { color: var(--c); }
-.pj-index button:hover .pf-roule span:first-child, .pj-index button:focus-visible .pf-roule span:first-child { transform: translateY(-105%); }
-.pj-index button:hover .pf-roule span:last-child, .pj-index button:focus-visible .pf-roule span:last-child { transform: translateY(0); }
-.pj-index__cat { display: inline-flex; align-items: center; gap: 10px; font: 400 0.7rem / 1.3 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--t2); }
-.pj-index__cat i { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
-.pj-index__annee { font: italic 400 1.1rem / 1 var(--serif); color: var(--t3); }
-.pj-index__fleche { justify-self: end; font-size: 1.5rem; color: var(--t3); transition: transform 0.5s var(--ease), color 0.3s; }
-.pj-index button:hover .pj-index__fleche { transform: translate(5px, -5px); color: var(--c); }
-.pj-apercu {
-  position: fixed; left: 0; top: 0; z-index: 40; width: clamp(240px, 22vw, 360px); aspect-ratio: 4 / 3; overflow: hidden;
-  border-radius: 10px; pointer-events: none; visibility: hidden; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.75);
-}
-.pj-apercu img { width: 100%; height: 100%; object-fit: cover; animation: pj-apercu-img 0.7s var(--ease) both; }
-@keyframes pj-apercu-img { from { transform: scale(1.3); } to { transform: scale(1); } }
+.pj-carte__badge i { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; animation: pf-pouls 1.8s infinite; }
+.pj-carte__texte { grid-area: texte; display: grid; gap: 18px; align-content: center; min-width: 0; }
+.pj-carte__num { font: 400 0.8rem / 1 var(--mono); letter-spacing: 0.14em; color: var(--c); }
+.pj-carte__num em { font-style: normal; color: var(--t4); }
+.pj-carte__cat { display: inline-flex; align-items: center; gap: 10px; font: 400 0.66rem / 1.3 var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--t2); }
+.pj-carte__cat i { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+.pj-carte__titre { margin: 0; font: 800 clamp(2.4rem, 4.6vw, 4.8rem) / 0.95 var(--serif); letter-spacing: -0.045em; color: var(--texte); }
+.pj-carte__desc { margin: 0; max-width: 46ch; font-size: clamp(1rem, 1.1vw, 1.1rem); line-height: 1.7; color: var(--t2); }
+.pj-carte__tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.pj-carte__tags li { padding: 7px 12px; border: 1px solid var(--bord-2); border-radius: 999px; font: 400 0.62rem / 1 var(--mono); letter-spacing: 0.08em; color: var(--t2); }
+.pj-carte__pied { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-top: 18px; border-top: 1px solid var(--bord-3); }
+.pj-carte__meta { font: 400 0.64rem / 1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--t3); }
+.pj-carte__actions { display: flex; align-items: center; gap: 20px; }
+.pj-carte__actions button.pf-lien { padding: 4px 0; border: 0; background-color: transparent; }
 .pj-pied { padding: 8vh var(--pad) 0; overflow: hidden; }
 .pj-detail > div { animation: pj-voile 0.45s ease both; }
 .pj-detail > div > div { animation: pj-carte 0.8s var(--ease) both; }
 @keyframes pj-voile { from { opacity: 0; } }
 @keyframes pj-carte { from { opacity: 0; transform: translateY(40px) scale(0.96); } }
-@media (hover: none) { .pj-apercu { display: none; } }
 @media (max-width: 767px) {
   .pj-filtres { flex-wrap: nowrap; width: auto; margin: 0 20px 28px; overflow-x: auto; scrollbar-width: none; }
   .pj-filtres button { flex-shrink: 0; padding: 11px 14px; }
-  .pj-scene { height: 74vh; height: 74svh; margin: 0 12px; }
-  .pj-scene__aide { left: 16px; right: 16px; top: 16px; text-align: center; }
-  .pj-focus { left: 10px; right: 10px; bottom: 10px; width: auto; gap: 12px; padding: 16px; }
-  .pj-focus__desc, .pj-focus__tags, .pj-focus__points { display: none; }
-  .pj-focus__titre { font-size: 1.5rem; }
-  .pj-focus__rond { width: 40px; height: 40px; }
-  .pj-focus__ouvrir { padding: 13px 18px; font-size: 0.62rem; }
-  .pj-index button { grid-template-columns: 38px minmax(0, 1fr) 24px; grid-template-areas: 'num titre fleche' '. cat annee'; gap: 8px 12px; }
-  .pj-index__num { grid-area: num; }
-  .pj-index__titre { grid-area: titre; font-size: 2rem; }
-  .pj-index__cat { grid-area: cat; }
-  .pj-index__annee { grid-area: annee; justify-self: end; font-size: 0.95rem; }
-  .pj-index__fleche { grid-area: fleche; font-size: 1.1rem; }
+  .pj-galerie { gap: 72px; padding: 24px 20px 90px; }
+  .pj-carte, .pj-carte.est-inverse { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'cadre' 'texte'; gap: 24px; }
+  .pj-carte__cadre { border-radius: 16px; }
+  .pj-carte__titre { font-size: 2.4rem; }
+  .pj-carte__texte { gap: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .pj-page, .pj-detail > div, .pj-detail > div > div, .pj-apercu img, .pj-focus__corps { animation: none; }
+  .pj-page, .pj-detail > div, .pj-detail > div > div, .pj-carte__badge i { animation: none; }
 }
 
 /* ── Préchargeur ──────────────────────────────────────────────────────── */
