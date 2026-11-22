@@ -1,5 +1,5 @@
 // Lunettes d'AXIS, d'après celles de Fréjus : verres rectangulaires sans
-// monture, teintés bleu, pont et charnières dorés, branches fines jusqu'aux
+// monture, transparents, pont et charnières dorés, branches fines jusqu'aux
 // oreilles. Les mesures sont prises sur la géométrie de la tête.
 import * as THREE from 'three'
 
@@ -44,11 +44,12 @@ export function creerLunettes(T0) {
   const zNez = avantPeau(P0, milieuX, yYeux, ecart * 0.08, h * 0.35)
 
   const verreMat = new THREE.MeshPhysicalMaterial({
-    color: lin('#1d44ff'), emissive: lin('#0a2ee0'), emissiveIntensity: 0.5,
-    transparent: true, opacity: 0.78, toneMapped: false, // bleu roi, sans désaturation du rendu roughness: 0.06, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.04,
+    color: lin('#eef4ff'), // verre clair, à peine froid
+    transparent: true, opacity: 0.16, specularIntensity: 1, roughness: 0.06, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.04,
     side: THREE.DoubleSide, depthWrite: false,
   })
-  const trancheMat = new THREE.MeshPhysicalMaterial({ color: lin('#c9dcff'), transparent: true, opacity: 0.7, roughness: 0.1 })
+  const trancheMat = new THREE.MeshPhysicalMaterial({ color: lin('#e8f0ff'), transparent: true, opacity: 0.55, roughness: 0.1 })
+  const refletMat = new THREE.MeshBasicMaterial({ color: lin('#ffffff'), transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide })
   const lisereMat = new THREE.LineBasicMaterial({ color: lin('#dbe7ff'), transparent: true, opacity: 0.85 })
   const orMat = new THREE.MeshStandardMaterial({ color: lin('#d6ad55'), metalness: 0.85, roughness: 0.26, emissive: lin('#4a3208'), emissiveIntensity: 0.35 })
 
@@ -72,6 +73,18 @@ export function creerLunettes(T0) {
     const lisere = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(contour), lisereMat)
     lisere.renderOrder = 3
     v.add(lisere)
+    // Reflets en biais (bandes inclinées dessinées à l'intérieur du verre)
+    for (const [x, larg] of [[-0.06, 0.14], [0.16, 0.05]]) {
+      const yh = h * 0.42, pente = l * 0.16
+      const bande = new THREE.Shape([
+        new THREE.Vector2(l * x + pente, yh), new THREE.Vector2(l * (x + larg) + pente, yh),
+        new THREE.Vector2(l * (x + larg) - pente, -yh), new THREE.Vector2(l * x - pente, -yh),
+      ])
+      const reflet = new THREE.Mesh(new THREE.ShapeGeometry(bande), refletMat)
+      reflet.position.z = 0.0032
+      reflet.renderOrder = 3
+      v.add(reflet)
+    }
     groupe.add(v)
     verres.push({ v, sgn })
   }
