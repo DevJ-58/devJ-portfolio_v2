@@ -399,7 +399,7 @@ export function creerMoteurAvatar(canvas, { accent: accentInitial = '#10b981' } 
     calculer(dt, now)
   }
 
-  function calculer(dt, now) {
+  function calculer(dt, now, rendre = true) {
     clock += dt
     const t = clock
     for (const k in T) T[k] = 0
@@ -466,7 +466,7 @@ export function creerMoteurAvatar(canvas, { accent: accentInitial = '#10b981' } 
     pivot.rotation.set(pose.pitch.x + nod * 0.06 + W.jaw * 0.03, pose.yaw.x, pose.roll.x)
     pivot.position.y = NECKY + Math.sin(t * 1.25) * 0.006
     rim.intensity = (1.5 + (etat === 'speak' ? W.jaw * 0.6 : 0)) * PI
-    renderer.render(scene, camera)
+    if (rendre) renderer.render(scene, camera)
   }
 
   function definirActif(actif) {
@@ -488,7 +488,7 @@ export function creerMoteurAvatar(canvas, { accent: accentInitial = '#10b981' } 
 
   // Vidéo : fixe les commandes de l'image suivante, puis avance d'un pas
   function piloter(p) { pilote = p }
-  function etape(dt) { calculer(dt, clock + dt) }
+  function etape(dt, rendre = true) { calculer(dt, clock + dt, rendre) }
 
   return { redimensionner, definirEtat, definirTexte, synchroniserVoix, definirAccent, definirActif, detruire, piloter, etape }
 }
