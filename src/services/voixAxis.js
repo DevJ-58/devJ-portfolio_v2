@@ -125,7 +125,7 @@ export function parlerAxis(texteBrut, { vocal = true, surDebut, surFin } = {}) {
       if (idx >= segments.length) { terminer(); return }
       const seg = new SpeechSynthesisUtterance(segments[idx])
       if (voixChoisie) seg.voice = voixChoisie
-      seg.lang = 'fr-FR'; seg.pitch = 0.82; seg.rate = isIOS ? 0.88 : 0.92; seg.volume = 1
+      seg.lang = 'fr-FR'; seg.pitch = 1; seg.rate = isIOS ? 0.88 : 0.92; seg.volume = 1
       const debut = debuts[idx], fin = debut + segments[idx].length
       seg.onstart = () => { if (!actif) return; entendu = true; signalerPositionVoix(debut, fin) }
       seg.onboundary = (ev) => { if (actif && ev.charIndex != null) signalerPositionVoix(debut + ev.charIndex, fin) }

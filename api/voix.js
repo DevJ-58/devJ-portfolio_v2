@@ -71,7 +71,8 @@ export default async function handler(req, res) {
         voice_settings: {
           stability: Number(process.env.ELEVENLABS_STABILITY ?? 0.68),
           similarity_boost: Number(process.env.ELEVENLABS_SIMILARITY ?? 0.75),
-          style: 0, use_speaker_boost: true,
+          style: Number(process.env.ELEVENLABS_STYLE ?? 0),
+          use_speaker_boost: process.env.ELEVENLABS_SPEAKER_BOOST !== 'false',
         },
       }),
     })
