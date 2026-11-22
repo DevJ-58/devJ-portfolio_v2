@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Lenis from 'lenis'
 import utiliserTheme from '@/store/utiliserTheme'
 import usePortfolioData from '@/hooks/usePortfolioData'
+import { PROJETS } from '@/donnees/projets'
 import ProjectsScene from '@/composants/ui/projets3d/ProjectsScene'
 import { genererPositions } from '@/composants/ui/projets3d/scenePositions'
 import ProjectDetailOverlay from '@/composants/ui/projets3d/ProjectDetailOverlay'
@@ -11,44 +12,7 @@ import { animerAttributs, animerBandeau } from '@/composants/portfolio/moteur/an
 import { variablesTheme } from '@/composants/portfolio/moteur/contexte'
 import '@/composants/portfolio/portfolio.css'
 
-const PROJETS_PAR_DEFAUT = [
-  {
-    num: '01', titre: 'Eliko Voyage', categorie: 'Agence de voyage', type: 'frontend',
-    tags: ['HTML/CSS', 'JavaScript', 'React'],
-    desc: "Interface moderne pour agence de voyage permettant la réservation en ligne et la gestion de séjours personnalisés.",
-    img: '/asset/eliko.PNG', lien: 'https://devj-58.github.io/eliko_voyage/', annee: '2024', status: 'EN LIGNE',
-  },
-  {
-    num: '02', titre: 'SanteAI', categorie: 'Télémédecine & IA', type: 'ia',
-    tags: ['React', 'Google AI', 'Python'],
-    desc: "Plateforme de télémédecine avec IA intégrée, consultations vidéo et gestion de dossiers médicaux.",
-    img: '/asset/santeAI.jpg', lien: 'https://devpost.com/software/santeai', annee: '2024', status: 'EN LIGNE',
-  },
-  {
-    num: '03', titre: 'Bibliothèque UIYA', categorie: 'Application éducative', type: 'fullstack',
-    tags: ['HTML', 'CSS', 'JavaScript'],
-    desc: "Système complet de gestion de bibliothèque déployé pour l'Université Internationale de Yamoussoukro.",
-    img: '/asset/uiya.PNG', lien: 'https://bibliotheque.igl-uiya.com/', annee: '2024', status: 'EN PRODUCTION',
-  },
-  {
-    num: '04', titre: 'GSB — Gestion de Stock', categorie: 'Application de gestion', type: 'fullstack',
-    tags: ['PHP', 'Laravel', 'MySQL'],
-    desc: "Application full-stack de gestion d'inventaire avec alertes automatiques et rapports exportables.",
-    img: '/asset/GSB.jpg', lien: null, annee: '2023', status: 'PRIVÉ',
-  },
-  {
-    num: '05', titre: 'ZikmuCI', categorie: 'Culture ivoirienne', type: 'impact',
-    tags: ['HTML5', 'CSS3', 'JavaScript'],
-    desc: "Plateforme musicale ivoirienne célébrant le Coupé-Décalé, Zouglou et l'Afrobeat.",
-    img: '/asset/zikmu.jpg', lien: 'https://devj-58.github.io/ZikmuCi/index.html', annee: '2023', status: 'EN LIGNE',
-  },
-  {
-    num: '06', titre: 'Terasse', categorie: 'Sensibilisation environnement', type: 'impact',
-    tags: ['HTML', 'CSS', 'JavaScript'],
-    desc: "Site de sensibilisation au changement climatique en Côte d'Ivoire.",
-    img: '/asset/terasse.jpg', lien: 'https://terasse-ivoire.vercel.app', annee: '2023', status: 'EN LIGNE',
-  },
-]
+const PROJETS_PAR_DEFAUT = PROJETS
 
 const CATEGORIES = {
   frontend: { label: 'Frontend', icon: 'layout', color: '#5DCAA5', textDark: true },

@@ -9,19 +9,16 @@ import {
   listerCompetences, creerCompetence, modifierCompetence, supprimerCompetence,
 } from '@/services/portfolioAdmin'
 import utiliserTheme from '@/store/utiliserTheme'
+import utiliserStore from '@/store/utiliserStore'
+import { dureeParole } from '@/composants/ui/axis/visemes'
+import { signalerPositionVoix } from '@/composants/ui/axis/canalParole'
 import AvatarAxis from '@/composants/ui/AvatarAxis'
 import PanneauParametres from '@/composants/ui/PanneauParametres'
 import { televerserImage, verifierFichier } from '@/services/televersement'
+import { PROJETS } from '@/donnees/projets'
 import { Volume2, Mic, Send, X, Menu, Plus, Upload, Trash2, ArrowUpRight, LogOut, Pencil } from 'lucide-react'
 
-const PROJETS_DEFAUT_A_IMPORTER = [
-  { titre: 'Eliko Voyage', categorie: 'Agence de voyage', type: 'frontend', tags: ['HTML/CSS', 'JavaScript', 'React'], desc: "Interface moderne pour agence de voyage permettant la réservation en ligne et la gestion de séjours personnalisés.", img: '/asset/eliko.PNG', lien: 'https://devj-58.github.io/eliko_voyage/', annee: '2024', status: 'EN LIGNE', ordre: 0 },
-  { titre: 'SanteAI', categorie: 'Télémédecine & IA', type: 'ia', tags: ['React', 'Google AI', 'Python'], desc: "Plateforme de télémédecine avec IA intégrée, consultations vidéo et gestion de dossiers médicaux.", img: '/asset/santeAI.jpg', lien: 'https://devpost.com/software/santeai', annee: '2024', status: 'EN LIGNE', ordre: 1 },
-  { titre: 'Bibliothèque UIYA', categorie: 'Application éducative', type: 'fullstack', tags: ['HTML', 'CSS', 'JavaScript'], desc: "Système complet de gestion de bibliothèque déployé pour l'Université Internationale de Yamoussoukro.", img: '/asset/uiya.PNG', lien: 'https://bibliotheque.igl-uiya.com/', annee: '2024', status: 'EN PRODUCTION', ordre: 2 },
-  { titre: 'GSB — Gestion de Stock', categorie: 'Application de gestion', type: 'fullstack', tags: ['PHP', 'Laravel', 'MySQL'], desc: "Application full-stack de gestion d'inventaire avec alertes automatiques et rapports exportables.", img: '/asset/GSB.jpg', lien: null, annee: '2023', status: 'PRIVÉ', ordre: 3 },
-  { titre: 'ZikmuCI', categorie: 'Culture ivoirienne', type: 'impact', tags: ['HTML5', 'CSS3', 'JavaScript'], desc: "Plateforme musicale ivoirienne célébrant le Coupé-Décalé, Zouglou et l'Afrobeat.", img: '/asset/zikmu.jpg', lien: 'https://devj-58.github.io/ZikmuCi/index.html', annee: '2023', status: 'EN LIGNE', ordre: 4 },
-  { titre: 'Terasse', categorie: 'Sensibilisation environnement', type: 'impact', tags: ['HTML', 'CSS', 'JavaScript'], desc: "Site de sensibilisation au changement climatique en Côte d'Ivoire.", img: '/asset/terasse.jpg', lien: 'https://terasse-ivoire.vercel.app', annee: '2023', status: 'EN LIGNE', ordre: 5 },
-]
+const PROJETS_DEFAUT_A_IMPORTER = PROJETS.map(({ num, ...p }) => p) // eslint-disable-line no-unused-vars
 
 const COMPETENCES_DEFAUT_A_IMPORTER = [
   { cat: 'Frontend', ordre: 0, items: [{ nom: 'HTML5', pct: 95 }, { nom: 'CSS3', pct: 90 }, { nom: 'JavaScript', pct: 85 }, { nom: 'React', pct: 80 }, { nom: 'TypeScript', pct: 75 }, { nom: 'Bootstrap', pct: 90 }, { nom: 'GSAP', pct: 75 }] },
@@ -31,6 +28,7 @@ const COMPETENCES_DEFAUT_A_IMPORTER = [
 ]
 
 const AvatarStable = React.memo(function AvatarStable({ etat, taille = 200 }) {
+  // Sans « etat », l'avatar suit le store : bouche synchronisée sur la voix
   return <AvatarAxis width={taille} height={taille} etat={etat} />
 })
 
@@ -49,7 +47,8 @@ export default function AdminDashboard({ onFermer }) {
   const [heure, setHeure] = useState('')
   const [dateStr, setDateStr] = useState('')
   const [aiState, setAiState] = useState('idle')
-  const [axisMessage, setAxisMessage] = useState('')
+  const [axisMessage, setAxisMessage] = useState({ texte: '', id: 0 })
+  const annoncer = (texte) => setAxisMessage((m) => ({ texte, id: m.id + 1 }))
   const [inputAdmin, setInputAdmin] = useState('')
   const [historiqueAdmin, setHistoriqueAdmin] = useState([])
   // Mode collecte de prompt — AXIS attend des instructions
@@ -99,10 +98,8 @@ export default function AdminDashboard({ onFermer }) {
             `Connexion établie. Bon ${moment} créateur. J'ai des données à te montrer si tu es prêt.`,
           ]
           const msg = accueils[new Date().getMinutes() % accueils.length]
-          setAxisMessage(msg)
+          annoncer(msg)
           setHistoriqueAdmin([{ role: 'axis', texte: msg }])
-          setAiState('speaking')
-          setTimeout(() => setAiState('idle'), 2000)
         }, 800)
       }
     })
@@ -299,117 +296,110 @@ export default function AdminDashboard({ onFermer }) {
     return () => window.removeEventListener('resize', handler)
   }, [])
 
+  // ── Voix d'AXIS + bouche de l'avatar (même mécanisme que l'espace AXIS)
   useEffect(() => {
-    if (!axisMessage) return
-    if (typeof window === 'undefined' || !window.speechSynthesis) return
-
+    const message = axisMessage.texte
+    if (!message) return
+    const { definirAxisParle } = utiliserStore.getState()
+    const synthese = typeof window !== 'undefined' ? window.speechSynthesis : null
     let actif = true
-    window.speechSynthesis.cancel()
+    let minuterie = null
+    let keepAlive = null
 
-    const nettoyerPourVoix = (texte) => {
-      return texte
-        .replace(/\*\*(.*?)\*\*/g, '$1')
-        .replace(/\*(.*?)\*/g, '$1')
-        .replace(/`(.*?)`/g, '$1')
-        .replace(/#{1,6}\s/g, '')
-        .replace(/\[(.*?)\]\(.*?\)/g, '$1')
-        .replace(/[-*•]\s/g, '')
-        .replace(/\n{2,}/g, '. ')
-        .replace(/\n/g, ', ')
-        .replace(/\s{2,}/g, ' ')
-        .replace(/Fréjus/gi, 'Fréjusse')
-        .replace(/Frejus/gi, 'Fréjusse')
-        .trim()
+    const textePropre = message
+      .replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/`(.*?)`/g, '$1')
+      .replace(/#{1,6}\s/g, '').replace(/\[(.*?)\]\(.*?\)/g, '$1').replace(/[-*•]\s/g, '')
+      .replace(/\n{2,}/g, '. ').replace(/\n/g, ', ').replace(/\s{2,}/g, ' ').trim()
+
+    const terminer = () => {
+      if (keepAlive) clearInterval(keepAlive)
+      definirAxisParle(false)
+      setAiState('idle')
     }
-
-    const segmenterTexte = (texte) => {
-      return texte
-        .split(/(?<=[.!?])\s+/)
-        .filter(s => s.trim().length > 0)
-    }
-
-    function trySpeak() {
-      if (!actif) return
-      if (!modeVocal) return
-
-      const voix = window.speechSynthesis.getVoices()
-      const priorite = [
-        v => v.lang.startsWith('fr') && v.name.toLowerCase().includes('thomas'),
-        v => v.lang.startsWith('fr') && v.name.toLowerCase().includes('nicolas'),
-        v => v.lang.startsWith('fr') && v.name.toLowerCase().includes('paul'),
-        v => v.lang === 'fr-FR' && v.name.includes('Google'),
-        v => v.lang === 'fr-FR' && !v.name.toLowerCase().includes('amelie')
-             && !v.name.toLowerCase().includes('marie')
-             && !v.name.toLowerCase().includes('alice')
-             && !v.name.toLowerCase().includes('stephanie'),
-        v => v.lang.startsWith('fr'),
-      ]
-
-      let voixChoisie = null
-      for (const test of priorite) {
-        voixChoisie = voix.find(test)
-        if (voixChoisie) break
-      }
-
-      const textePropre = nettoyerPourVoix(axisMessage)
-      const segments = segmenterTexte(textePropre)
-      let idx = 0
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-      let keepAlive = null
-
-      if (!isIOS && !('ontouchstart' in window)) {
-        keepAlive = setInterval(() => {
-          if (!actif) { clearInterval(keepAlive); return }
-          window.speechSynthesis.pause()
-          window.speechSynthesis.resume()
-        }, 10000)
-      }
-
-      function parlerSegment() {
-        if (!actif || idx >= segments.length) {
-          if (keepAlive) clearInterval(keepAlive)
-          setAiState('idle')
-          return
-        }
-
-        const seg = new SpeechSynthesisUtterance(segments[idx])
-        if (voixChoisie) seg.voice = voixChoisie
-        seg.lang = 'fr-FR'
-        seg.pitch = 0.82
-        seg.rate = isIOS ? 0.88 : 0.92
-        seg.volume = 1
-
-        seg.onend = () => {
-          if (!actif) return
-          idx += 1
-          setTimeout(parlerSegment, isIOS ? 200 : 120)
-        }
-
-        seg.onerror = (e) => {
-          if (!actif) return
-          console.warn('[speech] erreur segment:', e.error)
-          idx += 1
-          setTimeout(parlerSegment, 200)
-        }
-
-        window.speechSynthesis.speak(seg)
-      }
-
+    // Sans voix (coupée ou refusée par le navigateur) : la bouche suit le texte en silence
+    const parlerEnSilence = () => {
+      definirAxisParle(true, textePropre)
       setAiState('speaking')
-      parlerSegment()
+      minuterie = setTimeout(() => { if (actif) terminer() }, dureeParole(textePropre) * 1000)
     }
 
-    if (window.speechSynthesis.getVoices().length > 0) {
-      trySpeak()
-    } else {
-      window.speechSynthesis.onvoiceschanged = trySpeak
+    if (!modeVocal || !synthese) { parlerEnSilence(); return () => { actif = false; clearTimeout(minuterie) } }
+
+    synthese.cancel()
+    const voixTexte = textePropre.replace(/Fréjus/gi, 'Fréjusse').replace(/Frejus/gi, 'Fréjusse')
+    const segments = voixTexte.split(/(?<=[.!?])\s+/).filter((x) => x.trim())
+    let curseur = 0
+    const debuts = segments.map((seg) => { const pos = voixTexte.indexOf(seg, curseur); curseur = (pos >= 0 ? pos : curseur) + seg.length; return pos >= 0 ? pos : curseur - seg.length })
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    let idx = 0
+    let entendu = false
+
+    function choisirVoix() {
+      const voix = synthese.getVoices()
+      const priorite = [
+        (v) => v.lang.startsWith('fr') && /thomas|nicolas|paul/i.test(v.name),
+        (v) => v.lang === 'fr-FR' && v.name.includes('Google'),
+        (v) => v.lang === 'fr-FR' && !/amelie|marie|alice|stephanie/i.test(v.name),
+        (v) => v.lang.startsWith('fr'),
+      ]
+      for (const test of priorite) { const v = voix.find(test); if (v) return v }
+      return null
     }
+
+    function parlerSegment(voixChoisie) {
+      if (!actif) return
+      if (idx >= segments.length) { terminer(); return }
+      const seg = new SpeechSynthesisUtterance(segments[idx])
+      if (voixChoisie) seg.voice = voixChoisie
+      seg.lang = 'fr-FR'; seg.pitch = 0.82; seg.rate = isIOS ? 0.88 : 0.92; seg.volume = 1
+      const debut = debuts[idx], fin = debut + segments[idx].length
+      seg.onstart = () => { if (!actif) return; entendu = true; signalerPositionVoix(debut, fin) }
+      seg.onboundary = (ev) => { if (actif && ev.charIndex != null) signalerPositionVoix(debut + ev.charIndex, fin) }
+      seg.onend = () => { if (!actif) return; idx += 1; setTimeout(() => parlerSegment(voixChoisie), isIOS ? 200 : 120) }
+      seg.onerror = (e) => {
+        if (!actif) return
+        console.warn('[voix admin]', e.error)
+        // Voix refusée dès le départ (pas encore d'interaction, voix absente) : bouche en silence
+        if (!entendu) { if (keepAlive) clearInterval(keepAlive); clearTimeout(minuterie); parlerEnSilence(); return }
+        idx += 1; setTimeout(() => parlerSegment(voixChoisie), 200)
+      }
+      synthese.speak(seg)
+    }
+
+    function demarrer() {
+      if (!actif) return
+      definirAxisParle(true, voixTexte)
+      setAiState('speaking')
+      if (!isIOS && !('ontouchstart' in window)) {
+        keepAlive = setInterval(() => { synthese.pause(); synthese.resume() }, 10000)
+      }
+      parlerSegment(choisirVoix())
+      // Filet de sécurité : si la voix ne démarre jamais, la bouche parle en silence
+      minuterie = setTimeout(() => { if (actif && !entendu) { synthese.cancel(); parlerEnSilence() } }, 2500)
+    }
+
+    // Petit délai après cancel() : Chrome ignore parfois une parole lancée aussitôt
+    let demarre = false
+    let attenteVoix = null
+    const go = () => { if (demarre || !actif) return; demarre = true; synthese.onvoiceschanged = null; clearTimeout(attenteVoix); demarrer() }
+    const lancement = setTimeout(() => {
+      if (synthese.getVoices().length > 0) go()
+      else { synthese.onvoiceschanged = go; attenteVoix = setTimeout(go, 1000) } // liste des voix jamais annoncée : on démarre quand même
+    }, 80)
 
     return () => {
       actif = false
-      window.speechSynthesis.onvoiceschanged = null
+      clearTimeout(lancement); clearTimeout(minuterie); clearTimeout(attenteVoix)
+      if (keepAlive) clearInterval(keepAlive)
+      synthese.onvoiceschanged = null
     }
-    }, [axisMessage, modeVocal])
+  }, [axisMessage, modeVocal])
+
+  // En quittant l'admin : silence et bouche au repos
+  useEffect(() => () => {
+    window.speechSynthesis?.cancel()
+    utiliserStore.getState().definirAxisParle(false)
+  }, [])
 
   // ── Chargement portfolio (projets / competences) quand on sélectionne l'onglet
   useEffect(() => {
@@ -629,9 +619,7 @@ ${detailSessions || 'Aucune session encore.'}
       promptEnCoursRef.current = ''
       const reponseMode = "C'est bon Fréjus, je suis en mode collecte d'instructions. Dis-moi tout ce que tu veux qu'AXIS sache ou fasse. Quand tu as terminé, dis-moi de sauvegarder."
       setHistoriqueAdmin(prev => [...prev, { role: 'axis', texte: reponseMode }])
-      setAxisMessage(reponseMode)
-      setAiState('speaking')
-      setTimeout(() => setAiState('idle'), 2500)
+      annoncer(reponseMode)
       setAxisTyping(false)
       return
     }
@@ -644,9 +632,7 @@ ${detailSessions || 'Aucune session encore.'}
       await sauvegarderPrompt(contenuFinal, `Prompt via AXIS — ${new Date().toLocaleDateString('fr-FR')}`)
       const reponseOk = `Parfait Fréjus, j'ai sauvegardé tes instructions. Elles s'appliquent dès maintenant aux prochaines conversations.`
       setHistoriqueAdmin(prev => [...prev, { role: 'axis', texte: reponseOk }])
-      setAxisMessage(reponseOk)
-      setAiState('speaking')
-      setTimeout(() => setAiState('idle'), 2000)
+      annoncer(reponseOk)
       setAxisTyping(false)
       return
     }
@@ -658,7 +644,7 @@ ${detailSessions || 'Aucune session encore.'}
       setPromptEnCours(nouveau)
       const reponseCollecte = "Reçu. Continue, je note tout. Dis-moi quand tu as fini."
       setHistoriqueAdmin(prev => [...prev, { role: 'axis', texte: reponseCollecte }])
-      setAxisMessage(reponseCollecte)
+      annoncer(reponseCollecte)
       setAxisTyping(false)
       return
     }
@@ -686,9 +672,7 @@ ${detailSessions || 'Aucune session encore.'}
       const data = await response.json()
       const reponse = data.choices[0].message.content
       setHistoriqueAdmin(prev => [...prev, { role: 'axis', texte: reponse }])
-      setAxisMessage(reponse)
-      setAiState('speaking')
-      setTimeout(() => setAiState('idle'), 2500)
+      annoncer(reponse)
     } catch(e) {
       console.warn('[AXIS Admin]', e)
       setHistoriqueAdmin(prev => [...prev, {
@@ -951,7 +935,7 @@ ${detailSessions || 'Aucune session encore.'}
             <section className="ad-axis">
               <div className="ad-axis__scene">
                 <div className={`ad-axis__avatar est-${aiState}`}>
-                  <AvatarStable etat={aiState} taille={isMobile ? 150 : 230} />
+                  <AvatarStable etat={aiState === 'thinking' ? 'thinking' : undefined} taille={isMobile ? 150 : 230} />
                 </div>
                 <p className={`ad-etat est-${aiState}`}><i aria-hidden="true" />{libelleEtat}</p>
                 <div className="ad-modes">
@@ -1208,7 +1192,7 @@ ${detailSessions || 'Aucune session encore.'}
                 <label className="ad-champ"><span>Année</span><input inputMode="numeric" value={projetEnEdition.annee || ''} onChange={(e) => setProjetEnEdition((p) => ({ ...p, annee: e.target.value }))} /></label>
                 <label className="ad-champ"><span>Statut</span>
                   <select value={projetEnEdition.status || 'EN LIGNE'} onChange={(e) => setProjetEnEdition((p) => ({ ...p, status: e.target.value }))}>
-                    <option>EN LIGNE</option><option>EN PRODUCTION</option><option>PRIVÉ</option>
+                    <option>EN LIGNE</option><option>EN PRODUCTION</option><option>SUR GITHUB</option><option>PRIVÉ</option>
                   </select>
                 </label>
                 <label className="ad-champ"><span>Ordre</span><input type="number" value={projetEnEdition.ordre ?? 0} onChange={(e) => setProjetEnEdition((p) => ({ ...p, ordre: Number(e.target.value) }))} /></label>

@@ -1,3 +1,4 @@
+import { PROJETS } from '@/donnees/projets'
 // Contenus du portfolio. Projets et compétences : valeurs par défaut,
 // remplacées par celles de Firebase quand elles existent (usePortfolioData).
 
@@ -19,38 +20,7 @@ export const parcoursData = [
   { chap: 'III', periode: '2024—en cours', titre: 'Génie Logiciel', detail: "Licence à l'UIYA, 2ème année. Cap sur l'IA.", active: true },
 ]
 
-export const projetsParDefaut = [
-  {
-    num: '01', titre: 'Eliko Voyage', tags: ['HTML/CSS', 'JavaScript', 'React'],
-    desc: "Interface moderne pour agence de voyage permettant la réservation en ligne et la gestion de séjours personnalisés.",
-    img: '/asset/eliko.PNG', lien: 'https://devj-58.github.io/eliko_voyage/',
-  },
-  {
-    num: '02', titre: 'SanteAI', tags: ['React', 'Google AI', 'Python'],
-    desc: "Plateforme de télémédecine avec IA intégrée, consultations vidéo et gestion de dossiers médicaux.",
-    img: '/asset/santeAI.jpg', lien: 'https://devpost.com/software/santeai',
-  },
-  {
-    num: '03', titre: 'Bibliothèque UIYA', tags: ['HTML', 'CSS', 'JavaScript'],
-    desc: "Système complet de gestion de bibliothèque déployé pour l'Université Internationale de Yamoussoukro.",
-    img: '/asset/uiya.PNG', lien: 'https://bibliotheque.igl-uiya.com/',
-  },
-  {
-    num: '04', titre: 'GSB — Gestion de Stock', tags: ['PHP', 'Laravel', 'MySQL'],
-    desc: "Application full-stack de gestion d'inventaire avec alertes automatiques et rapports exportables.",
-    img: '/asset/GSB.jpg', lien: null,
-  },
-  {
-    num: '05', titre: 'ZikmuCI', tags: ['HTML5', 'CSS3', 'JavaScript'],
-    desc: "Plateforme musicale ivoirienne célébrant le Coupé-Décalé, Zouglou et l'Afrobeat.",
-    img: '/asset/zikmu.jpg', lien: 'https://devj-58.github.io/ZikmuCi/index.html',
-  },
-  {
-    num: '06', titre: 'Terasse', tags: ['HTML', 'CSS', 'JavaScript'],
-    desc: "Site de sensibilisation au changement climatique en Côte d'Ivoire.",
-    img: '/asset/terasse.jpg', lien: 'https://terasse-ivoire.vercel.app',
-  },
-]
+export const projetsParDefaut = PROJETS
 
 export const competencesParDefaut = [
   { cat: 'Frontend', items: [['HTML5', 95], ['CSS3', 90], ['JavaScript', 85], ['React', 80], ['TypeScript', 75], ['Bootstrap', 90], ['GSAP', 75]] },

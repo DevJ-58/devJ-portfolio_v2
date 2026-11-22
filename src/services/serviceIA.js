@@ -1,6 +1,12 @@
 ﻿  import donneePortfolio from '@/donnees/portfolio.json'
   import { getDoc, doc } from 'firebase/firestore'
   import { db } from '@/services/firebase'
+  import { PROJETS } from '@/donnees/projets'
+
+  // Liste des projets pour le prompt d'AXIS (même source que le portfolio)
+  function listeProjetsIA() {
+    return PROJETS.map((p, i) => `  ${i + 1}. ${p.titre} — ${p.desc} (${p.tags.join(', ')})\n    → ${p.lien || 'projet privé'}`).join('\n')
+  }
 
   const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY
   const MODELE = import.meta.env.VITE_GROQ_MODEL || 'openai/gpt-oss-120b'
@@ -79,21 +85,8 @@
   IA & ML  : Python (70%), TensorFlow (65%), NLP (60%)
   Outils   : Git & GitHub (90%), Figma (85%), Canva (88%), Docker (60%)
 
-  PROJETS RÉALISÉS :
-  1. Eliko Voyage — Interface agence de voyage (HTML/CSS, JS, React)
-    → https://devj-58.github.io/eliko_voyage/
-  2. SanteAI — Plateforme télémédecine avec IA (React, Google AI, Python)
-    → https://devpost.com/software/santeai
-  3. Bibliothèque UIYA — Système de gestion pour l'Université Internationale
-    de Yamoussoukro (HTML, CSS, JS)
-    → https://bibliotheque.igl-uiya.com/
-  4. GSB — Application de gestion de stock fullstack (PHP, Laravel, MySQL)
-    → projet privé
-  5. ZikmuCI — Plateforme musicale ivoirienne : Coupé-Décalé, Zouglou,
-    Afrobeat (HTML5, CSS3, JS)
-    → https://devj-58.github.io/ZikmuCi/index.html
-  6. Terasse — Site de sensibilisation au changement climatique en CI
-    → https://terasse-ivoire.vercel.app
+  PROJETS RÉALISÉS (${PROJETS.length}) :
+${listeProjetsIA()}
 
   CE PORTFOLIO LUI-MÊME (devjai / AXIS) :
   - C'est un projet personnel de Fréjus — une interface conversationnelle

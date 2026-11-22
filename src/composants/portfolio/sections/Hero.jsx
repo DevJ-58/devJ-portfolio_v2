@@ -10,8 +10,8 @@ const SOMMAIRE = [
   { num: '04', label: 'Contact', cible: 'contact' },
 ]
 
-const CHIFFRES = [
-  { valeur: 6, suffixe: '', label: 'Projets déployés' },
+const chiffres = (nbProjets) => [
+  { valeur: nbProjets, suffixe: '', label: 'Projets réalisés' },
   { valeur: 2, suffixe: '+', label: "Années d'expérience" },
   { valeur: 100, suffixe: '%', label: 'Satisfaction client' },
 ]
@@ -20,7 +20,8 @@ const CHIFFRES = [
 // le reste arrive en cascade. Au défilement (bureau), la scène reste en
 // place pendant que « À propos » glisse par-dessus : le nom s'écarte et le
 // portrait recule.
-export default function Hero({ pret }) {
+export default function Hero({ pret, nbProjets = 6 }) {
+  const CHIFFRES = chiffres(nbProjets)
   const { naviguer } = usePortfolio()
   const ref = useRef(null)
 

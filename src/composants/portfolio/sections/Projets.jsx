@@ -206,7 +206,7 @@ export default function Projets({ projets }) {
         </ol>
 
         <footer className="pf-scene__pied">
-          <span>{projets.length} projets déployés · survolez une étoile pour l'explorer</span>
+          <span>{projets.length} projets réalisés · survolez une étoile pour l'explorer</span>
           <a className="pf-btn pf-btn--clair" href="/projets" data-magnetique onClick={(e) => { e.preventDefault(); navigate('/projets') }}>
             <span>Tout voir →</span>
           </a>

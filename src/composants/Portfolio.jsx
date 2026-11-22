@@ -121,7 +121,7 @@ const Portfolio = forwardRef(function Portfolio({ accesDirecte = false, pret = t
           {scroller && (
             <>
               <NavPortfolio />
-              <Hero pret={pret} />
+              <Hero pret={pret} nbProjets={projetsAffiches.length} />
               <APropos />
               <Parcours />
               <Competences competences={competencesAffichees} />
