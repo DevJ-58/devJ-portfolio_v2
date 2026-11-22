@@ -1,4 +1,3 @@
-import { PROJETS } from '@/donnees/projets'
 // Contenus du portfolio. Projets et compétences : valeurs par défaut,
 // remplacées par celles de Firebase quand elles existent (usePortfolioData).
 
@@ -20,7 +19,6 @@ export const parcoursData = [
   { chap: 'III', periode: '2024—en cours', titre: 'Génie Logiciel', detail: "Licence à l'UIYA, 2ème année. Cap sur l'IA.", active: true },
 ]
 
-export const projetsParDefaut = PROJETS
 
 export const competencesParDefaut = [
   { cat: 'Frontend', items: [['HTML5', 95], ['CSS3', 90], ['JavaScript', 85], ['React', 80], ['TypeScript', 75], ['Bootstrap', 90], ['GSAP', 75]] },

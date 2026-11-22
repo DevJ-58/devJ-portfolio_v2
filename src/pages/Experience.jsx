@@ -201,12 +201,9 @@ export default function Experience() {
     if (!visiteur.prenom) naviguer('/')
   }, []) // eslint-disable-line
 
-  // Remplacer les données codées par défaut par le hook public (silent fallback)
-  // Renommez les tableaux codés en dur en projetsParDefaut / competencesParDefaut si présents
-  // Ici on utilise un fallback depuis cartesPortfolio si nécessaire
-  const projetsParDefaut = cartesPortfolio.projects || []
+  // Projets lus dans la base ; compétences avec repli sur cartesPortfolio
   const competencesParDefaut = cartesPortfolio.skills || []
-  const { projets, competences } = usePortfolioData(projetsParDefaut, competencesParDefaut)
+  const { projets, competences } = usePortfolioData(competencesParDefaut)
 
   useEffect(() => {
     function tick() {

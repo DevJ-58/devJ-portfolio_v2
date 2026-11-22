@@ -1,11 +1,25 @@
 ﻿  import donneePortfolio from '@/donnees/portfolio.json'
   import { getDoc, doc } from 'firebase/firestore'
   import { db } from '@/services/firebase'
-  import { PROJETS } from '@/donnees/projets'
+  import { listerProjetsPublic } from '@/services/portfolioPublic'
 
-  // Liste des projets pour le prompt d'AXIS (même source que le portfolio)
+  // Projets connus d'AXIS : lus dans la base (les mêmes que le portfolio)
+  let projetsIA = []
+  let projetsIACharges = null
+  function chargerProjetsIA() {
+    if (!projetsIACharges) {
+      projetsIACharges = listerProjetsPublic()
+        .then((liste) => { projetsIA = Array.isArray(liste) ? liste : [] })
+        .catch(() => { projetsIACharges = null })
+    }
+    return projetsIACharges
+  }
   function listeProjetsIA() {
-    return PROJETS.map((p, i) => `  ${i + 1}. ${p.titre} — ${p.desc} (${p.tags.join(', ')})\n    → ${p.lien || 'projet privé'}`).join('\n')
+    if (!projetsIA.length) return '  (liste momentanément indisponible)'
+    return projetsIA.map((p, i) => {
+      const tags = Array.isArray(p.tags) ? p.tags : p.tags ? Object.values(p.tags) : []
+      return `  ${i + 1}. ${p.titre} — ${p.desc || ''} (${tags.join(', ')})\n    → ${p.lien || 'projet privé'}`
+    }).join('\n')
   }
 
   const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY
@@ -85,7 +99,7 @@
   IA & ML  : Python (70%), TensorFlow (65%), NLP (60%)
   Outils   : Git & GitHub (90%), Figma (85%), Canva (88%), Docker (60%)
 
-  PROJETS RÉALISÉS (${PROJETS.length}) :
+  PROJETS RÉALISÉS (${projetsIA.length}) :
 ${listeProjetsIA()}
 
   CE PORTFOLIO LUI-MÊME (devjai / AXIS) :
@@ -317,6 +331,7 @@ ${listeProjetsIA()}
     historiqueConversation,
     messageUtilisateur,
   }) {
+    await chargerProjetsIA()
     // Charger le prompt système depuis Firestore (avec fallback sur le prompt codé en dur)
     let promptSystemeFirestore = null
     let instructionsAdditionnelles = ''

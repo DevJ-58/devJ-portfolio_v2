@@ -15,10 +15,44 @@ import { signalerPositionVoix } from '@/composants/ui/axis/canalParole'
 import AvatarAxis from '@/composants/ui/AvatarAxis'
 import PanneauParametres from '@/composants/ui/PanneauParametres'
 import { televerserImage, verifierFichier } from '@/services/televersement'
-import { PROJETS, VERSION_PROJETS } from '@/donnees/projets'
+import { PROJETS_INITIAUX, PROJETS_MASQUES, VERSION_PROJETS } from '@/admin/projetsInitiaux'
 import { Volume2, Mic, Send, X, Menu, Plus, Upload, Trash2, ArrowUpRight, LogOut, Pencil } from 'lucide-react'
 
-const PROJETS_DEFAUT_A_IMPORTER = PROJETS.map(({ num, ...p }) => p) // eslint-disable-line no-unused-vars
+// Clé de comparaison d'un titre (sans accents, casse ni ponctuation)
+const cleTitre = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '')
+// Image téléversée depuis l'admin (à ne jamais écraser)
+const imageTeleversee = (img) => typeof img === 'string' && img !== '' && !img.startsWith('/asset/')
+
+// Met la base à jour avec les projets initiaux :
+// ajoute les manquants, met à jour ceux dont la version est plus ancienne
+// (en gardant une image téléversée), supprime les projets masqués.
+async function synchroniserProjets() {
+  const existants = await listerProjets()
+  const parCle = new Map(existants.map((p) => [cleTitre(p.titre), p]))
+  const masques = new Set(PROJETS_MASQUES.map(cleTitre))
+  const rapport = { ajoutes: [], misAJour: [], retires: [], erreurs: [] }
+  for (const projet of PROJETS_INITIAUX) {
+    const { num, ...donnees } = projet // eslint-disable-line no-unused-vars
+    const enBase = parCle.get(cleTitre(projet.titre))
+    if (!enBase) {
+      if (await creerProjet(donnees)) rapport.ajoutes.push(projet.titre)
+      else rapport.erreurs.push(projet.titre)
+    } else if (Number(enBase.version || 0) < VERSION_PROJETS) {
+      const { id, created_at, updated_at, ...actuel } = enBase // eslint-disable-line no-unused-vars
+      const fusion = { ...actuel, ...donnees }
+      if (imageTeleversee(actuel.img)) fusion.img = actuel.img
+      if (await modifierProjet(id, fusion)) rapport.misAJour.push(projet.titre)
+      else rapport.erreurs.push(projet.titre)
+    }
+  }
+  for (const p of existants) {
+    if (masques.has(cleTitre(p.titre))) {
+      if (await supprimerProjet(p.id)) rapport.retires.push(p.titre)
+      else rapport.erreurs.push(p.titre)
+    }
+  }
+  return rapport
+}
 
 const COMPETENCES_DEFAUT_A_IMPORTER = [
   { cat: 'Frontend', ordre: 0, items: [{ nom: 'HTML5', pct: 95 }, { nom: 'CSS3', pct: 90 }, { nom: 'JavaScript', pct: 85 }, { nom: 'React', pct: 80 }, { nom: 'TypeScript', pct: 75 }, { nom: 'Bootstrap', pct: 90 }, { nom: 'GSAP', pct: 75 }] },
@@ -106,6 +140,29 @@ export default function AdminDashboard({ onFermer }) {
     return () => unsub()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // ── Projets : mise à jour de la base à la connexion ──
+  const [rapportSync, setRapportSync] = useState(null)
+  const [syncEnCours, setSyncEnCours] = useState(false)
+  const syncLancee = useRef(false)
+  async function lancerSynchronisation() {
+    setSyncEnCours(true)
+    try {
+      const r = await synchroniserProjets()
+      setRapportSync(r)
+      if (r.ajoutes.length || r.misAJour.length || r.retires.length) setProjetsListe(await listerProjets())
+    } catch (e) {
+      console.warn('[synchroniserProjets]', e)
+      setRapportSync({ ajoutes: [], misAJour: [], retires: [], erreurs: ['synchronisation'] })
+    } finally {
+      setSyncEnCours(false)
+    }
+  }
+  useEffect(() => {
+    if (!user || syncLancee.current) return
+    syncLancee.current = true
+    lancerSynchronisation()
+  }, [user])
 
   // ── Horloge ──
   useEffect(() => {
@@ -404,6 +461,7 @@ export default function AdminDashboard({ onFermer }) {
   // ── Chargement portfolio (projets / competences) quand on sélectionne l'onglet
   useEffect(() => {
     if (onglet !== 'projets' && onglet !== 'competences') return
+    if (syncEnCours) return
     let actif = true
     async function charger() {
       setChargementPortfolio(true)
@@ -418,7 +476,7 @@ export default function AdminDashboard({ onFermer }) {
     }
     charger()
     return () => { actif = false }
-  }, [onglet])
+  }, [onglet, syncEnCours]) // recharge aussi à la fin de la mise à jour de la base
 
   // Handlers CRUD portfolio
   async function sauvegarderProjet(saisie) {
@@ -466,14 +524,6 @@ export default function AdminDashboard({ onFermer }) {
     if (importEnCours) return
     setImportEnCours(true)
     try {
-      const projetsExistants = await listerProjets()
-      const titresExistants = new Set(projetsExistants.map(p => (p.titre || '').toLowerCase().trim()))
-      for (const p of PROJETS_DEFAUT_A_IMPORTER) {
-        if (!titresExistants.has(p.titre.toLowerCase().trim())) {
-          await creerProjet(p)
-        }
-      }
-
       const competencesExistantes = await listerCompetences()
       const catsExistantes = new Set(competencesExistantes.map(c => (c.cat || '').toLowerCase().trim()))
       for (const c of COMPETENCES_DEFAUT_A_IMPORTER) {
@@ -482,9 +532,7 @@ export default function AdminDashboard({ onFermer }) {
         }
       }
 
-      const nouveauxProjets = await listerProjets()
       const nouvellesCompetences = await listerCompetences()
-      setProjetsListe(nouveauxProjets)
       setCompetencesListe(nouvellesCompetences)
       setImportReussi(true)
       setTimeout(() => setImportReussi(false), 3000)
@@ -1099,10 +1147,19 @@ ${detailSessions || 'Aucune session encore.'}
               <div className="ad-barre-actions">
                 <span className="ad-note">{projetsListe.length} projet{projetsListe.length > 1 ? 's' : ''}{portfolioSauvegarde && <b className="ad-ok"> · Enregistré ✓</b>}</span>
                 <div>
-                  <button type="button" className="ad-bouton ad-bouton--discret" onClick={importerDonneesParDefaut} disabled={importEnCours}>{importEnCours ? 'Import…' : importReussi ? 'Importé ✓' : 'Importer les données par défaut'}</button>
+                  <button type="button" className="ad-bouton ad-bouton--discret" onClick={lancerSynchronisation} disabled={syncEnCours}>{syncEnCours ? 'Mise à jour de la base…' : 'Vérifier la base'}</button>
                   <button type="button" className="ad-bouton ad-bouton--plein" onClick={() => setProjetEnEdition({ titre: '', categorie: '', type: 'frontend', tags: [], desc: '', img: '', lien: '', annee: String(new Date().getFullYear()), status: 'EN LIGNE', ordre: projetsListe.length })}><Plus size={14} aria-hidden="true" /> Nouveau projet</button>
                 </div>
               </div>
+              {rapportSync && (rapportSync.ajoutes.length + rapportSync.misAJour.length + rapportSync.retires.length + rapportSync.erreurs.length > 0) && (
+                <div className={`ad-rapport${rapportSync.erreurs.length ? ' est-erreur' : ''}`} role="status">
+                  <b>Base des projets mise à jour</b>
+                  {rapportSync.ajoutes.length > 0 && <p>{rapportSync.ajoutes.length} ajouté{rapportSync.ajoutes.length > 1 ? 's' : ''} : {rapportSync.ajoutes.join(', ')}</p>}
+                  {rapportSync.misAJour.length > 0 && <p>{rapportSync.misAJour.length} mis à jour : {rapportSync.misAJour.join(', ')}</p>}
+                  {rapportSync.retires.length > 0 && <p>Retiré : {rapportSync.retires.join(', ')}</p>}
+                  {rapportSync.erreurs.length > 0 && <p>Échec pour : {rapportSync.erreurs.join(', ')}. Vérifie les règles d’écriture de Firestore.</p>}
+                </div>
+              )}
               {chargementPortfolio ? <p className="ad-vide">Chargement…</p> : (
                 <div className="ad-projets">
                   {projetsListe.map((p) => (

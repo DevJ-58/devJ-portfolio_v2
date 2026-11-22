@@ -1,17 +1,12 @@
-// Liste unique des projets de Fréjus, utilisée par le portfolio, la page
-// /projets, l'import de l'admin et les connaissances d'AXIS.
-// Les projets enregistrés dans Firebase (admin) priment ; ceux de cette liste
-// qui n'y sont pas encore s'ajoutent à l'affichage, dans l'ordre ci-dessous.
-// Les projets en ligne viennent en premier ; les 6 premiers forment la
-// constellation du portfolio.
+// Projets à écrire dans la base Firebase (collection projets_portfolio).
+// Ce fichier n'est chargé que par l'espace admin : à la connexion, l'admin
+// ajoute les projets manquants, met à jour ceux dont la version est plus
+// ancienne et supprime les projets masqués. Le site public ne lit que la base.
 // type : 'frontend' | 'fullstack' | 'ia' | 'impact'
 
-// Version des données ci-dessous. Un projet enregistré dans Firebase avec une
-// version plus ancienne est remplacé à l'affichage par celui-ci ; tout projet
-// enregistré depuis l'admin porte la version courante et garde ses réglages.
 export const VERSION_PROJETS = 2
 
-export const PROJETS = [
+export const PROJETS_INITIAUX = [
   // ── En ligne
   {
     titre: 'AXIS — Portfolio IA', categorie: 'Portfolio interactif', type: 'ia', annee: '2026', status: 'EN LIGNE',
@@ -136,5 +131,5 @@ export const PROJETS = [
   },
 ].map((p, i) => ({ ...p, num: String(i + 1).padStart(2, '0'), ordre: i, version: VERSION_PROJETS }))
 
-// Projets à ne jamais publier, même s'ils existent dans Firebase
+// Projets à retirer de la base
 export const PROJETS_MASQUES = ['djaimomo']

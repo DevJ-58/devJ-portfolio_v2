@@ -5,7 +5,7 @@ import usePortfolioData from '@/hooks/usePortfolioData'
 import { ScrollTrigger } from '@/composants/portfolio/moteur/gsap'
 import { ContextePortfolio, variablesTheme } from '@/composants/portfolio/moteur/contexte'
 import useDefilement from '@/composants/portfolio/moteur/useDefilement'
-import { projetsParDefaut, competencesParDefaut, normaliserProjets, normaliserCompetences } from '@/composants/portfolio/donnees'
+import { competencesParDefaut, normaliserProjets, normaliserCompetences } from '@/composants/portfolio/donnees'
 import NavPortfolio from '@/composants/portfolio/chrome/NavPortfolio'
 import Curseur from '@/composants/portfolio/chrome/Curseur'
 import AxisBouton from '@/composants/portfolio/AxisBouton'
@@ -35,7 +35,7 @@ const Portfolio = forwardRef(function Portfolio({ accesDirecte = false, pret = t
   const [scroller, setScroller] = useState(null)
 
   const [github, setGithub] = useState({ donnees: null, chargement: true, erreur: false })
-  const { projets, competences } = usePortfolioData(projetsParDefaut, competencesParDefaut)
+  const { projets, competences } = usePortfolioData(competencesParDefaut)
   const projetsAffiches = useMemo(() => normaliserProjets(projets), [projets])
   const competencesAffichees = useMemo(() => normaliserCompetences(competences), [competences])
 

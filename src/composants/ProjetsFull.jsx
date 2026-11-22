@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import Lenis from 'lenis'
 import utiliserTheme from '@/store/utiliserTheme'
 import usePortfolioData from '@/hooks/usePortfolioData'
-import { PROJETS } from '@/donnees/projets'
 import ProjectsScene from '@/composants/ui/projets3d/ProjectsScene'
 import { genererPositions } from '@/composants/ui/projets3d/scenePositions'
 import ProjectDetailOverlay from '@/composants/ui/projets3d/ProjectDetailOverlay'
@@ -12,7 +11,6 @@ import { animerAttributs, animerBandeau } from '@/composants/portfolio/moteur/an
 import { variablesTheme } from '@/composants/portfolio/moteur/contexte'
 import '@/composants/portfolio/portfolio.css'
 
-const PROJETS_PAR_DEFAUT = PROJETS
 
 const CATEGORIES = {
   frontend: { label: 'Frontend', icon: 'layout', color: '#5DCAA5', textDark: true },
@@ -47,7 +45,7 @@ export default function ProjetsFull() {
   const reprise = useRef(null)
   const sceneRef = useRef(null)
 
-  const { projets: projetsData } = usePortfolioData(PROJETS_PAR_DEFAUT, [])
+  const { projets: projetsData } = usePortfolioData([])
   const projets = useMemo(() => projetsData.map((p, i) => ({
     ...p,
     num: p.num || String(i + 1).padStart(2, '0'),

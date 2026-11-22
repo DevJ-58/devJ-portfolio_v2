@@ -133,6 +133,12 @@
 .ad-barre-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .ad-barre-actions > div { display: flex; gap: 8px; flex-wrap: wrap; }
 
+/* Rapport de mise à jour de la base */
+.ad-rapport { display: grid; gap: 6px; padding: 16px 20px; border: 1px solid var(--a); border-radius: 14px; font-size: 0.9rem; line-height: 1.5; color: var(--t1); }
+.ad-rapport b { font: 700 0.66rem / 1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--a); }
+.ad-rapport.est-erreur { border-color: var(--rouge); }
+.ad-rapport.est-erreur b { color: var(--rouge); }
+
 /* Barres de progression */
 .ad-barre { display: grid; gap: 8px; }
 .ad-barre > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
