@@ -14,6 +14,7 @@ import { Volume2, Layout, RotateCcw, Send, MapPin, Briefcase, Zap, Mic, MessageS
 import { gsap, useGSAP, EASE, mouvementReduit } from '@/composants/portfolio/moteur/gsap'
 import { variablesTheme } from '@/composants/portfolio/moteur/contexte'
 import './experience.css'
+import { creerCompteurTouches } from '@/hooks/useAccesSecret'
 import cartesPortfolio from '@/donnees/cartesPortfolio'
 import usePortfolioData from '@/hooks/usePortfolioData'
 
@@ -94,6 +95,8 @@ export default function Experience() {
 
   const portfolioRef = useRef(null)
   const xpRef = useRef(null)
+  // Accès secret à l'espace admin : 5 touches rapides sur l'avatar
+  const [toucherAvatar] = useState(() => creerCompteurTouches(5, 3000))
 
   // Entrée de l'espace AXIS
   useGSAP(() => {
@@ -892,7 +895,7 @@ export default function Experience() {
 
       <main className={`xp-scene${reponseVisible ? ' a-reponse' : ''}`}>
         <span className="xp-scene__fond" aria-hidden="true">AXIS</span>
-        <div className="xp-avatar" data-xp-avatar style={{ '--t': `${avatarTaille}px` }}>
+        <div className="xp-avatar" data-xp-avatar style={{ '--t': `${avatarTaille}px` }} onClick={toucherAvatar}>
           <span className={`xp-avatar__anneau est-${aiState}`} aria-hidden="true" />
           <AvatarStable etat={aiState} width={avatarTaille} height={avatarTaille} />
         </div>
