@@ -388,11 +388,18 @@ export function creerMoteurAvatar(canvas, { accent: accentInitial = '#10b981' } 
 
   // ── Boucle d'animation
   let rafId = null, last = 0
+  // Mode piloté (vidéos) : la bouche, la tête et le regard sont donnés de
+  // l'extérieur à chaque image, et le temps avance par pas fixes (etape).
+  let pilote = null
   function frame(ms) {
     rafId = requestAnimationFrame(frame)
     const now = ms / 1000
     const dt = last ? Math.min(0.04, now - last) : 0.016
     last = now
+    calculer(dt, now)
+  }
+
+  function calculer(dt, now) {
     clock += dt
     const t = clock
     for (const k in T) T[k] = 0
@@ -430,9 +437,18 @@ export function creerMoteurAvatar(canvas, { accent: accentInitial = '#10b981' } 
       pose.pitch.t = Math.sin(t * 1.1) * 0.02 + my * 0.12
       pose.roll.t = lerp(pose.roll.t, Math.sin(t * 0.7) * 0.03, 0.02)
     }
+    if (pilote) {
+      T.jaw = pilote.jaw || 0; T.wide = pilote.wide || 0; T.round = pilote.round || 0
+      T.smile = pilote.smile ?? 1
+      T.browL = T.browR = pilote.sourcils || 0
+      pose.yaw.t = pilote.yaw || 0; pose.pitch.t = pilote.pitch || 0; pose.roll.t = pilote.roll || 0
+      gazeT = { x: pilote.regardX || 0, y: pilote.regardY || 0 }
+      if (pilote.hochement) { kickNod(pilote.hochement); pilote.hochement = 0 }
+      if (pilote.cligner) { blinkNow(); pilote.cligner = false }
+    }
     browPulse = Math.max(0, browPulse - dt * 2.2)
     smilePulse = Math.max(0, smilePulse - dt * 1.1)
-    T.jaw = Math.max(T.jaw, etat === 'speak' ? T.smile * 0.12 : 0)
+    if (!pilote) T.jaw = Math.max(T.jaw, etat === 'speak' ? T.smile * 0.12 : 0)
     if (t > nextBlink) { blinkNow(); nextBlink = t + 2.2 + Math.random() * 3.5 }
     let bl = 0
     if (blinkT >= 0) { blinkT += dt; const d = 0.17; bl = blinkT < d ? Math.sin(blinkT / d * Math.PI) : 0; if (blinkT >= d) blinkT = -1 }
@@ -470,5 +486,9 @@ export function creerMoteurAvatar(canvas, { accent: accentInitial = '#10b981' } 
     renderer.forceContextLoss()
   }
 
-  return { redimensionner, definirEtat, definirTexte, synchroniserVoix, definirAccent, definirActif, detruire }
+  // Vidéo : fixe les commandes de l'image suivante, puis avance d'un pas
+  function piloter(p) { pilote = p }
+  function etape(dt) { calculer(dt, clock + dt) }
+
+  return { redimensionner, definirEtat, definirTexte, synchroniserVoix, definirAccent, definirActif, detruire, piloter, etape }
 }
