@@ -8,10 +8,26 @@ import utiliserStore from '@/store/utiliserStore'
 import { dureeParole } from '@/composants/ui/axis/visemes'
 import { signalerPositionVoix } from '@/composants/ui/axis/canalParole'
 
-const MAX_CARACTERES = 1000
+// Au-delà, seules les premières phrases sont dites (le texte reste affiché en entier) :
+// chaque caractère dit coûte des crédits ElevenLabs
+const MAX_CARACTERES = 320
 const cache = new Map() // texte → { url, alignement } ; évite de repayer une phrase déjà dite
 let elevenDisponible = true // passe à false si le serveur n'a pas de voix configurée
 let arretCourant = null
+
+// Garde les phrases entières qui tiennent dans la limite
+export function raccourcirPourVoix(texte, max = MAX_CARACTERES) {
+  if (texte.length <= max) return texte
+  const phrases = texte.split(/(?<=[.!?…])\s+/)
+  let r = ''
+  for (const ph of phrases) {
+    if ((r ? r.length + 1 : 0) + ph.length > max) break
+    r = r ? `${r} ${ph}` : ph
+  }
+  if (r) return r
+  const coupe = texte.slice(0, max)
+  return `${coupe.slice(0, Math.max(coupe.lastIndexOf(' '), max * 0.6)).trim()}…`
+}
 
 export function nettoyerPourVoix(texte) {
   return String(texte || '')
@@ -71,7 +87,7 @@ function choisirVoixNavigateur(synthese) {
 export function parlerAxis(texteBrut, { vocal = true, surDebut, surFin } = {}) {
   arretCourant?.()
   const { definirAxisParle } = utiliserStore.getState()
-  const texte = nettoyerPourVoix(texteBrut)
+  const texte = raccourcirPourVoix(nettoyerPourVoix(texteBrut))
   let actif = true
   let fini = false
   const nettoyages = []
@@ -162,7 +178,7 @@ export function parlerAxis(texteBrut, { vocal = true, surDebut, surFin } = {}) {
   }
 
   // ── 1. Voix ElevenLabs
-  if (!elevenDisponible || texte.length > MAX_CARACTERES) { voixNavigateur(); return arreter }
+  if (!elevenDisponible) { voixNavigateur(); return arreter }
 
   const controleur = new AbortController()
   nettoyages.push(() => controleur.abort())

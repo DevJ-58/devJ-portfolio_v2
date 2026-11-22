@@ -8,7 +8,7 @@
 //   ELEVENLABS_VOICE_ID  identifiant de la voix (obligatoire)
 //   ELEVENLABS_MODEL     facultatif, eleven_multilingual_v2 par défaut (le plus fidèle
 //                        aux voix clonées ; eleven_flash_v2_5 = plus rapide, moins fidèle)
-//   ELEVENLABS_MAX_CHARS facultatif, 1000 par défaut
+//   ELEVENLABS_MAX_CHARS facultatif, 400 par défaut
 
 const LIMITE_PAR_MINUTE = 12
 const visites = new Map() // limite simple par adresse IP (par instance)
@@ -55,7 +55,7 @@ export default async function handler(req, res) {
   let corps = req.body
   if (typeof corps === 'string') { try { corps = JSON.parse(corps) } catch { corps = {} } }
   const texte = String(corps?.texte || '').trim()
-  const max = Number(process.env.ELEVENLABS_MAX_CHARS) || 1000
+  const max = Number(process.env.ELEVENLABS_MAX_CHARS) || 400
   if (!texte) return res.status(400).json({ erreur: 'texte vide' })
   if (texte.length > max) return res.status(413).json({ erreur: 'texte trop long' })
 

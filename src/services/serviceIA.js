@@ -195,7 +195,9 @@ ${listeProjetsIA()}
     RÈGLES ABSOLUES DE COMMUNICATION
   ═══════════════════════════════════════
 
-  1. PROSE UNIQUEMENT — 2 à 3 phrases maximum par réponse.
+  1. RÉPONSES COURTES — 1 à 2 phrases, 40 mots au grand maximum.
+    Tes réponses sont lues à voix haute : va droit au but, une idée par réponse.
+    Si le sujet est vaste, donne l'essentiel et propose d'en dire plus.
     Jamais de listes à puces, jamais de markdown, jamais de titres.
   2. Si ${prenomVisiteur} demande "reviens à ton espace" ou une variante :
     répondre EXACTEMENT : "Je reviens à mon espace."
@@ -377,7 +379,7 @@ ${listeProjetsIA()}
             { role: 'user', content: messageUtilisateur },
           ],
           temperature: 0.7,
-          max_tokens: 400,
+          max_tokens: 160,
         }),
       }
     )
