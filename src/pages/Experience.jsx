@@ -467,88 +467,87 @@ export default function Experience() {
     return arreter
   }, [dernierMessage, modeVocal])
 
+  // ── Micro : une seule écoute à la fois, coupée pendant que AXIS réfléchit
+  // ou parle (sinon il s'entend lui-même), relancée sans clignoter tant
+  // que le visiteur garde le micro ouvert.
+  const aiStateRef = useRef(aiState)
+  useEffect(() => { aiStateRef.current = aiState }, [aiState])
+  const silencesRef = useRef(0) // écoutes de suite sans aucune parole
+  const MAX_SILENCES = 10 // ≈ 1 minute sans rien dire : le micro se coupe
+
+  const arreterMicro = useCallback(() => {
+    const rec = recognitionRef.current
+    recognitionRef.current = null
+    if (rec) {
+      rec.onend = null; rec.onresult = null; rec.onerror = null
+      try { rec.abort() } catch { /* déjà arrêté */ }
+    }
+    setEcoute(false)
+  }, [])
+
+  const demarrerMicro = useCallback(function demarrer() {
+    if (!modeParlerRef.current || aiStateRef.current !== 'idle' || recognitionRef.current) return
+    const RecVocale = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!RecVocale) return
+    const rec = new RecVocale()
+    rec.lang = 'fr-FR'
+    rec.continuous = false
+    rec.interimResults = false
+    let entendu = false
+
+    rec.onstart = () => setEcoute(true)
+    rec.onresult = (event) => {
+      if (aiStateRef.current !== 'idle') return
+      const texte = event.results[0][0].transcript.trim()
+      if (!texte) return
+      entendu = true
+      silencesRef.current = 0
+      derniereQuestionRef.current = texte
+      envoyerMessageRef.current(texte)
+    }
+    rec.onerror = (e) => {
+      // Micro refusé ou absent : inutile de réessayer en boucle
+      if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(e.error)) {
+        modeParlerRef.current = false
+        setModeParler(false)
+      } else if (e.error !== 'no-speech' && e.error !== 'aborted') {
+        console.warn('[micro]', e.error)
+      }
+    }
+    rec.onend = () => {
+      if (recognitionRef.current !== rec) return
+      recognitionRef.current = null
+      if (!entendu) silencesRef.current += 1
+      if (silencesRef.current >= MAX_SILENCES) {
+        modeParlerRef.current = false
+        setModeParler(false)
+      }
+      if (modeParlerRef.current && aiStateRef.current === 'idle') {
+        // Le navigateur ferme l'écoute après un silence : on la rouvre
+        // aussitôt, l'indicateur reste sur « écoute »
+        setTimeout(demarrer, 250)
+      } else {
+        setEcoute(false)
+      }
+    }
+    recognitionRef.current = rec
+    try { rec.start() } catch { recognitionRef.current = null; setEcoute(false) }
+  }, [])
+
   useEffect(() => {
-    if (aiState === 'speaking') {
-      try { recognitionRef.current?.abort() } catch (e) { console.warn('[rec] abort error:', e) }
-      setTimeout(() => setEcoute(false), 0)
-      return
+    if (modeParler && aiState === 'idle') {
+      silencesRef.current = 0
+      const t = setTimeout(demarrerMicro, 700) // laisse la fin de la voix se dissiper
+      return () => clearTimeout(t)
     }
-
-    if (aiState === 'idle' && (modeParlerRef.current || modeParler)) {
-      const timer = setTimeout(() => {
-        if (!modeParlerRef.current && !modeParler) return
-        // Ne pas redémarrer si le micro est déjà actif
-        if (ecoute) return
-        try { recognitionRef.current?.abort() } catch (e) { console.warn('[rec] abort error:', e) }
-
-        const RecVocale = window.SpeechRecognition || window.webkitSpeechRecognition
-        if (!RecVocale) return
-
-        const rec = new RecVocale()
-        rec.lang           = 'fr-FR'
-        rec.continuous     = false
-        rec.interimResults = false
-
-        rec.onstart = () => setEcoute(true)
-
-        rec.onresult = (event) => {
-          const texte = event.results[0][0].transcript.trim()
-          if (texte) {
-            derniereQuestionRef.current = texte
-            envoyerMessageRef.current(texte)
-          }
-        }
-
-        rec.onerror = (e) => {
-          console.warn('[rec] erreur:', e.error)
-          setEcoute(false)
-        }
-
-        // CORRECTION 2A — Redémarrage automatique du micro si toujours en mode parler
-        rec.onend = () => {
-          setEcoute(false)
-          // Redémarrer seulement si modeParler toujours actif et IA en attente
-          if (modeParlerRef.current && aiState === 'idle') {
-            setTimeout(() => {
-              if (!modeParlerRef.current) return
-              try {
-                const RecVocale = window.SpeechRecognition || window.webkitSpeechRecognition
-                if (!RecVocale) return
-                const newRec = new RecVocale()
-                newRec.lang = 'fr-FR'
-                newRec.continuous = false
-                newRec.interimResults = false
-                newRec.onstart = () => setEcoute(true)
-                newRec.onresult = rec.onresult
-                newRec.onerror = (e) => {
-                  console.warn('[rec] erreur redém:', e.error)
-                  setEcoute(false)
-                }
-                // Redémarrage récursif — même logique à la fin du nouveau cycle
-                newRec.onend = rec.onend
-                recognitionRef.current = newRec
-                newRec.start()
-              } catch (e) {
-                console.warn('[rec] redémarrage échoué:', e)
-              }
-            }, 600)
-          }
-        }
-
-        recognitionRef.current = rec
-        try { rec.start() } catch (e) { console.warn('[rec] start error:', e) }
-      }, 900)
-
-      return () => clearTimeout(timer)
-    }
-}, [aiState, modeParler])
+    arreterMicro()
+  }, [aiState, modeParler, arreterMicro, demarrerMicro])
 
   useEffect(() => {
     return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop()
-        recognitionRef.current = null
-      }
+      const rec = recognitionRef.current
+      recognitionRef.current = null
+      if (rec) { rec.onend = null; try { rec.abort() } catch { /* déjà arrêté */ } }
       utiliserStore.getState().definirAxisParle(false)
     }
   }, []) // [] = seulement au démontage du composant
@@ -600,44 +599,16 @@ export default function Experience() {
 
   const toggleParler = useCallback(() => {
     if (!modeParler) {
+      silencesRef.current = 0
       setModeParler(true)
       modeParlerRef.current = true
-
-      const RecVocale = window.SpeechRecognition || window.webkitSpeechRecognition
-      if (!RecVocale) return
-
-      const rec = new RecVocale()
-      rec.lang           = 'fr-FR'
-      rec.continuous     = false
-      rec.interimResults = false
-
-      rec.onstart = () => setEcoute(true)
-
-      rec.onresult = (event) => {
-        const texte = event.results[0][0].transcript.trim()
-        if (texte) {
-          derniereQuestionRef.current = texte
-          envoyerMessageRef.current(texte)
-        }
-      }
-
-      rec.onerror = (e) => {
-        console.warn('[rec] erreur:', e.error)
-        setEcoute(false)
-      }
-
-      rec.onend = () => setEcoute(false)
-
-      recognitionRef.current = rec
-      try { rec.start() } catch (e) { console.warn('[rec] start error:', e) }
+      demarrerMicro() // dans le geste du visiteur : le navigateur accepte la demande d'accès
     } else {
-      setModeParler(false)
       modeParlerRef.current = false
-      try { recognitionRef.current?.abort() } catch (e) { console.warn('[rec] abort error:', e) }
-      recognitionRef.current = null
-      setEcoute(false)
+      setModeParler(false)
+      arreterMicro()
     }
-  }, [modeParler])
+  }, [modeParler, demarrerMicro, arreterMicro])
 
   // ── Affichage ───────────────────────────────────────────────────────────
   const libelleEtat = aiState === 'idle' ? 'En attente' : aiState === 'thinking' ? 'Réflexion…' : 'Parole'
