@@ -10,8 +10,7 @@ import {
 } from '@/services/portfolioAdmin'
 import utiliserTheme from '@/store/utiliserTheme'
 import utiliserStore from '@/store/utiliserStore'
-import { dureeParole } from '@/composants/ui/axis/visemes'
-import { signalerPositionVoix } from '@/composants/ui/axis/canalParole'
+import { parlerAxis, faireTaireAxis } from '@/services/voixAxis'
 import AvatarAxis from '@/composants/ui/AvatarAxis'
 import PanneauParametres from '@/composants/ui/PanneauParametres'
 import { televerserImage, verifierFichier } from '@/services/televersement'
@@ -353,108 +352,19 @@ export default function AdminDashboard({ onFermer }) {
     return () => window.removeEventListener('resize', handler)
   }, [])
 
-  // ── Voix d'AXIS + bouche de l'avatar (même mécanisme que l'espace AXIS)
+  // ── Voix d'AXIS + bouche de l'avatar (même service que l'espace AXIS)
   useEffect(() => {
-    const message = axisMessage.texte
-    if (!message) return
-    const { definirAxisParle } = utiliserStore.getState()
-    const synthese = typeof window !== 'undefined' ? window.speechSynthesis : null
-    let actif = true
-    let minuterie = null
-    let keepAlive = null
-
-    const textePropre = message
-      .replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/`(.*?)`/g, '$1')
-      .replace(/#{1,6}\s/g, '').replace(/\[(.*?)\]\(.*?\)/g, '$1').replace(/[-*•]\s/g, '')
-      .replace(/\n{2,}/g, '. ').replace(/\n/g, ', ').replace(/\s{2,}/g, ' ').trim()
-
-    const terminer = () => {
-      if (keepAlive) clearInterval(keepAlive)
-      definirAxisParle(false)
-      setAiState('idle')
-    }
-    // Sans voix (coupée ou refusée par le navigateur) : la bouche suit le texte en silence
-    const parlerEnSilence = () => {
-      definirAxisParle(true, textePropre)
-      setAiState('speaking')
-      minuterie = setTimeout(() => { if (actif) terminer() }, dureeParole(textePropre) * 1000)
-    }
-
-    if (!modeVocal || !synthese) { parlerEnSilence(); return () => { actif = false; clearTimeout(minuterie) } }
-
-    synthese.cancel()
-    const voixTexte = textePropre.replace(/Fréjus/gi, 'Fréjusse').replace(/Frejus/gi, 'Fréjusse')
-    const segments = voixTexte.split(/(?<=[.!?])\s+/).filter((x) => x.trim())
-    let curseur = 0
-    const debuts = segments.map((seg) => { const pos = voixTexte.indexOf(seg, curseur); curseur = (pos >= 0 ? pos : curseur) + seg.length; return pos >= 0 ? pos : curseur - seg.length })
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-    let idx = 0
-    let entendu = false
-
-    function choisirVoix() {
-      const voix = synthese.getVoices()
-      const priorite = [
-        (v) => v.lang.startsWith('fr') && /thomas|nicolas|paul/i.test(v.name),
-        (v) => v.lang === 'fr-FR' && v.name.includes('Google'),
-        (v) => v.lang === 'fr-FR' && !/amelie|marie|alice|stephanie/i.test(v.name),
-        (v) => v.lang.startsWith('fr'),
-      ]
-      for (const test of priorite) { const v = voix.find(test); if (v) return v }
-      return null
-    }
-
-    function parlerSegment(voixChoisie) {
-      if (!actif) return
-      if (idx >= segments.length) { terminer(); return }
-      const seg = new SpeechSynthesisUtterance(segments[idx])
-      if (voixChoisie) seg.voice = voixChoisie
-      seg.lang = 'fr-FR'; seg.pitch = 0.82; seg.rate = isIOS ? 0.88 : 0.92; seg.volume = 1
-      const debut = debuts[idx], fin = debut + segments[idx].length
-      seg.onstart = () => { if (!actif) return; entendu = true; signalerPositionVoix(debut, fin) }
-      seg.onboundary = (ev) => { if (actif && ev.charIndex != null) signalerPositionVoix(debut + ev.charIndex, fin) }
-      seg.onend = () => { if (!actif) return; idx += 1; setTimeout(() => parlerSegment(voixChoisie), isIOS ? 200 : 120) }
-      seg.onerror = (e) => {
-        if (!actif) return
-        console.warn('[voix admin]', e.error)
-        // Voix refusée dès le départ (pas encore d'interaction, voix absente) : bouche en silence
-        if (!entendu) { if (keepAlive) clearInterval(keepAlive); clearTimeout(minuterie); parlerEnSilence(); return }
-        idx += 1; setTimeout(() => parlerSegment(voixChoisie), 200)
-      }
-      synthese.speak(seg)
-    }
-
-    function demarrer() {
-      if (!actif) return
-      definirAxisParle(true, voixTexte)
-      setAiState('speaking')
-      if (!isIOS && !('ontouchstart' in window)) {
-        keepAlive = setInterval(() => { synthese.pause(); synthese.resume() }, 10000)
-      }
-      parlerSegment(choisirVoix())
-      // Filet de sécurité : si la voix ne démarre jamais, la bouche parle en silence
-      minuterie = setTimeout(() => { if (actif && !entendu) { synthese.cancel(); parlerEnSilence() } }, 2500)
-    }
-
-    // Petit délai après cancel() : Chrome ignore parfois une parole lancée aussitôt
-    let demarre = false
-    let attenteVoix = null
-    const go = () => { if (demarre || !actif) return; demarre = true; synthese.onvoiceschanged = null; clearTimeout(attenteVoix); demarrer() }
-    const lancement = setTimeout(() => {
-      if (synthese.getVoices().length > 0) go()
-      else { synthese.onvoiceschanged = go; attenteVoix = setTimeout(go, 1000) } // liste des voix jamais annoncée : on démarre quand même
-    }, 80)
-
-    return () => {
-      actif = false
-      clearTimeout(lancement); clearTimeout(minuterie); clearTimeout(attenteVoix)
-      if (keepAlive) clearInterval(keepAlive)
-      synthese.onvoiceschanged = null
-    }
+    if (!axisMessage.texte) return
+    return parlerAxis(axisMessage.texte, {
+      vocal: modeVocal,
+      surDebut: () => setAiState('speaking'),
+      surFin: () => setAiState('idle'),
+    })
   }, [axisMessage, modeVocal])
 
   // En quittant l'admin : silence et bouche au repos
   useEffect(() => () => {
-    window.speechSynthesis?.cancel()
+    faireTaireAxis()
     utiliserStore.getState().definirAxisParle(false)
   }, [])
 

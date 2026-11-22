@@ -4,8 +4,7 @@ import utiliserStore from '@/store/utiliserStore'
 import utiliserTheme from '@/store/utiliserTheme'
 import { useAxis } from '@/hooks/utiliserDevJAI'
 import AvatarAxis from '@/composants/ui/AvatarAxis'
-import { dureeParole } from '@/composants/ui/axis/visemes'
-import { signalerPositionVoix } from '@/composants/ui/axis/canalParole'
+import { parlerAxis } from '@/services/voixAxis'
 
 // Import du hook AXIS renommé sans changer le nom du fichier
 import Portfolio from '@/composants/Portfolio'
@@ -458,154 +457,14 @@ export default function Experience() {
     return () => window.clearTimeout(init)
   }, [messageCourant, dernierMessage, modePortfolio, parseEtExecuterCommande])
 
+  // Voix d'AXIS : ElevenLabs, sinon voix du navigateur, sinon bouche en silence
   useEffect(() => {
     if (!dernierMessage) return
-    if (typeof window === 'undefined' || !window.speechSynthesis) return
-
-    let actif = true
-    let finTexteTimer = null
-    const { definirAxisParle } = utiliserStore.getState()
-
-    window.speechSynthesis.cancel()
-
-    const nettoyerPourVoix = (texte) => {
-      return texte
-        .replace(/\*\*(.*?)\*\*/g, '$1')
-        .replace(/\*(.*?)\*/g, '$1')
-        .replace(/`(.*?)`/g, '$1')
-        .replace(/#{1,6}\s/g, '')
-        .replace(/\[(.*?)\]\(.*?\)/g, '$1')
-        .replace(/[-*•]\s/g, '')
-        .replace(/\n{2,}/g, '. ')
-        .replace(/\n/g, ', ')
-        .replace(/\s{2,}/g, ' ')
-        // Correction prononciation : Fréjus → Fréjusse (force le S)
-        .replace(/Fréjus/gi, 'Fréjusse')
-        .replace(/Frejus/gi, 'Fréjusse')
-        .trim()
-    }
-
-    // Découper le texte en segments naturels pour éviter les coupures
-    const segmenterTexte = (texte) => {
-      return texte
-        .split(/(?<=[.!?])\s+/)
-        .filter(s => s.trim().length > 0)
-    }
-
-    const u = new SpeechSynthesisUtterance('') // placeholder, non utilisé directement
-    void u
-
-    function trySpeak() {
-      if (!actif) return
-      if (!modeVocal) {
-        // Sans voix : AXIS « parle » le temps que sa bouche suive le texte
-        const texte = nettoyerPourVoix(dernierMessage)
-        definirAxisParle(true, texte)
-        finTexteTimer = setTimeout(() => { if (actif) definirAxisParle(false) }, dureeParole(texte) * 1000)
-        return
-      }
-
-      const voix = window.speechSynthesis.getVoices()
-      
-      const priorite = [
-        // Desktop — voix masculines françaises
-        v => v.lang.startsWith('fr') && v.name.toLowerCase().includes('thomas'),
-        v => v.lang.startsWith('fr') && v.name.toLowerCase().includes('nicolas'),
-        v => v.lang.startsWith('fr') && v.name.toLowerCase().includes('paul'),
-        // Mobile Android — Google français
-        v => v.lang === 'fr-FR' && v.name.includes('Google'),
-        v => v.lang === 'fr-FR' && !v.name.toLowerCase().includes('amelie') 
-             && !v.name.toLowerCase().includes('marie')
-             && !v.name.toLowerCase().includes('alice')
-             && !v.name.toLowerCase().includes('stephanie'),
-        // Fallback fr générique
-        v => v.lang.startsWith('fr'),
-      ]
-
-      let voixChoisie = null
-      for (const test of priorite) {
-        voixChoisie = voix.find(test)
-        if (voixChoisie) break
-      }
-
-      const textePropre = nettoyerPourVoix(dernierMessage)
-      const segments = segmenterTexte(textePropre)
-      // Position de chaque segment dans le texte complet (synchro de la bouche)
-      let curseur = 0
-      const debutsSegments = segments.map((seg) => {
-        const pos = textePropre.indexOf(seg, curseur)
-        curseur = (pos >= 0 ? pos : curseur) + seg.length
-        return pos >= 0 ? pos : curseur - seg.length
-      })
-      let idx = 0
-
-      // Détection iOS
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-
-      // Keep-alive uniquement sur desktop — cause des coupures sur mobile
-      let keepAlive = null
-      if (!isIOS && !('ontouchstart' in window)) {
-        keepAlive = setInterval(() => {
-          if (!actif) { clearInterval(keepAlive); return }
-          window.speechSynthesis.pause()
-          window.speechSynthesis.resume()
-        }, 10000)
-      }
-
-      function parlerSegment() {
-        if (!actif || idx >= segments.length) {
-          if (keepAlive) clearInterval(keepAlive)
-          definirAxisParle(false)
-          setCartesActives([])
-          return
-        }
-
-        const seg = new SpeechSynthesisUtterance(segments[idx])
-        if (voixChoisie) seg.voice = voixChoisie
-        seg.lang = 'fr-FR'
-        seg.pitch = 0.82
-        seg.rate = isIOS ? 0.88 : 0.92
-        seg.volume = 1
-
-        const debutSeg = debutsSegments[idx]
-        const finSeg = debutSeg + segments[idx].length
-        seg.onstart = () => { if (actif) signalerPositionVoix(debutSeg, finSeg) }
-        seg.onboundary = (ev) => {
-          if (actif && ev.charIndex != null) signalerPositionVoix(debutSeg + ev.charIndex, finSeg)
-        }
-
-        seg.onend = () => {
-          if (!actif) return
-          idx++
-          // Délai légèrement plus long sur mobile
-          setTimeout(parlerSegment, isIOS ? 200 : 120)
-        }
-
-        seg.onerror = (e) => {
-          if (!actif) return
-          console.warn('[speech] erreur segment:', e.error)
-          idx++
-          setTimeout(parlerSegment, 200)
-        }
-
-        window.speechSynthesis.speak(seg)
-      }
-
-      definirAxisParle(true, textePropre)
-      parlerSegment()
-    }
-
-    if (window.speechSynthesis.getVoices().length > 0) {
-      trySpeak()
-    } else {
-      window.speechSynthesis.onvoiceschanged = trySpeak
-    }
-
-    return () => {
-      actif = false
-      if (finTexteTimer) clearTimeout(finTexteTimer)
-      // Ne PAS cancel ici — laisser la parole finir
-    }
+    const arreter = parlerAxis(dernierMessage, {
+      vocal: modeVocal,
+      surFin: () => setCartesActives([]),
+    })
+    return arreter
   }, [dernierMessage, modeVocal])
 
   useEffect(() => {
