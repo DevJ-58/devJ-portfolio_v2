@@ -6,7 +6,8 @@
 // Variables à définir dans Vercel :
 //   ELEVENLABS_API_KEY   clé de l'API (obligatoire)
 //   ELEVENLABS_VOICE_ID  identifiant de la voix (obligatoire)
-//   ELEVENLABS_MODEL     facultatif, eleven_flash_v2_5 par défaut
+//   ELEVENLABS_MODEL     facultatif, eleven_multilingual_v2 par défaut (le plus fidèle
+//                        aux voix clonées ; eleven_flash_v2_5 = plus rapide, moins fidèle)
 //   ELEVENLABS_MAX_CHARS facultatif, 1000 par défaut
 
 const LIMITE_PAR_MINUTE = 12
@@ -38,7 +39,12 @@ export default async function handler(req, res) {
   const cle = process.env.ELEVENLABS_API_KEY
   const voix = process.env.ELEVENLABS_VOICE_ID
 
-  if (req.method === 'GET') return res.status(200).json({ disponible: Boolean(cle && voix) })
+  // GET /api/voix : diagnostic sans révéler la clé (fin de l'identifiant de voix seulement)
+  if (req.method === 'GET') return res.status(200).json({
+    disponible: Boolean(cle && voix),
+    voix: voix ? `…${voix.slice(-4)}` : null,
+    modele: process.env.ELEVENLABS_MODEL || 'eleven_multilingual_v2',
+  })
   if (req.method !== 'POST') return res.status(405).json({ erreur: 'méthode' })
   if (!cle || !voix) return res.status(503).json({ erreur: 'voix non configurée' })
   if (!origineAutorisee(req)) return res.status(403).json({ erreur: 'origine' })
@@ -53,7 +59,7 @@ export default async function handler(req, res) {
   if (!texte) return res.status(400).json({ erreur: 'texte vide' })
   if (texte.length > max) return res.status(413).json({ erreur: 'texte trop long' })
 
-  const modele = process.env.ELEVENLABS_MODEL || 'eleven_flash_v2_5'
+  const modele = process.env.ELEVENLABS_MODEL || 'eleven_multilingual_v2'
   try {
     const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voix)}/with-timestamps?output_format=mp3_44100_128`, {
       method: 'POST',
@@ -62,7 +68,11 @@ export default async function handler(req, res) {
         text: texte,
         model_id: modele,
         ...(/v2_5|turbo/.test(modele) ? { language_code: 'fr' } : {}),
-        voice_settings: { stability: 0.68, similarity_boost: 0.75, style: 0, use_speaker_boost: true },
+        voice_settings: {
+          stability: Number(process.env.ELEVENLABS_STABILITY ?? 0.68),
+          similarity_boost: Number(process.env.ELEVENLABS_SIMILARITY ?? 0.75),
+          style: 0, use_speaker_boost: true,
+        },
       }),
     })
     if (!r.ok) {
